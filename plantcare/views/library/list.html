@@ -1,0 +1,282 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Plant Library{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="library" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% include "partials/app_header.html" with title="Plant Library" subtitle="Browse and discover plant species 🌿" search="Search plant library..." %}
+
+    <div style="padding:28px 32px;">
+
+      <!-- Summary Stats -->
+      <div class="grid-4" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px;">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#214E34" stroke-width="1.6"/></svg></div>
+          <div class="value">150</div>
+          <div class="t-small text-muted">Total Species</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+          <div class="value">89</div>
+          <div class="t-small text-muted">Indoor Plants</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--info-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#2563A6" stroke-width="1.6"/></svg></div>
+          <div class="value">61</div>
+          <div class="t-small text-muted">Outdoor Plants</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2c5.5 0 10 4.5 10 10s-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2Z" stroke="#A86712" stroke-width="1.6"/></svg></div>
+          <div class="value">24</div>
+          <div class="t-small text-muted">New This Month</div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Section -->
+      <div style="margin-top:36px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <h2 class="t-h2">Browse Plants</h2>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="search-box" style="width:240px; height:38px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <input type="text" placeholder="Search plant species...">
+            </div>
+            <select class="select" style="width:150px; height:38px;">
+              <option>All Categories</option>
+              <option>Indoor Plants</option>
+              <option>Outdoor Plants</option>
+              <option>Succulents</option>
+              <option>Flowering Plants</option>
+              <option>Foliage Plants</option>
+            </select>
+            <select class="select" style="width:150px; height:38px;">
+              <option>All Light Levels</option>
+              <option>Full Sun</option>
+              <option>Partial Sun</option>
+              <option>Bright Indirect</option>
+              <option>Low Light</option>
+            </select>
+            <select class="select" style="width:160px; height:38px;">
+              <option>Sort: Name (A-Z)</option>
+              <option>Sort: Name (Z-A)</option>
+              <option>Sort: Popularity</option>
+              <option>Sort: Recently Added</option>
+              <option>Sort: Difficulty</option>
+            </select>
+            <a href="{% url 'library_create' %}" class="btn btn-primary btn-sm">+ Add Plant Species</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plants Library Grid -->
+      <div class="grid-3" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin-top:24px;">
+
+        <!-- Plant Card 1 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#4F8A52;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Monstera Deliciosa</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Monstera deliciosa</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Tropical</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-success"><span class="badge-dot"></span>Easy Care</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Bright Indirect</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 2 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#214E34;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Snake Plant</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Dracaena trifasciata</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Desert</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-success"><span class="badge-dot"></span>Very Easy</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Low Light</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 3 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#5C9A5F;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Peace Lily</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Spathiphyllum wallisii</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Flowering</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-warning"><span class="badge-dot"></span>Moderate</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Medium Light</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 4 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#3C7A48;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Aloe Vera</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Aloe barbadensis</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor/Outdoor • Succulent</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-success"><span class="badge-dot"></span>Very Easy</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Full Sun</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 5 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#2F6B3C;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Pothos</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Epipremnum aureum</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Trailing</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-success"><span class="badge-dot"></span>Very Easy</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Low to Bright</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 6 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#6BA86E;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Spider Plant</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Chlorophytum comosum</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Air Purifying</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-success"><span class="badge-dot"></span>Easy Care</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Bright Indirect</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 7 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#4A7D4F;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Fiddle Leaf Fig</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Ficus lyrata</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Statement Plant</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-error"><span class="badge-dot"></span>Difficult</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Bright Indirect</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plant Card 8 -->
+        <div class="plant-card">
+          <div class="plant-photo" style="background:#598C5C;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="t-label">Rubber Plant</div>
+                <div class="t-small text-secondary" style="font-style:italic;">Ficus elastica</div>
+              </div>
+              <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+            <div class="t-small text-muted">Indoor • Foliage</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge badge-success"><span class="badge-dot"></span>Easy Care</span>
+              <span class="badge badge-info"><span class="badge-dot"></span>Bright Indirect</span>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <a href="{% url 'library_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View Details</a>
+              <a href="{% url 'library_edit' %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:32px;">
+        <button class="btn btn-secondary btn-sm" disabled>&larr; Previous</button>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-primary btn-sm" style="min-width:36px;">1</button>
+          <button class="btn btn-secondary btn-sm" style="min-width:36px;">2</button>
+          <button class="btn btn-secondary btn-sm" style="min-width:36px;">3</button>
+          <button class="btn btn-secondary btn-sm" style="min-width:36px;">4</button>
+          <button class="btn btn-secondary btn-sm" style="min-width:36px;">5</button>
+        </div>
+        <button class="btn btn-secondary btn-sm">Next &rarr;</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+<div class="app-header">
+  <div>
+    <div class="t-h3" data-field="title"></div>
+    <div class="t-small text-muted" data-field="subtitle"></div>
+  </div>
+  <div class="search-box" data-field="search-box">
+    <input type="text" data-field="search-input" placeholder="Search..." style="padding-left:16px;">
+  </div>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <!-- Notification Dropdown -->
+    <div style="position:relative;">
+      <button id="notificationBtn" style="position:relative; width:40px; height:40px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;" aria-label="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span id="notificationBadge" style="position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:#B42318; border:1.5px solid #fff;"></span>
+      </button>
+      
+      <!-- Notification Dropdown Menu -->
+      <div id="notificationDropdown" style="position:absolute; top:calc(100% + 8px); right:0; width:360px; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); border:1px solid #E2E8DF; visibility:hidden; opacity:0; z-index:9999; max-height:480px; overflow:hidden; transition:opacity 0.2s, visibility 0.2s;">
+        <div style="padding:16px 20px; border-bottom:1px solid #E2E8DF; display:flex; align-items:center; justify-content:space-between;">
+          <h3 style="margin:0; font-size:16px; font-weight:600;">Notifications</h3>
+          <button onclick="markAllAsRead()" style="width:28px; height:28px; border-radius:6px; border:1px solid #E2E8DF; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        
+        <div style="max-height:320px; overflow-y:auto;">
+          <!-- Notification Item 1 -->
+          <div class="notification-item" style="padding:14px 20px; border-bottom:1px solid #E2E8DF; display:flex; gap:12px; align-items:flex-start; cursor:pointer; background:#fff; transition:background 0.15s;" onmouseover="this.style.background='#F8F8F2'" onmouseout="this.style.background='#fff'">
+            <div style="width:8px; height:8px; border-radius:50%; background:#2563A6; margin-top:6px; flex:none;"></div>
+            <div style="flex:1;">
+              <div style="font-weight:600; margin-bottom:4px; font-size:14px;">Snake Plant needs watering</div>
+              <div style="font-size:13px; color:#89948B;">Your Snake Plant in the Bedroom is due for watering today</div>
+              <div style="font-size:12px; color:#89948B; margin-top:4px;">2 hours ago</div>
+            </div>
+          </div>
+          
+          <!-- Notification Item 2 -->
+          <div class="notification-item" style="padding:14px 20px; border-bottom:1px solid #E2E8DF; display:flex; gap:12px; align-items:flex-start; cursor:pointer; background:#fff; transition:background 0.15s;" onmouseover="this.style.background='#F8F8F2'" onmouseout="this.style.background='#fff'">
+            <div style="width:8px; height:8px; border-radius:50%; background:#A86712; margin-top:6px; flex:none;"></div>
+            <div style="flex:1;">
+              <div style="font-weight:600; margin-bottom:4px; font-size:14px;">Peace Lily - Care overdue</div>
+              <div style="font-size:13px; color:#89948B;">Watering for your Peace Lily is 2 days overdue</div>
+              <div style="font-size:12px; color:#89948B; margin-top:4px;">5 hours ago</div>
+            </div>
+          </div>
+          
+          <!-- Notification Item 3 -->
+          <div class="notification-item" style="padding:14px 20px; border-bottom:1px solid #E2E8DF; display:flex; gap:12px; align-items:flex-start; cursor:pointer; background:#fff; transition:background 0.15s;" onmouseover="this.style.background='#F8F8F2'" onmouseout="this.style.background='#fff'">
+            <div style="width:8px; height:8px; border-radius:50%; background:#287A4B; margin-top:6px; flex:none;"></div>
+            <div style="flex:1;">
+              <div style="font-weight:600; margin-bottom:4px; font-size:14px;">Care task completed</div>
+              <div style="font-size:13px; color:#89948B;">Great job! You completed watering for Monstera Deliciosa</div>
+              <div style="font-size:12px; color:#89948B; margin-top:4px;">1 day ago</div>
+            </div>
+          </div>
+          
+          <!-- Notification Item 4 -->
+          <div class="notification-item" style="padding:14px 20px; display:flex; gap:12px; align-items:flex-start; cursor:pointer; background:#fff; transition:background 0.15s;" onmouseover="this.style.background='#F8F8F2'" onmouseout="this.style.background='#fff'">
+            <div style="width:8px; height:8px; border-radius:50%; background:#2563A6; margin-top:6px; flex:none;"></div>
+            <div style="flex:1;">
+              <div style="font-weight:600; margin-bottom:4px; font-size:14px;">Upcoming care reminder</div>
+              <div style="font-size:13px; color:#89948B;">Fertilize your Pothos tomorrow</div>
+              <div style="font-size:12px; color:#89948B; margin-top:4px;">1 day ago</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="padding:12px 20px; border-top:1px solid #E2E8DF; text-align:center;">
+          <a href="/pages/notifications/notifications.html" style="font-weight:600; color:#214E34; text-decoration:none;">See All Notifications</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="avatar">AF</div>
+  </div>
+</div>

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — Add Plant Species</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  <div data-include="../../nav/sidebar.html" data-current="library"></div>
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    <div data-include="../../nav/app-header.html"
+         data-title="Add Plant Species"
+         data-subtitle="Add a new plant species to the library 🌿"
+         data-search=""></div>
+
+    <div style="padding:28px 32px; max-width:1000px;">
+
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:20px;">
+        <a href="plant-library.html" class="nav-link" style="font-size:14px;">&larr; Back to Plant Library</a>
+      </div>
+
+      <div class="card" style="padding:32px;">
+        <form id="createPlantForm">
+          
+          <!-- Basic Information -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Basic Information</h3>
+            
+            <div style="display:grid; gap:20px;">
+              <div>
+                <label class="t-label" style="display:block; margin-bottom:6px;">Common Name *</label>
+                <input type="text" class="input" placeholder="e.g., Monstera Deliciosa" required style="width:100%;">
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Scientific Name *</label>
+                  <input type="text" class="input" placeholder="e.g., Monstera deliciosa" required style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Family</label>
+                  <input type="text" class="input" placeholder="e.g., Araceae" style="width:100%;">
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Category *</label>
+                  <select class="select" required style="width:100%;">
+                    <option value="">Select category...</option>
+                    <option>Indoor Plants</option>
+                    <option>Outdoor Plants</option>
+                    <option>Succulents</option>
+                    <option>Flowering Plants</option>
+                    <option>Foliage Plants</option>
+                    <option>Tropical Plants</option>
+                    <option>Desert Plants</option>
+                    <option>Air Purifying</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Origin</label>
+                  <input type="text" class="input" placeholder="e.g., Central America" style="width:100%;">
+                </div>
+              </div>
+
+              <div>
+                <label class="t-label" style="display:block; margin-bottom:6px;">Description</label>
+                <textarea class="input" rows="4" placeholder="Add a detailed description of this plant species..." style="width:100%; resize:vertical;"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Care Requirements -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Care Requirements</h3>
+            
+            <div style="display:grid; gap:20px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Difficulty Level *</label>
+                  <select class="select" required style="width:100%;">
+                    <option value="">Select difficulty...</option>
+                    <option>Very Easy</option>
+                    <option>Easy</option>
+                    <option>Moderate</option>
+                    <option>Difficult</option>
+                    <option>Expert</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Light Requirements *</label>
+                  <select class="select" required style="width:100%;">
+                    <option value="">Select light level...</option>
+                    <option>Full Sun</option>
+                    <option>Partial Sun</option>
+                    <option>Bright Indirect</option>
+                    <option>Medium Light</option>
+                    <option>Low Light</option>
+                    <option>Low to Bright</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Watering Frequency *</label>
+                  <select class="select" required style="width:100%;">
+                    <option value="">Select frequency...</option>
+                    <option>Daily</option>
+                    <option>Every 2-3 days</option>
+                    <option>Weekly</option>
+                    <option>Bi-weekly</option>
+                    <option>Monthly</option>
+                    <option>Rarely</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Fertilizing Schedule</label>
+                  <select class="select" style="width:100%;">
+                    <option value="">Select schedule...</option>
+                    <option>Weekly</option>
+                    <option>Bi-weekly</option>
+                    <option>Monthly</option>
+                    <option>Quarterly</option>
+                    <option>Seasonally</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Temperature Range</label>
+                  <input type="text" class="input" placeholder="e.g., 18-24°C" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Humidity Level</label>
+                  <select class="select" style="width:100%;">
+                    <option value="">Select humidity...</option>
+                    <option>Low (30-40%)</option>
+                    <option>Medium (40-60%)</option>
+                    <option>High (60-80%)</option>
+                    <option>Very High (80%+)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Soil Type</label>
+                  <input type="text" class="input" placeholder="e.g., Well-draining potting mix" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Growth Rate</label>
+                  <select class="select" style="width:100%;">
+                    <option value="">Select growth rate...</option>
+                    <option>Slow</option>
+                    <option>Moderate</option>
+                    <option>Fast</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant Characteristics -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Plant Characteristics</h3>
+            
+            <div style="display:grid; gap:20px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Mature Height</label>
+                  <input type="text" class="input" placeholder="e.g., 2-3 meters" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Mature Width</label>
+                  <input type="text" class="input" placeholder="e.g., 1-2 meters" style="width:100%;">
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Foliage Color</label>
+                  <input type="text" class="input" placeholder="e.g., Dark green" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Flower Color</label>
+                  <input type="text" class="input" placeholder="e.g., White, Pink" style="width:100%;">
+                </div>
+              </div>
+
+              <div>
+                <label class="t-label" style="display:block; margin-bottom:6px;">Special Features</label>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="features" value="air-purifying">
+                    <span class="t-small">Air Purifying</span>
+                  </label>
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="features" value="pet-friendly">
+                    <span class="t-small">Pet Friendly</span>
+                  </label>
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="features" value="toxic">
+                    <span class="t-small">Toxic to Pets</span>
+                  </label>
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="features" value="flowering">
+                    <span class="t-small">Flowering</span>
+                  </label>
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="features" value="fragrant">
+                    <span class="t-small">Fragrant</span>
+                  </label>
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="features" value="edible">
+                    <span class="t-small">Edible</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant Photo -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Plant Photo</h3>
+            <div style="border:2px dashed var(--border); border-radius:12px; padding:32px; text-align:center; background:var(--bg-secondary);">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto 12px;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <div class="t-body" style="margin-bottom:8px;">Upload plant photo</div>
+              <div class="t-small text-muted" style="margin-bottom:12px;">PNG, JPG up to 5MB</div>
+              <input type="file" id="plantPhoto" accept="image/*" style="display:none;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('plantPhoto').click();">Choose File</button>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; gap:12px; justify-content:flex-end; padding-top:20px; border-top:1px solid var(--border);">
+            <a href="plant-library.html" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Add Plant Species</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/include.js"></script>
+<script src="../../assets/js/script.js"></script>
+<script>
+document.getElementById('createPlantForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  alert('Plant species added successfully!');
+  window.location.href = 'plant-library.html';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — Plant Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<!-- Header (shared) -->
+<div data-include="../nav/navbar.html" data-current="library"></div>
+
+<!-- Hero Section -->
+<section style="background:linear-gradient(135deg, #214E34 0%, #4F8A52 100%); color:#fff; padding:80px 0;">
+  <div class="container" style="max-width:900px; text-align:center;">
+    <span class="eyebrow" style="color:rgba(255,255,255,0.9);">Plant Library</span>
+    <h1 class="t-display" style="font-size:48px; line-height:1.1; margin:16px 0 20px;">Explore Our Plant Collection</h1>
+    <p class="t-body-lg" style="color:rgba(255,255,255,0.9); max-width:600px; margin:0 auto 32px;">Browse through our extensive library of indoor and outdoor plants. Find the perfect green companion for your space with detailed care information for each species.</p>
+    <div style="max-width:560px; margin:0 auto;">
+      <div style="position:relative;">
+        <input type="text" placeholder="Search plants by name, category, or care level..." style="width:100%; padding:16px 50px 16px 20px; border-radius:12px; border:none; font-size:16px;">
+        <button style="position:absolute; right:8px; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:8px; background:#214E34; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#fff" stroke-width="2"/><path d="M21 21l-4-4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Category Filter Tabs -->
+<section style="background:#fff; border-bottom:1px solid var(--border); position:sticky; top:76px; z-index:10;">
+  <div class="container" style="display:flex; gap:8px; padding:16px 32px; overflow-x:auto;">
+    <button class="btn btn-sm btn-primary">All Plants (150)</button>
+    <button class="btn btn-sm btn-secondary">Indoor (89)</button>
+    <button class="btn btn-sm btn-secondary">Outdoor (61)</button>
+    <button class="btn btn-sm btn-secondary">Succulents (34)</button>
+    <button class="btn btn-sm btn-secondary">Flowering (45)</button>
+    <button class="btn btn-sm btn-secondary">Air Purifying (28)</button>
+    <button class="btn btn-sm btn-secondary">Pet-Friendly (19)</button>
+  </div>
+</section>
+
+<!-- Browse by Category -->
+<section class="container section">
+  <h2 class="t-h1" style="margin-bottom:32px;">Browse by Category</h2>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px; margin-bottom:64px;">
+    
+    <!-- Category 1 -->
+    <div class="card" style="padding:28px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+      <div style="width:64px; height:64px; border-radius:16px; background:#E7F5EC; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#287A4B" stroke-width="2"/></svg>
+      </div>
+      <h3 class="t-h3" style="margin-bottom:10px;">Indoor Plants</h3>
+      <p class="t-body text-secondary" style="margin-bottom:16px;">Perfect for homes, offices, and apartments. Low to bright light options available.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="t-body text-muted">89 species</span>
+        <a href="#indoor" style="color:#214E34; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">View All <span>&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- Category 2 -->
+    <div class="card" style="padding:28px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+      <div style="width:64px; height:64px; border-radius:16px; background:#E8F1FA; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="#2563A6" stroke-width="2"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#2563A6" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="t-h3" style="margin-bottom:10px;">Outdoor Plants</h3>
+      <p class="t-body text-secondary" style="margin-bottom:16px;">Thrive in gardens, patios, and balconies. Sun-loving varieties for outdoor spaces.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="t-body text-muted">61 species</span>
+        <a href="#outdoor" style="color:#214E34; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">View All <span>&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- Category 3 -->
+    <div class="card" style="padding:28px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+      <div style="width:64px; height:64px; border-radius:16px; background:#FBF0E0; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 3l-1.5 1.5v4L12 10l1.5-1.5v-4L12 3zM12 14l-1.5 1.5v4L12 21l1.5-1.5v-4L12 14z" stroke="#A86712" stroke-width="2"/></svg>
+      </div>
+      <h3 class="t-h3" style="margin-bottom:10px;">Succulents & Cacti</h3>
+      <p class="t-body text-secondary" style="margin-bottom:16px;">Low-maintenance beauties that store water. Perfect for beginners and busy people.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="t-body text-muted">34 species</span>
+        <a href="#succulents" style="color:#214E34; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">View All <span>&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- Category 4 -->
+    <div class="card" style="padding:28px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+      <div style="width:64px; height:64px; border-radius:16px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" stroke="#B42318" stroke-width="2"/><path d="M8 10h.01M16 10h.01M8 15c1 1.5 3 2 4 2s3-.5 4-2" stroke="#B42318" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="t-h3" style="margin-bottom:10px;">Flowering Plants</h3>
+      <p class="t-body text-secondary" style="margin-bottom:16px;">Add color and beauty with blooming varieties. Indoor and outdoor flowering options.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="t-body text-muted">45 species</span>
+        <a href="#flowering" style="color:#214E34; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">View All <span>&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- Category 5 -->
+    <div class="card" style="padding:28px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+      <div style="width:64px; height:64px; border-radius:16px; background:#E7F5EC; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#287A4B" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="t-h3" style="margin-bottom:10px;">Air Purifying</h3>
+      <p class="t-body text-secondary" style="margin-bottom:16px;">Naturally filter and clean indoor air. Great for bedrooms and living spaces.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="t-body text-muted">28 species</span>
+        <a href="#airpurifying" style="color:#214E34; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">View All <span>&rarr;</span></a>
+      </div>
+    </div>
+
+    <!-- Category 6 -->
+    <div class="card" style="padding:28px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 32px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+      <div style="width:64px; height:64px; border-radius:16px; background:#E8F1FA; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 0v9l5 5" stroke="#2563A6" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="t-h3" style="margin-bottom:10px;">Pet-Friendly</h3>
+      <p class="t-body text-secondary" style="margin-bottom:16px;">Safe for cats and dogs. Non-toxic varieties for homes with furry friends.</p>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span class="t-body text-muted">19 species</span>
+        <a href="#petfriendly" style="color:#214E34; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:6px;">View All <span>&rarr;</span></a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Featured Plants Grid -->
+  <h2 class="t-h1" style="margin-bottom:32px;">Popular Plants</h2>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+    
+    <!-- Plant Card 1 -->
+    <div class="plant-card" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div class="plant-photo" style="background:linear-gradient(135deg, #4F8A52, #214E34); height:200px; display:flex; align-items:center; justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+      </div>
+      <div style="padding:18px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="t-h4" style="margin-bottom:4px;">Monstera Deliciosa</div>
+            <div class="t-small text-muted" style="font-style:italic;">Monstera deliciosa</div>
+          </div>
+          <span class="badge badge-success" style="flex:none;"><span class="badge-dot"></span>Easy</span>
+        </div>
+        <p class="t-small text-secondary" style="margin-bottom:14px;">Popular tropical plant with stunning split leaves. Great for bright, indirect light.</p>
+        <a href="../pages/plant-library/view-plant.html" class="btn btn-secondary btn-sm" style="width:100%;">Learn More</a>
+      </div>
+    </div>
+
+    <!-- Plant Card 2 -->
+    <div class="plant-card" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div class="plant-photo" style="background:linear-gradient(135deg, #214E34, #193D29); height:200px; display:flex; align-items:center; justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+      </div>
+      <div style="padding:18px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="t-h4" style="margin-bottom:4px;">Snake Plant</div>
+            <div class="t-small text-muted" style="font-style:italic;">Dracaena trifasciata</div>
+          </div>
+          <span class="badge badge-success" style="flex:none;"><span class="badge-dot"></span>Very Easy</span>
+        </div>
+        <p class="t-small text-secondary" style="margin-bottom:14px;">Nearly indestructible plant that purifies air and tolerates low light conditions.</p>
+        <a href="../pages/plant-library/view-plant.html" class="btn btn-secondary btn-sm" style="width:100%;">Learn More</a>
+      </div>
+    </div>
+
+    <!-- Plant Card 3 -->
+    <div class="plant-card" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div class="plant-photo" style="background:linear-gradient(135deg, #2F6B3C, #1E4A28); height:200px; display:flex; align-items:center; justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+      </div>
+      <div style="padding:18px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="t-h4" style="margin-bottom:4px;">Pothos</div>
+            <div class="t-small text-muted" style="font-style:italic;">Epipremnum aureum</div>
+          </div>
+          <span class="badge badge-success" style="flex:none;"><span class="badge-dot"></span>Very Easy</span>
+        </div>
+        <p class="t-small text-secondary" style="margin-bottom:14px;">Versatile trailing vine perfect for hanging baskets or climbing. Tolerates neglect.</p>
+        <a href="../pages/plant-library/view-plant.html" class="btn btn-secondary btn-sm" style="width:100%;">Learn More</a>
+      </div>
+    </div>
+
+    <!-- Plant Card 4 -->
+    <div class="plant-card" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div class="plant-photo" style="background:linear-gradient(135deg, #5C9A5F, #3C7A48); height:200px; display:flex; align-items:center; justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+      </div>
+      <div style="padding:18px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="t-h4" style="margin-bottom:4px;">Peace Lily</div>
+            <div class="t-small text-muted" style="font-style:italic;">Spathiphyllum wallisii</div>
+          </div>
+          <span class="badge badge-warning" style="flex:none;"><span class="badge-dot"></span>Moderate</span>
+        </div>
+        <p class="t-small text-secondary" style="margin-bottom:14px;">Elegant flowering plant with white blooms. Excellent air purifier for indoor spaces.</p>
+        <a href="../pages/plant-library/view-plant.html" class="btn btn-secondary btn-sm" style="width:100%;">Learn More</a>
+      </div>
+    </div>
+
+    <!-- Plant Card 5 -->
+    <div class="plant-card" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div class="plant-photo" style="background:linear-gradient(135deg, #3C7A48, #2A5934); height:200px; display:flex; align-items:center; justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+      </div>
+      <div style="padding:18px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="t-h4" style="margin-bottom:4px;">Aloe Vera</div>
+            <div class="t-small text-muted" style="font-style:italic;">Aloe barbadensis</div>
+          </div>
+          <span class="badge badge-success" style="flex:none;"><span class="badge-dot"></span>Very Easy</span>
+        </div>
+        <p class="t-small text-secondary" style="margin-bottom:14px;">Medicinal succulent with healing gel. Thrives in sunny spots with minimal water.</p>
+        <a href="../pages/plant-library/view-plant.html" class="btn btn-secondary btn-sm" style="width:100%;">Learn More</a>
+      </div>
+    </div>
+
+    <!-- Plant Card 6 -->
+    <div class="plant-card" style="cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div class="plant-photo" style="background:linear-gradient(135deg, #6BA86E, #4A8850); height:200px; display:flex; align-items:center; justify-content:center;">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+      </div>
+      <div style="padding:18px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="t-h4" style="margin-bottom:4px;">Spider Plant</div>
+            <div class="t-small text-muted" style="font-style:italic;">Chlorophytum comosum</div>
+          </div>
+          <span class="badge badge-success" style="flex:none;"><span class="badge-dot"></span>Easy</span>
+        </div>
+        <p class="t-small text-secondary" style="margin-bottom:14px;">Fast-growing air purifier that produces baby plantlets. Safe for pets.</p>
+        <a href="../pages/plant-library/view-plant.html" class="btn btn-secondary btn-sm" style="width:100%;">Learn More</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section style="background:linear-gradient(135deg, #EEF4EB 0%, #DCE8D8 100%); border-top:1px solid var(--border);">
+  <div class="container section" style="text-align:center; padding:80px 32px;">
+    <h2 class="t-h1" style="margin-bottom:16px;">Ready to Start Your Plant Journey?</h2>
+    <p class="t-body-lg text-secondary" style="margin-bottom:32px; max-width:600px; margin-left:auto; margin-right:auto;">Create a free account and start tracking your plant collection today. Get personalized care reminders and expert guidance.</p>
+    <div style="display:flex; gap:16px; justify-content:center;">
+      <a href="../pages/auth/register.html" class="btn btn-primary">Create Free Account</a>
+      <a href="index.html" class="btn btn-secondary">Learn More</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer (shared) -->
+<div data-include="../nav/footer.html"></div>
+
+<script src="../assets/js/include.js"></script>
+<script src="../assets/js/script.js"></script>
+</body>
+</html>

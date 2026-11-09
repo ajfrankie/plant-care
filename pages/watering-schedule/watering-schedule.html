@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — Watering Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  <div data-include="../../nav/sidebar.html" data-current="watering"></div>
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    <div data-include="../../nav/app-header.html"
+         data-title="Watering Schedule"
+         data-subtitle="Keep your plants hydrated and happy"
+         data-search="Search your plants..."></div>
+
+    <div style="padding:28px 32px;">
+
+      <!-- Summary cards -->
+      <div class="grid-4" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px;">
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--error-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#B42318" stroke-width="1.6"/></svg></div>
+            <div class="value">5</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Need Watering Today</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#A86712" stroke-width="1.6"/></svg></div>
+            <div class="value">7</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">This Week</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+            <div class="value">12</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Recently Watered</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="#214E34" stroke-width="1.6"/></svg></div>
+            <div class="value">24</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Active Reminders</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="card" style="margin-top:24px; background:linear-gradient(135deg, #EEF4EB 0%, #DCE8D8 100%); border:1px solid var(--soft-sage);">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:48px; height:48px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.8"/></svg>
+            </div>
+            <div>
+              <div class="t-h4">5 plants need water today</div>
+              <div class="t-small text-muted">Don't forget to check soil moisture before watering</div>
+            </div>
+          </div>
+          <button class="btn btn-primary">Mark All as Watered</button>
+        </div>
+      </div>
+
+      <!-- Filter controls -->
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:32px;">
+        <h3 class="t-h3">Watering Schedule</h3>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <select class="select" style="width:160px; height:38px;">
+            <option>All Plants</option>
+            <option>Due Today</option>
+            <option>Due This Week</option>
+            <option>Overdue</option>
+            <option>Recently Watered</option>
+          </select>
+          <select class="select" style="width:140px; height:38px;">
+            <option>All Locations</option>
+            <option>Living Room</option>
+            <option>Bedroom</option>
+            <option>Kitchen</option>
+            <option>Office</option>
+            <option>Garden</option>
+            <option>Balcony</option>
+          </select>
+          <select class="select" style="width:140px; height:38px;">
+            <option>Sort: Due Date</option>
+            <option>Sort: Plant Name</option>
+            <option>Sort: Last Watered</option>
+            <option>Sort: Frequency</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Plants needing water -->
+      <div style="margin-top:20px;">
+        <div style="background:var(--error-bg); border:1px solid var(--error); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#B42318" stroke-width="1.6"/><path d="M12 8v4M12 16v.5" stroke="#B42318" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div class="t-label" style="color:var(--error);">Needs Water Today (5 plants)</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:16px;">
+
+          <!-- Plant card 1 -->
+          <div class="card" style="border-left:4px solid var(--error);">
+            <div style="display:flex; gap:14px;">
+              <div style="width:72px; height:72px; border-radius:8px; background:#214E34; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Snake Plant</div>
+                    <div class="t-small text-muted" style="font-style:italic;">Dracaena trifasciata</div>
+                  </div>
+                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  </button>
+                </div>
+                <div class="t-small text-muted" style="margin-bottom:8px;">📍 Bedroom</div>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                  <span class="badge badge-error"><span class="badge-dot"></span>Due Today</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+                  <div><strong>Frequency:</strong> Every 10 days</div>
+                  <div><strong>Last watered:</strong> 10 days ago</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-block">✓ Mark as Watered</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant card 2 -->
+          <div class="card" style="border-left:4px solid var(--error);">
+            <div style="display:flex; gap:14px;">
+              <div style="width:72px; height:72px; border-radius:8px; background:#5C9A5F; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Peace Lily</div>
+                    <div class="t-small text-muted" style="font-style:italic;">Spathiphyllum wallisii</div>
+                  </div>
+                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  </button>
+                </div>
+                <div class="t-small text-muted" style="margin-bottom:8px;">📍 Balcony</div>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                  <span class="badge badge-error"><span class="badge-dot"></span>Due Today</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+                  <div><strong>Frequency:</strong> Every 5 days</div>
+                  <div><strong>Last watered:</strong> 5 days ago</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-block">✓ Mark as Watered</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant card 3 -->
+          <div class="card" style="border-left:4px solid var(--error);">
+            <div style="display:flex; gap:14px;">
+              <div style="width:72px; height:72px; border-radius:8px; background:#2F6B3C; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Pothos</div>
+                    <div class="t-small text-muted" style="font-style:italic;">Epipremnum aureum</div>
+                  </div>
+                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  </button>
+                </div>
+                <div class="t-small text-muted" style="margin-bottom:8px;">📍 Kitchen</div>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                  <span class="badge badge-error"><span class="badge-dot"></span>Due Today</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+                  <div><strong>Frequency:</strong> Every 7 days</div>
+                  <div><strong>Last watered:</strong> 7 days ago</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-block">✓ Mark as Watered</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant card 4 -->
+          <div class="card" style="border-left:4px solid var(--error);">
+            <div style="display:flex; gap:14px;">
+              <div style="width:72px; height:72px; border-radius:8px; background:#6AA66B; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Spider Plant</div>
+                    <div class="t-small text-muted" style="font-style:italic;">Chlorophytum comosum</div>
+                  </div>
+                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  </button>
+                </div>
+                <div class="t-small text-muted" style="margin-bottom:8px;">📍 Office</div>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                  <span class="badge badge-error"><span class="badge-dot"></span>Due Today</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+                  <div><strong>Frequency:</strong> Every 6 days</div>
+                  <div><strong>Last watered:</strong> 6 days ago</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-block">✓ Mark as Watered</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant card 5 -->
+          <div class="card" style="border-left:4px solid var(--error);">
+            <div style="display:flex; gap:14px;">
+              <div style="width:72px; height:72px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Boston Fern</div>
+                    <div class="t-small text-muted" style="font-style:italic;">Nephrolepis exaltata</div>
+                  </div>
+                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+                  </button>
+                </div>
+                <div class="t-small text-muted" style="margin-bottom:8px;">📍 Bathroom</div>
+                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                  <span class="badge badge-error"><span class="badge-dot"></span>Due Today</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+                  <div><strong>Frequency:</strong> Every 4 days</div>
+                  <div><strong>Last watered:</strong> 4 days ago</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-block">✓ Mark as Watered</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Coming up this week -->
+      <div style="margin-top:36px;">
+        <div style="background:var(--warning-bg); border:1px solid var(--warning); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#A86712" stroke-width="1.6"/><path d="M3 9h18" stroke="#A86712" stroke-width="1.6"/></svg>
+            <div class="t-label" style="color:var(--warning);">Coming Up This Week (7 plants)</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; flex-direction:column; gap:0;">
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--warning); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#4F8A52; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Monstera Deliciosa</div>
+                <div class="t-small text-muted">Monstera deliciosa • Living Room</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-warning"><span class="badge-dot"></span>Tomorrow</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 8 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--info); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#3C7A48; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Aloe Vera</div>
+                <div class="t-small text-muted">Aloe barbadensis • Garden</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-info"><span class="badge-dot"></span>Tomorrow</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 14 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--info); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Fiddle Leaf Fig</div>
+                <div class="t-small text-muted">Ficus lyrata • Living Room</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-info"><span class="badge-dot"></span>Nov 10</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 7 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--info); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#8CA88D; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Rubber Plant</div>
+                <div class="t-small text-muted">Ficus elastica • Office</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-info"><span class="badge-dot"></span>Nov 11</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 9 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--info); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#4A7A55; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">ZZ Plant</div>
+                <div class="t-small text-muted">Zamioculcas zamiifolia • Bedroom</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-info"><span class="badge-dot"></span>Nov 12</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 21 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--info); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#6A9A6D; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Jade Plant</div>
+                <div class="t-small text-muted">Crassula ovata • Windowsill</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-info"><span class="badge-dot"></span>Nov 13</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 12 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-left:4px solid var(--info); margin-left:-20px; padding-left:16px;">
+              <div style="width:52px; height:52px; border-radius:8px; background:#3D6F4A; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Philodendron</div>
+                <div class="t-small text-muted">Philodendron hederaceum • Kitchen</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:140px;">
+                <span class="badge badge-info"><span class="badge-dot"></span>Nov 14</span>
+                <div style="font-size:11px; color:var(--text-muted);">Every 6 days</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="flex:none;">Mark Watered</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently watered -->
+      <div style="margin-top:36px;">
+        <div style="background:var(--success-bg); border:1px solid var(--success); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <div class="t-label" style="color:var(--success);">Recently Watered</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px;">
+
+          <div class="card" style="border-left:4px solid var(--success);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="width:48px; height:48px; border-radius:8px; background:#3D7A48; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Bird of Paradise</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Watered 1 day ago</div>
+                <div style="font-size:11px; color:var(--success); font-weight:600; margin-top:4px;">Next: Nov 14</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="border-left:4px solid var(--success);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="width:48px; height:48px; border-radius:8px; background:#5A8A5D; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">English Ivy</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Watered 2 days ago</div>
+                <div style="font-size:11px; color:var(--success); font-weight:600; margin-top:4px;">Next: Nov 12</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="border-left:4px solid var(--success);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="width:48px; height:48px; border-radius:8px; background:#4A7A50; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Prayer Plant</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Watered 3 days ago</div>
+                <div style="font-size:11px; color:var(--success); font-weight:600; margin-top:4px;">Next: Nov 13</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="border-left:4px solid var(--success);">
+            <div style="display:flex; gap:12px; align-items:center;">
+              <div style="width:48px; height:48px; border-radius:8px; background:#6A9A6D; flex:none;"></div>
+              <div style="flex:1; min-width:0;">
+                <div class="t-label">Calathea</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Watered 3 days ago</div>
+                <div style="font-size:11px; color:var(--success); font-weight:600; margin-top:4px;">Next: Nov 14</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="text-align:center; margin-top:16px;">
+          <button class="btn btn-secondary btn-sm">View All Watered Plants</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/include.js"></script>
+<script src="../../assets/js/script.js"></script>
+</body>
+</html>

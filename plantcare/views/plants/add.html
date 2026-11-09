@@ -1,0 +1,193 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Add New Plant{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="my-plants" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% include "partials/app_header.html" with title="Add New Plant" subtitle="Add a new plant to your collection 🌱" %}
+
+    <div style="padding:28px 32px; max-width:900px;">
+
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'my_plants' %}" class="nav-link" style="font-size:14px;">&larr; Back to My Plants</a>
+      </div>
+
+      <div class="card" style="padding:32px;">
+        <form id="addPlantForm">
+          
+          <!-- Basic Information -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Basic Information</h3>
+            
+            <div style="display:grid; gap:20px;">
+              <div>
+                <label class="t-label" style="display:block; margin-bottom:6px;">Plant Name *</label>
+                <input type="text" class="input" placeholder="e.g., Monstera Deliciosa" required style="width:100%;">
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Scientific Name</label>
+                  <input type="text" class="input" placeholder="e.g., Monstera deliciosa" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Common Name</label>
+                  <input type="text" class="input" placeholder="e.g., Swiss Cheese Plant" style="width:100%;">
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Location *</label>
+                  <select class="select" required style="width:100%;">
+                    <option value="">Select location...</option>
+                    <option>Living Room</option>
+                    <option>Bedroom</option>
+                    <option>Kitchen</option>
+                    <option>Bathroom</option>
+                    <option>Balcony</option>
+                    <option>Garden</option>
+                    <option>Office</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Date Acquired</label>
+                  <input type="date" class="input" style="width:100%;">
+                </div>
+              </div>
+
+              <div>
+                <label class="t-label" style="display:block; margin-bottom:6px;">Notes</label>
+                <textarea class="input" rows="3" placeholder="Add any special notes about this plant..." style="width:100%; resize:vertical;"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Care Requirements -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Care Requirements</h3>
+            
+            <div style="display:grid; gap:20px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Watering Frequency *</label>
+                  <select class="select" required style="width:100%;">
+                    <option value="">Select frequency...</option>
+                    <option>Daily</option>
+                    <option>Every 2-3 days</option>
+                    <option>Weekly</option>
+                    <option>Bi-weekly</option>
+                    <option>Monthly</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Next Watering Date</label>
+                  <input type="date" class="input" style="width:100%;">
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Light Requirements</label>
+                  <select class="select" style="width:100%;">
+                    <option value="">Select light level...</option>
+                    <option>Full Sun</option>
+                    <option>Partial Sun</option>
+                    <option>Bright Indirect</option>
+                    <option>Medium Light</option>
+                    <option>Low Light</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Fertilizing Schedule</label>
+                  <select class="select" style="width:100%;">
+                    <option value="">Select schedule...</option>
+                    <option>Weekly</option>
+                    <option>Bi-weekly</option>
+                    <option>Monthly</option>
+                    <option>Quarterly</option>
+                    <option>Seasonally</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Temperature Range</label>
+                  <input type="text" class="input" placeholder="e.g., 18-24°C" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" style="display:block; margin-bottom:6px;">Humidity Level</label>
+                  <select class="select" style="width:100%;">
+                    <option value="">Select humidity...</option>
+                    <option>Low (30-40%)</option>
+                    <option>Medium (40-60%)</option>
+                    <option>High (60-80%)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant Photo -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Plant Photo</h3>
+            <div style="border:2px dashed var(--border); border-radius:12px; padding:32px; text-align:center; background:var(--bg-secondary);">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto 12px;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <div class="t-body" style="margin-bottom:8px;">Upload plant photo</div>
+              <div class="t-small text-muted" style="margin-bottom:12px;">PNG, JPG up to 5MB</div>
+              <input type="file" id="plantPhoto" accept="image/*" style="display:none;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('plantPhoto').click();">Choose File</button>
+            </div>
+          </div>
+
+          <!-- Health Status -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Health Status</h3>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+              <label style="display:flex; align-items:center; padding:12px; border:2px solid var(--border); border-radius:8px; cursor:pointer;">
+                <input type="radio" name="health" value="healthy" checked style="margin-right:10px;">
+                <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+              </label>
+              <label style="display:flex; align-items:center; padding:12px; border:2px solid var(--border); border-radius:8px; cursor:pointer;">
+                <input type="radio" name="health" value="attention" style="margin-right:10px;">
+                <span class="badge badge-warning"><span class="badge-dot"></span>Needs Attention</span>
+              </label>
+              <label style="display:flex; align-items:center; padding:12px; border:2px solid var(--border); border-radius:8px; cursor:pointer;">
+                <input type="radio" name="health" value="critical" style="margin-right:10px;">
+                <span class="badge badge-error"><span class="badge-dot"></span>Critical</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; gap:12px; justify-content:flex-end; padding-top:20px; border-top:1px solid var(--border);">
+            <a href="{% url 'my_plants' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Add Plant</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('addPlantForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  alert('Plant added successfully!');
+  window.location.href = '{% url 'my_plants' %}';
+});
+</script>
+{% endblock %}

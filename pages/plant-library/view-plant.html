@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — View Plant Species</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  <div data-include="../../nav/sidebar.html" data-current="library"></div>
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    <div data-include="../../nav/app-header.html"
+         data-title="Plant Species Details"
+         data-subtitle="Monstera Deliciosa 🌿"
+         data-search=""></div>
+
+    <div style="padding:28px 32px;">
+
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:20px;">
+        <a href="plant-library.html" class="nav-link" style="font-size:14px;">&larr; Back to Plant Library</a>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+        
+        <!-- Left Column - Main Info -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Plant Photo & Basic Info -->
+          <div class="card">
+            <div style="display:flex; gap:24px; align-items:flex-start;">
+              <div style="width:180px; height:180px; border-radius:12px; background:#4F8A52; display:flex; align-items:center; justify-content:center; flex:none;">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+              </div>
+              <div style="flex:1;">
+                <h2 class="t-h2" style="margin-bottom:4px;">Monstera Deliciosa</h2>
+                <div class="t-body text-secondary" style="font-style:italic; margin-bottom:4px;">Monstera deliciosa</div>
+                <div class="t-small text-muted" style="margin-bottom:16px;">Family: Araceae • Origin: Central America</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+                  <span class="badge badge-success"><span class="badge-dot"></span>Easy Care</span>
+                  <span class="badge badge-info"><span class="badge-dot"></span>Indoor</span>
+                  <span class="badge badge-info"><span class="badge-dot"></span>Air Purifying</span>
+                </div>
+                <div style="display:flex; gap:12px;">
+                  <a href="edit-plant.html" class="btn btn-primary btn-sm">Edit Species</a>
+                  <button class="btn btn-secondary btn-sm">Add to My Plants</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="card">
+            <h3 class="t-h3" style="margin-bottom:12px;">About This Plant</h3>
+            <div class="t-body text-secondary">
+              The Monstera Deliciosa, also known as the Swiss Cheese Plant, is a species of flowering plant native to tropical forests of southern Mexico. It's famous for its large, glossy, heart-shaped leaves with natural holes (fenestrations) that develop as the plant matures. This stunning tropical plant can grow quite large indoors and is perfect for adding a jungle vibe to any space.
+            </div>
+          </div>
+
+          <!-- Care Requirements -->
+          <div class="card">
+            <h3 class="t-h3" style="margin-bottom:20px;">Care Requirements</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">💧 Watering</div>
+                <div class="t-body">Weekly</div>
+                <div class="t-small text-muted" style="margin-top:4px;">Water when top 2" of soil is dry</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">☀️ Light</div>
+                <div class="t-body">Bright Indirect</div>
+                <div class="t-small text-muted" style="margin-top:4px;">Avoid direct sunlight</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">🌡️ Temperature</div>
+                <div class="t-body">18-24°C</div>
+                <div class="t-small text-muted" style="margin-top:4px;">Prefers warm conditions</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">💨 Humidity</div>
+                <div class="t-body">Medium (40-60%)</div>
+                <div class="t-small text-muted" style="margin-top:4px;">Mist leaves occasionally</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">🌱 Fertilizing</div>
+                <div class="t-body">Monthly</div>
+                <div class="t-small text-muted" style="margin-top:4px;">During growing season</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">🪴 Soil</div>
+                <div class="t-body">Well-draining mix</div>
+                <div class="t-small text-muted" style="margin-top:4px;">Rich, peat-based potting soil</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant Characteristics -->
+          <div class="card">
+            <h3 class="t-h3" style="margin-bottom:20px;">Plant Characteristics</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">Mature Height</div>
+                <div class="t-body">2-3 meters indoors</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">Mature Width</div>
+                <div class="t-body">1-2 meters</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">Growth Rate</div>
+                <div class="t-body">Moderate</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">Foliage Color</div>
+                <div class="t-body">Dark glossy green</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Care Tips -->
+          <div class="card" style="background:var(--pale-sage); border:none;">
+            <h3 class="t-h4" style="margin-bottom:12px;">💡 Pro Care Tips</h3>
+            <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+              <li class="t-small">Provide a moss pole or stake for support as the plant grows</li>
+              <li class="t-small">Wipe leaves with a damp cloth monthly to remove dust</li>
+              <li class="t-small">Rotate plant weekly for even growth on all sides</li>
+              <li class="t-small">Yellow leaves indicate overwatering</li>
+              <li class="t-small">Brown leaf tips suggest low humidity</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- Right Column - Quick Info -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Quick Facts -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:16px;">Quick Facts</h3>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Common Name</div>
+                <div class="t-body">Swiss Cheese Plant</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Difficulty Level</div>
+                <div class="t-body">Easy</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Category</div>
+                <div class="t-body">Indoor, Tropical</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Pet Safety</div>
+                <div class="t-body">⚠️ Toxic to pets</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Special Features -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:16px;">Special Features</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="padding:8px 12px; background:var(--success-bg); border-radius:6px;">
+                <div class="t-small" style="font-weight:600; color:var(--success);">✓ Air Purifying</div>
+              </div>
+              <div style="padding:8px 12px; background:var(--info-bg); border-radius:6px;">
+                <div class="t-small" style="font-weight:600; color:var(--info);">✓ Large Foliage</div>
+              </div>
+              <div style="padding:8px 12px; background:var(--info-bg); border-radius:6px;">
+                <div class="t-small" style="font-weight:600; color:var(--info);">✓ Statement Plant</div>
+              </div>
+              <div style="padding:8px 12px; background:var(--error-bg); border-radius:6px;">
+                <div class="t-small" style="font-weight:600; color:var(--error);">⚠ Toxic to Pets</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Popularity -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:16px;">Popularity</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Users Growing</div>
+                <div class="t-h3" style="color:var(--primary);">487</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Avg Rating</div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="color:#FFB800; font-size:18px;">★★★★★</span>
+                  <span class="t-body">4.8 / 5.0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Related Plants -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:16px;">Similar Plants</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <a href="#" class="nav-link" style="padding:8px 0;">Philodendron Brasil</a>
+              <a href="#" class="nav-link" style="padding:8px 0;">Pothos</a>
+              <a href="#" class="nav-link" style="padding:8px 0;">Fiddle Leaf Fig</a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/include.js"></script>
+<script src="../../assets/js/script.js"></script>
+</body>
+</html>

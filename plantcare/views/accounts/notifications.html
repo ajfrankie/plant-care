@@ -1,0 +1,234 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Notifications{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="notifications" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% include "partials/app_header.html" with title="Notifications" subtitle="Stay updated with your plant care reminders 🔔" %}
+
+    <div style="padding:28px 32px; max-width:900px;">
+
+      <!-- Action Bar -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-sm btn-primary" onclick="markAllAsRead()">Mark All as Read</button>
+          <select class="select" style="height:36px; width:140px;">
+            <option>All Notifications</option>
+            <option>Unread Only</option>
+            <option>Care Reminders</option>
+            <option>Health Alerts</option>
+            <option>System Updates</option>
+          </select>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="clearAll()">Clear All</button>
+      </div>
+
+      <!-- Today's Notifications -->
+      <div style="margin-bottom:32px;">
+        <h3 class="t-h4" style="margin-bottom:16px; color:var(--text-muted);">Today</h3>
+        
+        <!-- Notification Card 1 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--info);">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--info-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">Snake Plant needs watering</div>
+              <span class="t-small text-muted">2 hours ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">Your Snake Plant in the Bedroom is due for watering today. Make sure the soil is completely dry before watering.</div>
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'plant_view' %}" class="btn btn-secondary btn-sm">View Plant</a>
+              <button class="btn btn-secondary btn-sm">Mark Complete</button>
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Card 2 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--warning);">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--warning-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#A86712" stroke-width="1.6"/><path d="M12 8v4m0 4h.01" stroke="#A86712" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">Peace Lily - Care overdue</div>
+              <span class="t-small text-muted">5 hours ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">Watering for your Peace Lily in the Balcony is 2 days overdue. Check the plant's health status.</div>
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'plant_view' %}" class="btn btn-secondary btn-sm">View Plant</a>
+              <button class="btn btn-secondary btn-sm">Mark Complete</button>
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Card 3 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--success); opacity:0.7;">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--success-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">Care task completed</div>
+              <span class="t-small text-muted">8 hours ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">Great job! You completed watering for Monstera Deliciosa. Next watering scheduled in 7 days.</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yesterday's Notifications -->
+      <div style="margin-bottom:32px;">
+        <h3 class="t-h4" style="margin-bottom:16px; color:var(--text-muted);">Yesterday</h3>
+        
+        <!-- Notification Card 4 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--info); opacity:0.7;">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--info-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#2563A6" stroke-width="1.6"/><path d="M3 9h18" stroke="#2563A6" stroke-width="1.6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">Upcoming care reminder</div>
+              <span class="t-small text-muted">1 day ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">Don't forget to fertilize your Pothos tomorrow. Use a balanced liquid fertilizer diluted to half strength.</div>
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'plant_view' %}" class="btn btn-secondary btn-sm">View Plant</a>
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Card 5 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--success); opacity:0.7;">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--success-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#287A4B" stroke-width="1.6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">New plant added</div>
+              <span class="t-small text-muted">1 day ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">You successfully added Rubber Plant to your collection. Set up care reminders to keep it healthy.</div>
+            <div style="display:flex; gap:8px;">
+              <a href="{% url 'plant_view' %}" class="btn btn-secondary btn-sm">View Plant</a>
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Earlier This Week -->
+      <div style="margin-bottom:32px;">
+        <h3 class="t-h4" style="margin-bottom:16px; color:var(--text-muted);">Earlier This Week</h3>
+        
+        <!-- Notification Card 6 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--info); opacity:0.6;">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--info-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="#2563A6" stroke-width="1.6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">Plant health update</div>
+              <span class="t-small text-muted">3 days ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">Spider Plant's health status changed to Healthy. Great care work!</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Card 7 -->
+        <div class="card" style="margin-bottom:12px; padding:18px 20px; display:flex; gap:16px; align-items:flex-start; border-left:3px solid var(--secondary); opacity:0.6;">
+          <div style="width:44px; height:44px; border-radius:10px; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; flex:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M19 12a7 7 0 0 0-.1-1.1l2-1.5-2-3.4-2.3.9a7 7 0 0 0-1.9-1.1L14.3 3H9.7l-.4 2.8a7 7 0 0 0-1.9 1.1l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .7.1 1.1l-2 1.5 2 3.4 2.3-.9c.6.5 1.2.8 1.9 1.1l.4 2.8h4.6l.4-2.8c.7-.3 1.3-.6 1.9-1.1l2.3.9 2-3.4-2-1.5c.1-.4.1-.7.1-1.1Z" stroke="currentColor" stroke-width="1.4"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+              <div class="t-label">System update</div>
+              <span class="t-small text-muted">5 days ago</span>
+            </div>
+            <div class="t-body text-secondary" style="margin-bottom:10px;">New feature: You can now set custom care schedules for each plant!</div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-icon" style="width:32px; height:32px;" onclick="deleteNotification(this)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State (hidden by default) -->
+      <div id="emptyState" style="display:none; text-align:center; padding:60px 20px;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="margin:0 auto 16px; opacity:0.3;"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" stroke-width="1.6"/></svg>
+        <div class="t-h4" style="margin-bottom:8px; color:var(--text-muted);">No notifications</div>
+        <div class="t-body text-secondary">You're all caught up! Check back later for updates.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function markAllAsRead() {
+  const notifications = document.querySelectorAll('.card[style*="border-left"]');
+  notifications.forEach(notif => {
+    notif.style.opacity = '0.6';
+  });
+  alert('All notifications marked as read!');
+}
+
+function clearAll() {
+  if (confirm('Are you sure you want to clear all notifications?')) {
+    const notifications = document.querySelectorAll('.card[style*="border-left"]');
+    notifications.forEach(notif => {
+      notif.remove();
+    });
+    document.getElementById('emptyState').style.display = 'block';
+  }
+}
+
+function deleteNotification(btn) {
+  const notification = btn.closest('.card');
+  notification.style.transition = 'opacity 0.3s, transform 0.3s';
+  notification.style.opacity = '0';
+  notification.style.transform = 'translateX(20px)';
+  setTimeout(() => {
+    notification.remove();
+    
+    // Check if there are any notifications left
+    const remaining = document.querySelectorAll('.card[style*="border-left"]');
+    if (remaining.length === 0) {
+      document.getElementById('emptyState').style.display = 'block';
+    }
+  }, 300);
+}
+</script>
+{% endblock %}

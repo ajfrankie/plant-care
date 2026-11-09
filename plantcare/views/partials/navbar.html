@@ -1,0 +1,18 @@
+<header style="position:sticky; top:0; z-index:20; background:rgba(248,248,242,0.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--border);">
+  <div class="container" style="display:flex; align-items:center; justify-content:space-between; height:76px;">
+    <a href="{% url 'home' %}" style="display:flex; align-items:center; gap:10px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#4F8A52"/><path d="M4 20c4-2 9-7 11-13" stroke="#EEF4EB" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <span style="font-size:19px; font-weight:700; color:var(--primary);">Plant Care</span>
+    </a>
+    <nav style="display:flex; align-items:center; gap:36px;" aria-label="Primary">
+      <a class="nav-link{% if current == 'home' %} active{% endif %}" data-nav="home" href="{% url 'home' %}">Home</a>
+      <a class="nav-link{% if current == 'library' %} active{% endif %}" data-nav="library" href="{% url 'explore' %}">Plant Library</a>
+      <a class="nav-link{% if current == 'guides' %} active{% endif %}" data-nav="guides" href="{% url 'care_guides' %}">Plant Care Guides</a>
+      <a class="nav-link{% if current == 'about' %} active{% endif %}" data-nav="about" href="{% url 'about' %}">About</a>
+    </nav>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Create Account</a>
+    </div>
+  </div>
+</header>

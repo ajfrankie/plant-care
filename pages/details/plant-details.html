@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — Monstera Deliciosa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  <div data-include="../../nav/sidebar.html" data-current="my-plants"></div>
+
+  <div class="main-area">
+    <!-- This page's header is a "back" nav bar, not the standard title/search
+         app-header, so it stays inline rather than using nav/app-header.html -->
+    <div class="app-header">
+      <a href="dashboard.html" class="nav-link" style="display:flex; align-items:center; gap:8px; font-weight:600;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to My Plants
+      </a>
+      <div></div>
+      <div class="avatar">AF</div>
+    </div>
+
+    <div style="padding:28px 32px; max-width:1040px;">
+
+      <div class="two-col" style="display:flex; gap:28px; align-items:flex-start;">
+
+        <!-- Photo -->
+        <div style="flex:1 1 360px;">
+          <div class="card-shadow" style="border-radius:16px; overflow:hidden; aspect-ratio:1/1; background:linear-gradient(155deg,#4F8A52,#214E34); display:flex; align-items:center; justify-content:center;">
+            <svg width="110" height="110" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#EEF4EB" stroke-width="1.3"/></svg>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <div style="width:56px; height:56px; border-radius:8px; background:var(--pale-sage); border:1px solid var(--border);"></div>
+            <div style="width:56px; height:56px; border-radius:8px; background:var(--pale-sage); border:1px solid var(--border);"></div>
+            <div style="width:56px; height:56px; border-radius:8px; background:var(--pale-sage); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-muted);">+2</div>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div style="flex:1 1 480px;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+            <div>
+              <h1 class="t-h1">Monstera Deliciosa</h1>
+              <p class="t-body text-secondary" style="font-style:italic; margin-top:2px;">Monstera deliciosa</p>
+            </div>
+            <span class="badge badge-neutral">Indoor · Tropical</span>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;">
+            <span class="badge badge-success" data-water-status><span class="badge-dot"></span>Healthy</span>
+            <span class="badge badge-info"><span class="badge-dot"></span>Living Room</span>
+          </div>
+
+          <div class="card" style="margin-top:20px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px;">
+            <div>
+              <div class="t-small text-muted">Last Watered</div>
+              <div class="t-h4" data-last-watered style="margin-top:4px;">2 days ago</div>
+            </div>
+            <div>
+              <div class="t-small text-muted">Next Watering</div>
+              <div class="t-h4" data-next-watering style="margin-top:4px; color:var(--info);">In 1 day</div>
+            </div>
+            <div>
+              <div class="t-small text-muted">Watering Requirements</div>
+              <div class="t-body" style="margin-top:4px;">Weekly, when top 2" of soil is dry</div>
+            </div>
+            <div>
+              <div class="t-small text-muted">Light Requirements</div>
+              <div class="t-body" style="margin-top:4px;">Bright, indirect light</div>
+            </div>
+            <div>
+              <div class="t-small text-muted">Soil</div>
+              <div class="t-body" style="margin-top:4px;">Well-draining, peat-based mix</div>
+            </div>
+            <div>
+              <div class="t-small text-muted">Humidity</div>
+              <div class="t-body" style="margin-top:4px;">Medium to high (50%+)</div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:20px;">
+            <button class="btn btn-primary" data-mark-watered>Mark as Watered</button>
+            <button class="btn btn-secondary">Edit Plant</button>
+            <button class="btn btn-secondary">Update Health</button>
+            <button class="btn btn-secondary">Add Care Note</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Care history -->
+      <div style="margin-top:40px;" id="care-history">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <h2 class="t-h3">Care History</h2>
+          <a href="care-history.html" class="nav-link" style="color:var(--primary); font-weight:600;">View Full Care History &rarr;</a>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <div style="display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border);">
+            <div style="width:10px; height:10px; border-radius:50%; background:var(--info); margin-top:5px; flex:none;"></div>
+            <div style="flex:1;"><div class="t-body" style="font-weight:600;">Watered</div><div class="t-small text-muted">2 days ago</div></div>
+          </div>
+          <div style="display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border);">
+            <div style="width:10px; height:10px; border-radius:50%; background:var(--success); margin-top:5px; flex:none;"></div>
+            <div style="flex:1;"><div class="t-body" style="font-weight:600;">Health updated — Healthy</div><div class="t-small text-muted">5 days ago</div></div>
+          </div>
+          <div style="display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border);">
+            <div style="width:10px; height:10px; border-radius:50%; background:var(--secondary); margin-top:5px; flex:none;"></div>
+            <div style="flex:1;"><div class="t-body" style="font-weight:600;">Fertilized — balanced liquid feed</div><div class="t-small text-muted">12 days ago</div></div>
+          </div>
+          <div style="display:flex; gap:14px; padding:14px 0;">
+            <div style="width:10px; height:10px; border-radius:50%; background:var(--info); margin-top:5px; flex:none;"></div>
+            <div style="flex:1;"><div class="t-body" style="font-weight:600;">Added to collection</div><div class="t-small text-muted">6 weeks ago</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div style="margin-top:32px; padding-bottom:48px;">
+        <h2 class="t-h3">Notes</h2>
+        <div class="card" style="margin-top:14px;">
+          <p class="t-body text-secondary" style="line-height:1.7;">New leaf unfurling near the east-facing window — rotating the pot a quarter turn weekly to even out growth. Keep an eye on the lower leaves for yellowing once the weather turns humid.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="..\/..\/assets/js/include.js"></script>
+<script src="..\/..\/assets/js/script.js"></script>
+</body>
+</html>

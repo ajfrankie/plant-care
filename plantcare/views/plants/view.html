@@ -1,0 +1,197 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — View Plant Details{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="my-plants" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% include "partials/app_header.html" with title="Plant Details" subtitle="Monstera Deliciosa 🌿" %}
+
+    <div style="padding:28px 32px;">
+
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'my_plants' %}" class="nav-link" style="font-size:14px;">&larr; Back to My Plants</a>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+        
+        <!-- Left Column - Main Info -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Plant Photo & Basic Info -->
+          <div class="card">
+            <div style="display:flex; gap:24px; align-items:flex-start;">
+              <div style="width:160px; height:160px; border-radius:12px; background:#4F8A52; display:flex; align-items:center; justify-content:center; flex:none;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg>
+              </div>
+              <div style="flex:1;">
+                <h2 class="t-h2" style="margin-bottom:4px;">Monstera Deliciosa</h2>
+                <div class="t-body text-secondary" style="font-style:italic; margin-bottom:12px;">Monstera deliciosa</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+                  <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+                  <span class="badge badge-info"><span class="badge-dot"></span>Water Tomorrow</span>
+                </div>
+                <div style="display:flex; gap:12px;">
+                  <a href="{% url 'plant_edit' %}" class="btn btn-primary btn-sm">Edit Plant</a>
+                  <button class="btn btn-secondary btn-sm">Water Now</button>
+                  <button class="btn btn-secondary btn-sm">Log Care Activity</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Care Requirements -->
+          <div class="card">
+            <h3 class="t-h3" style="margin-bottom:20px;">Care Requirements</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">💧 Watering</div>
+                <div class="t-body">Weekly</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">☀️ Light</div>
+                <div class="t-body">Bright Indirect</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">🌡️ Temperature</div>
+                <div class="t-body">18-24°C</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">💨 Humidity</div>
+                <div class="t-body">Medium (40-60%)</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">🌱 Fertilizing</div>
+                <div class="t-body">Monthly</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">📍 Location</div>
+                <div class="t-body">Living Room</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Care History -->
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 class="t-h3">Recent Care History</h3>
+              <a href="{% url 'care_history' %}" class="nav-link" style="font-size:14px;">View All &rarr;</a>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0;">
+              <div style="display:flex; align-items:center; gap:16px; padding:12px 0; border-bottom:1px solid var(--border);">
+                <div style="width:36px; height:36px; border-radius:8px; background:var(--info-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.6"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="t-label">Watered</div>
+                  <div class="t-small text-muted">3 days ago · Nov 5, 2026</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; padding:12px 0; border-bottom:1px solid var(--border);">
+                <div style="width:36px; height:36px; border-radius:8px; background:var(--success-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2c5.5 0 10 4.5 10 10s-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2Z" stroke="#287A4B" stroke-width="1.6"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="t-label">Fertilized</div>
+                  <div class="t-small text-muted">10 days ago · Oct 29, 2026</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; padding:12px 0; border-bottom:1px solid var(--border);">
+                <div style="width:36px; height:36px; border-radius:8px; background:var(--pale-sage); display:flex; align-items:center; justify-content:center; flex:none;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15l-3-3m6 0l-3 3m0-6v6" stroke="#214E34" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="t-label">Misted leaves</div>
+                  <div class="t-small text-muted">14 days ago · Oct 25, 2026</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; padding:12px 0;">
+                <div style="width:36px; height:36px; border-radius:8px; background:var(--info-bg); display:flex; align-items:center; justify-content:center; flex:none;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.6"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="t-label">Watered</div>
+                  <div class="t-small text-muted">10 days ago · Oct 29, 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="card">
+            <h3 class="t-h3" style="margin-bottom:12px;">Notes</h3>
+            <div class="t-body text-secondary">This plant is thriving in indirect sunlight near the window. Recently noticed new leaf growth.</div>
+          </div>
+
+        </div>
+
+        <!-- Right Column - Quick Info -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Quick Stats -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:16px;">Quick Stats</h3>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Date Acquired</div>
+                <div class="t-body">Jan 15, 2024</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Age</div>
+                <div class="t-body">1 year, 10 months</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Times Watered</div>
+                <div class="t-body">86 times</div>
+              </div>
+              <div>
+                <div class="t-small text-muted" style="margin-bottom:4px;">Last Care Activity</div>
+                <div class="t-body">3 days ago</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming Care -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:16px;">Upcoming Care</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="padding:10px 12px; background:var(--info-bg); border-radius:8px; border-left:3px solid var(--info);">
+                <div class="t-label">Water</div>
+                <div class="t-small text-muted">Tomorrow</div>
+              </div>
+              <div style="padding:10px 12px; background:var(--bg-secondary); border-radius:8px; border-left:3px solid var(--border);">
+                <div class="t-label">Fertilize</div>
+                <div class="t-small text-muted">In 20 days</div>
+              </div>
+              <div style="padding:10px 12px; background:var(--bg-secondary); border-radius:8px; border-left:3px solid var(--border);">
+                <div class="t-label">Check for pests</div>
+                <div class="t-small text-muted">In 2 weeks</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Health Tips -->
+          <div class="card" style="background:var(--pale-sage); border:none;">
+            <h3 class="t-h4" style="margin-bottom:12px;">💡 Care Tips</h3>
+            <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+              <li class="t-small">Wipe leaves with damp cloth monthly</li>
+              <li class="t-small">Rotate plant weekly for even growth</li>
+              <li class="t-small">Watch for yellowing leaves (overwatering)</li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

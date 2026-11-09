@@ -1,0 +1,206 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Dashboard{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="dashboard" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% include "partials/app_header.html" with title="My Dashboard" subtitle="Good afternoon, Alex 🌿" search="Search your plants..." %}
+
+    <div style="padding:28px 32px;">
+
+      <!-- Summary cards -->
+      <div class="grid-4" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px;">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#214E34" stroke-width="1.6"/></svg></div>
+          <div class="value">24</div>
+          <div class="t-small text-muted">Total Plants</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="#A86712" stroke-width="1.6"/></svg></div>
+          <div class="value">5</div>
+          <div class="t-small text-muted">Need Watering</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+          <div class="value">19</div>
+          <div class="t-small text-muted">Healthy Plants</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--info-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#2563A6" stroke-width="1.6"/><path d="M3 9h18" stroke="#2563A6" stroke-width="1.6"/></svg></div>
+          <div class="value">3</div>
+          <div class="t-small text-muted">Care Tasks Today</div>
+        </div>
+      </div>
+
+      <!-- My plants -->
+      <div id="my-plants" style="margin-top:36px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <h2 class="t-h2">My Plants</h2>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="search-box" style="width:220px; height:38px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <input type="text" placeholder="Filter plants...">
+            </div>
+            <select class="select" style="width:150px; height:38px;">
+              <option>Sort: Name</option>
+              <option>Sort: Date added</option>
+              <option>Sort: Health</option>
+              <option>Sort: Next watering</option>
+            </select>
+            <a href="{% url 'plant_add' %}" class="btn btn-primary btn-sm">+ Add New Plant</a>
+          </div>
+        </div>
+
+        <div class="grid-3" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin-top:20px;">
+
+          <div class="plant-card">
+            <div class="plant-photo" style="background:#4F8A52;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+            <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="t-label">Monstera Deliciosa</div>
+                  <div class="t-small text-secondary" style="font-style:italic;">Monstera deliciosa</div>
+                </div>
+                <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+              </div>
+              <div class="t-small text-muted">Living Room</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+                <span class="badge badge-info"><span class="badge-dot"></span>Water Tomorrow</span>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:6px;">
+                <a href="{% url 'plant_details' %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+                <button class="btn btn-secondary btn-sm" style="flex:1;">Edit</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="plant-card">
+            <div class="plant-photo" style="background:#214E34;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+            <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="t-label">Snake Plant</div>
+                  <div class="t-small text-secondary" style="font-style:italic;">Dracaena trifasciata</div>
+                </div>
+                <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+              </div>
+              <div class="t-small text-muted">Bedroom</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+                <span class="badge badge-warning"><span class="badge-dot"></span>Water Today</span>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:6px;">
+                <a href="{% url 'plant_details' %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+                <button class="btn btn-secondary btn-sm" style="flex:1;">Edit</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="plant-card">
+            <div class="plant-photo" style="background:#5C9A5F;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+            <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="t-label">Peace Lily</div>
+                  <div class="t-small text-secondary" style="font-style:italic;">Spathiphyllum wallisii</div>
+                </div>
+                <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+              </div>
+              <div class="t-small text-muted">Balcony</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <span class="badge badge-warning"><span class="badge-dot"></span>Needs Attention</span>
+                <span class="badge badge-error"><span class="badge-dot"></span>Overdue</span>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:6px;">
+                <a href="{% url 'plant_details' %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+                <button class="btn btn-secondary btn-sm" style="flex:1;">Edit</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="plant-card">
+            <div class="plant-photo" style="background:#3C7A48;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+            <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div class="t-label">Aloe Vera</div>
+                  <div class="t-small text-secondary" style="font-style:italic;">Aloe barbadensis</div>
+                </div>
+                <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+              </div>
+              <div class="t-small text-muted">Garden</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+                <span class="badge badge-info"><span class="badge-dot"></span>Water Tomorrow</span>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:6px;">
+                <a href="{% url 'plant_details' %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+                <button class="btn btn-secondary btn-sm" style="flex:1;">Edit</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div style="text-align:center; margin-top:18px;">
+          <a href="{% url 'my_plants' %}" class="nav-link" style="font-weight:600; color:var(--primary);">View All Plants (24) &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Bottom two-column -->
+      <div class="two-col" style="display:flex; gap:24px; margin-top:36px; align-items:flex-start;">
+
+        <div class="card" style="flex:1 1 50%;">
+          <h3 class="t-h4">Today's Plant Care</h3>
+          <div style="display:flex; flex-direction:column; margin-top:12px;">
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div style="width:34px; height:34px; border-radius:8px; background:#214E34; flex:none;"></div>
+              <div style="flex:1;"><div class="t-label">Snake Plant</div><div class="t-small text-muted">Water · Bedroom</div></div>
+              <span class="badge badge-warning"><span class="badge-dot"></span>Water Today</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div style="width:34px; height:34px; border-radius:8px; background:#5C9A5F; flex:none;"></div>
+              <div style="flex:1;"><div class="t-label">Peace Lily</div><div class="t-small text-muted">Fertilize · Balcony</div></div>
+              <span class="badge badge-error"><span class="badge-dot"></span>Overdue</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0;">
+              <div style="width:34px; height:34px; border-radius:8px; background:#2F6B3C; flex:none;"></div>
+              <div style="flex:1;"><div class="t-label">Pothos</div><div class="t-small text-muted">Mist leaves · Kitchen</div></div>
+              <span class="badge badge-info"><span class="badge-dot"></span>Scheduled</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="flex:1 1 50%;">
+          <h3 class="t-h4">Upcoming Watering Reminders</h3>
+          <div style="display:flex; flex-direction:column; margin-top:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div class="t-body">Monstera Deliciosa</div>
+              <div class="t-small text-muted">Tomorrow</div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div class="t-body">Aloe Vera</div>
+              <div class="t-small text-muted">Tomorrow</div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div class="t-body">Spider Plant</div>
+              <div class="t-small text-muted">In 3 days</div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0;">
+              <div class="t-body">Pothos</div>
+              <div class="t-small text-muted">In 4 days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

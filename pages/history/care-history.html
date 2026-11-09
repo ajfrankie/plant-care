@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — Care History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  <div data-include="../../nav/sidebar.html" data-current="history"></div>
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    <div data-include="../../nav/app-header.html"
+         data-title="Care History"
+         data-subtitle="Complete timeline of all plant care activities"
+         data-search="Search care history..."></div>
+
+    <div style="padding:28px 32px;">
+
+      <!-- Activity summary stats -->
+      <div class="grid-4" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px;">
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--info-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.6"/></svg></div>
+            <div class="value">47</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Waterings This Month</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#287A4B" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="#287A4B" stroke-width="1.6"/></svg></div>
+            <div class="value">12</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Fertilizing Events</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="#214E34" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div class="value">8</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Maintenance Tasks</div>
+        </div>
+        <div class="stat-card">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="#A86712" stroke-width="1.6"/></svg></div>
+            <div class="value">15</div>
+          </div>
+          <div class="t-small text-muted" style="margin-top:4px;">Health Updates</div>
+        </div>
+      </div>
+
+      <!-- Activity chart -->
+      <div class="card" style="margin-top:24px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+          <h3 class="t-h4">Activity Overview</h3>
+          <div style="display:flex; gap:10px;">
+            <select class="select" style="width:140px; height:38px;">
+              <option>Last 7 Days</option>
+              <option>Last 30 Days</option>
+              <option>Last 90 Days</option>
+              <option>This Year</option>
+            </select>
+            <button class="btn btn-secondary btn-sm">Export History</button>
+          </div>
+        </div>
+        <div style="display:flex; align-items:flex-end; gap:8px; height:180px; padding:20px 0;">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:70%;"></div>
+            </div>
+            <div class="t-small text-muted">Mon</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:45%;"></div>
+            </div>
+            <div class="t-small text-muted">Tue</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:85%;"></div>
+            </div>
+            <div class="t-small text-muted">Wed</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:55%;"></div>
+            </div>
+            <div class="t-small text-muted">Thu</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:40%;"></div>
+            </div>
+            <div class="t-small text-muted">Fri</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:95%;"></div>
+            </div>
+            <div class="t-small text-muted">Sat</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
+              <div style="width:100%; background:var(--primary); border-radius:4px 4px 0 0; height:60%;"></div>
+            </div>
+            <div class="t-small text-muted">Today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter controls -->
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:32px;">
+        <h3 class="t-h3">Activity Timeline</h3>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <select class="select" style="width:160px; height:38px;">
+            <option>All Activities</option>
+            <option>Watering</option>
+            <option>Fertilizing</option>
+            <option>Pruning/Maintenance</option>
+            <option>Health Updates</option>
+            <option>Notes</option>
+          </select>
+          <select class="select" style="width:140px; height:38px;">
+            <option>All Plants</option>
+            <option>Monstera Deliciosa</option>
+            <option>Snake Plant</option>
+            <option>Peace Lily</option>
+            <option>Pothos</option>
+          </select>
+          <select class="select" style="width:140px; height:38px;">
+            <option>All Locations</option>
+            <option>Living Room</option>
+            <option>Bedroom</option>
+            <option>Kitchen</option>
+            <option>Office</option>
+            <option>Garden</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div style="margin-top:20px;">
+
+        <!-- Today -->
+        <div style="margin-bottom:24px;">
+          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
+            <div class="t-label">Today — Sunday, Nov 8, 2026</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0;">
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#214E34; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Snake Plant</div>
+                    <div class="t-small text-muted">Dracaena trifasciata • Bedroom</div>
+                  </div>
+                  <div class="t-small text-muted">2 hours ago</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Watered</span>
+                </div>
+                <div class="t-small text-secondary">Soil was dry to touch. Used 200ml filtered water at room temperature.</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--success); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--success); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#4F8A52; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Monstera Deliciosa</div>
+                    <div class="t-small text-muted">Monstera deliciosa • Living Room</div>
+                  </div>
+                  <div class="t-small text-muted">5 hours ago</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="var(--success)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Health Updated</span>
+                  <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+                </div>
+                <div class="t-small text-secondary">New aerial root forming. Leaf fenestration improving with better light exposure.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Yesterday -->
+        <div style="margin-bottom:24px;">
+          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
+            <div class="t-label">Yesterday — Saturday, Nov 7</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0;">
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#5C9A5F; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Peace Lily</div>
+                    <div class="t-small text-muted">Spathiphyllum wallisii • Balcony</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 7, 9:30 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Watered</span>
+                </div>
+                <div class="t-small text-secondary">Regular watering. Plant is drooping slightly — monitoring for recovery.</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--secondary); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--secondary); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#3C7A48; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Aloe Vera</div>
+                    <div class="t-small text-muted">Aloe barbadensis • Garden</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 7, 7:00 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--secondary)" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="var(--secondary)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Fertilized</span>
+                </div>
+                <div class="t-small text-secondary">Applied diluted succulent fertilizer (half strength). Next feeding in 4 weeks.</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#2F6B3C; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Pothos</div>
+                    <div class="t-small text-muted">Epipremnum aureum • Kitchen</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 7, 6:15 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Watered</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Nov 5 -->
+        <div style="margin-bottom:24px;">
+          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
+            <div class="t-label">Nov 5, 2026 — Thursday</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0;">
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--primary); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--primary); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Fiddle Leaf Fig</div>
+                    <div class="t-small text-muted">Ficus lyrata • Living Room</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 5, 2:45 PM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                  <span class="t-body" style="font-weight:600;">Pruned</span>
+                </div>
+                <div class="t-small text-secondary">Removed 2 lower leaves with brown spots. Cleaned remaining leaves with damp cloth. Improved air circulation around plant.</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#6AA66B; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Spider Plant</div>
+                    <div class="t-small text-muted">Chlorophytum comosum • Office</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 5, 10:00 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Watered</span>
+                </div>
+                <div class="t-small text-secondary">Bottom watered for 15 minutes. Plant absorbed approximately 300ml.</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--secondary); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--secondary); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#4F8A52; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Monstera Deliciosa</div>
+                    <div class="t-small text-muted">Monstera deliciosa • Living Room</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 5, 9:30 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--secondary)" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="var(--secondary)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Fertilized</span>
+                </div>
+                <div class="t-small text-secondary">Applied balanced liquid fertilizer (10-10-10) at quarter strength. Watered before and after application.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Nov 3 -->
+        <div style="margin-bottom:24px;">
+          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
+            <div class="t-label">Nov 3, 2026 — Tuesday</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:0;">
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#8CA88D; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Rubber Plant</div>
+                    <div class="t-small text-muted">Ficus elastica • Office</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 3, 11:15 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Watered</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--primary); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--primary); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#8CA88D; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Rubber Plant</div>
+                    <div class="t-small text-muted">Ficus elastica • Office</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 3, 11:00 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8" stroke="var(--primary)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Leaf Care</span>
+                </div>
+                <div class="t-small text-secondary">Wiped leaves with damp microfiber cloth to remove dust. Improves photosynthesis and appearance.</div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--warning); margin-left:12px; position:relative;">
+              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--warning); border:2px solid var(--bg);"></div>
+              <div style="width:52px; height:52px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
+              <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div>
+                    <div class="t-label">Boston Fern</div>
+                    <div class="t-small text-muted">Nephrolepis exaltata • Bathroom</div>
+                  </div>
+                  <div class="t-small text-muted">Nov 3, 8:30 AM</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="var(--warning)" stroke-width="1.6"/></svg>
+                  <span class="t-body" style="font-weight:600;">Health Updated</span>
+                  <span class="badge badge-warning"><span class="badge-dot"></span>Needs Attention</span>
+                </div>
+                <div class="t-small text-secondary">Fronds showing dryness at tips. Increased misting schedule to twice daily.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Load more -->
+        <div style="text-align:center; padding:20px 0;">
+          <button class="btn btn-secondary">Load Earlier History</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/include.js"></script>
+<script src="../../assets/js/script.js"></script>
+</body>
+</html>

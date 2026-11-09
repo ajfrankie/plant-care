@@ -1,0 +1,43 @@
+<header style="position:sticky; top:0; z-index:20; background:rgba(248,248,242,0.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--border);">
+  <div class="container" style="display:flex; align-items:center; justify-content:space-between; height:76px;">
+    <a href="/frontend/index.html" style="display:flex; align-items:center; gap:10px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#4F8A52"/><path d="M4 20c4-2 9-7 11-13" stroke="#EEF4EB" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <span style="font-size:19px; font-weight:700; color:var(--primary);">Plant Care</span>
+    </a>
+    <nav style="display:flex; align-items:center; gap:36px;" aria-label="Primary">
+      <a class="nav-link" data-nav="home" href="/frontend/index.html">Home</a>
+      <a class="nav-link" data-nav="library" href="/frontend/plant-lib.html">Plant Library</a>
+      <a class="nav-link" data-nav="guides" href="/frontend/care-guides.html">Plant Care Guides</a>
+      <a class="nav-link" data-nav="about" href="/frontend/about.html">About</a>
+    </nav>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <a href="/pages/auth/login.html" class="btn btn-secondary btn-sm">Sign In</a>
+      <a href="/pages/auth/register.html" class="btn btn-primary btn-sm">Create Account</a>
+    </div>
+  </div>
+</header>
+
+<script>
+// Fix navbar links to work from any location
+(function() {
+  var currentPath = window.location.pathname;
+  var links = document.querySelectorAll('header a[href^="/"]');
+  
+  // Determine the base path (how many levels to go up)
+  var pathParts = currentPath.split('/').filter(function(p) { return p; });
+  var depth = pathParts.length - 1; // -1 for the filename
+  
+  // If we're in the root or frontend folder, adjust accordingly
+  if (currentPath.includes('/frontend/')) {
+    // We're in frontend folder, so links starting with /frontend/ are relative
+    links.forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (href.startsWith('/frontend/')) {
+        link.setAttribute('href', href.replace('/frontend/', ''));
+      } else if (href.startsWith('/pages/')) {
+        link.setAttribute('href', href.replace('/pages/', '../pages/'));
+      }
+    });
+  }
+})();
+</script>

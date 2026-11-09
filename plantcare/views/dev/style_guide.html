@@ -1,0 +1,189 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Design Foundations{% endblock %}
+
+{% block head_extra %}
+<style>
+  .swatch{border-radius:10px; height:72px; border:1px solid rgba(0,0,0,0.06); display:flex; align-items:flex-end; padding:8px;}
+  .swatch-label{font-size:12px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.25);}
+  .tok-row{display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid var(--border);}
+  .spacing-bar{background:var(--secondary); height:14px; border-radius:4px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- This page's header is the internal dev nav (links to every mockup page),
+     not the public marketing header, so it's kept inline rather than
+     pulled from nav/navbar.html -->
+<header style="position:sticky; top:0; z-index:20; background:rgba(248,248,242,0.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--border);">
+  <div class="container" style="display:flex; align-items:center; justify-content:space-between; height:76px;">
+    <a href="{% url 'home' %}" style="display:flex; align-items:center; gap:10px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#4F8A52"/></svg>
+      <span style="font-size:19px; font-weight:700; color:var(--primary);">Plant Care</span>
+    </a>
+    <nav style="display:flex; align-items:center; gap:28px;">
+      <a class="nav-link" href="{% url 'home' %}">Home</a>
+      <a class="nav-link" href="{% url 'login' %}">Login</a>
+      <a class="nav-link" href="{% url 'register' %}">Register</a>
+      <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+      <a class="nav-link" href="{% url 'plant_details' %}">Plant Details</a>
+      <a class="nav-link" href="{% url 'style_guide' %}" style="color:var(--primary); font-weight:700;">Foundations</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container section">
+  <span class="eyebrow">Design System</span>
+  <h1 class="t-display" style="margin-top:10px;">Foundations &amp; Design Tokens</h1>
+  <p class="t-body-lg text-secondary" style="margin-top:12px; max-width:640px;">The shared color, type, spacing and component rules every Plant Care screen is built from — Inter typography, forest-green &amp; sage-green brand palette, an 8pt spacing system.</p>
+</div>
+
+<!-- Colors -->
+<div class="container section" style="padding-top:0;">
+  <h2 class="t-h2">Primary Brand Colors</h2>
+  <div class="grid-3" style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:16px; margin-top:20px;">
+    <div><div class="swatch" style="background:#214E34;"><span class="swatch-label">#214E34</span></div><div class="t-label" style="margin-top:8px;">Primary / Forest Green</div><div class="t-small text-muted">Main buttons, nav, branding</div></div>
+    <div><div class="swatch" style="background:#193D29;"><span class="swatch-label">#193D29</span></div><div class="t-label" style="margin-top:8px;">Primary Hover</div><div class="t-small text-muted">Hover / active states</div></div>
+    <div><div class="swatch" style="background:#4F8A52;"><span class="swatch-label">#4F8A52</span></div><div class="t-label" style="margin-top:8px;">Secondary / Leaf Green</div><div class="t-small text-muted">Secondary actions, icons</div></div>
+    <div><div class="swatch" style="background:#DCE8D8;"><span class="swatch-label" style="color:#26332A; text-shadow:none;">#DCE8D8</span></div><div class="t-label" style="margin-top:8px;">Soft Sage</div><div class="t-small text-muted">Selected nav, soft panels</div></div>
+    <div><div class="swatch" style="background:#EEF4EB;"><span class="swatch-label" style="color:#26332A; text-shadow:none;">#EEF4EB</span></div><div class="t-label" style="margin-top:8px;">Pale Sage</div><div class="t-small text-muted">Subtle backgrounds</div></div>
+  </div>
+
+  <h2 class="t-h2" style="margin-top:48px;">Neutral Colors</h2>
+  <div style="display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:16px; margin-top:20px;">
+    <div><div class="swatch" style="background:#F8F8F2;"><span class="swatch-label" style="color:#26332A; text-shadow:none;">#F8F8F2</span></div><div class="t-small" style="margin-top:8px;">Page Background</div></div>
+    <div><div class="swatch" style="background:#FFFFFF;"><span class="swatch-label" style="color:#26332A; text-shadow:none;">#FFFFFF</span></div><div class="t-small" style="margin-top:8px;">Surface</div></div>
+    <div><div class="swatch" style="background:#E2E8DF;"><span class="swatch-label" style="color:#26332A; text-shadow:none;">#E2E8DF</span></div><div class="t-small" style="margin-top:8px;">Border</div></div>
+    <div><div class="swatch" style="background:#26332A;"><span class="swatch-label">#26332A</span></div><div class="t-small" style="margin-top:8px;">Text Primary</div></div>
+    <div><div class="swatch" style="background:#66736A;"><span class="swatch-label">#66736A</span></div><div class="t-small" style="margin-top:8px;">Text Secondary</div></div>
+    <div><div class="swatch" style="background:#89948B;"><span class="swatch-label">#89948B</span></div><div class="t-small" style="margin-top:8px;">Text Muted</div></div>
+    <div><div class="swatch" style="background:#B7C1B8;"><span class="swatch-label">#B7C1B8</span></div><div class="t-small" style="margin-top:8px;">Disabled</div></div>
+  </div>
+
+  <h2 class="t-h2" style="margin-top:48px;">Semantic Status Colors</h2>
+  <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin-top:20px;">
+    <div><div class="swatch" style="background:#287A4B;"><span class="swatch-label">#287A4B</span></div><div class="t-label" style="margin-top:8px;">Success</div></div>
+    <div><div class="swatch" style="background:#A86712;"><span class="swatch-label">#A86712</span></div><div class="t-label" style="margin-top:8px;">Warning</div></div>
+    <div><div class="swatch" style="background:#B42318;"><span class="swatch-label">#B42318</span></div><div class="t-label" style="margin-top:8px;">Error</div></div>
+    <div><div class="swatch" style="background:#2563A6;"><span class="swatch-label">#2563A6</span></div><div class="t-label" style="margin-top:8px;">Information</div></div>
+  </div>
+</div>
+
+<!-- Typography -->
+<div class="container section" style="background:#fff; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <h2 class="t-h2">Typography — Inter</h2>
+  <p class="t-body text-secondary" style="margin-top:8px;">One font family across the whole product.</p>
+  <div style="margin-top:24px;">
+    <div class="tok-row"><div class="t-display">Display</div><div class="t-small text-muted">40 / 700 / 48</div></div>
+    <div class="tok-row"><div class="t-h1">Heading 1</div><div class="t-small text-muted">32 / 700 / 40</div></div>
+    <div class="tok-row"><div class="t-h2">Heading 2</div><div class="t-small text-muted">24 / 700 / 32</div></div>
+    <div class="tok-row"><div class="t-h3">Heading 3</div><div class="t-small text-muted">20 / 600 / 28</div></div>
+    <div class="tok-row"><div class="t-h4">Heading 4</div><div class="t-small text-muted">16 / 600 / 24</div></div>
+    <div class="tok-row"><div class="t-body-lg">Body Large — the quick brown fox</div><div class="t-small text-muted">16 / 400 / 24</div></div>
+    <div class="tok-row"><div class="t-body">Body — the quick brown fox jumps</div><div class="t-small text-muted">14 / 400 / 22</div></div>
+    <div class="tok-row"><div class="t-label">Label — Email Address</div><div class="t-small text-muted">14 / 600 / 20</div></div>
+    <div class="tok-row"><div class="t-small">Small — Last watered 2 days ago</div><div class="t-small text-muted">12 / 500 / 16</div></div>
+    <div class="tok-row"><div class="t-button">Button Label</div><div class="t-small text-muted">14 / 600 / 20</div></div>
+  </div>
+</div>
+
+<!-- Spacing & radius -->
+<div class="container section">
+  <h2 class="t-h2">Spacing — 8pt System</h2>
+  <div style="display:flex; flex-direction:column; gap:14px; margin-top:20px; max-width:560px;">
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:4px;"></div><span class="t-small text-muted">4px — small icon gaps</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:8px;"></div><span class="t-small text-muted">8px — tight spacing</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:12px;"></div><span class="t-small text-muted">12px — compact component spacing</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:16px;"></div><span class="t-small text-muted">16px — standard internal spacing</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:24px;"></div><span class="t-small text-muted">24px — card padding, section gaps</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:32px;"></div><span class="t-small text-muted">32px — major section spacing</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:40px;"></div><span class="t-small text-muted">40px — large layout spacing</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:48px;"></div><span class="t-small text-muted">48px — page section separation</span></div>
+    <div style="display:flex; align-items:center; gap:16px;"><div class="spacing-bar" style="width:64px;"></div><span class="t-small text-muted">64px — hero / marketing spacing</span></div>
+  </div>
+
+  <h2 class="t-h2" style="margin-top:48px;">Radius &amp; Elevation</h2>
+  <div style="display:flex; gap:24px; margin-top:20px; flex-wrap:wrap;">
+    <div style="width:160px;"><div style="height:90px; background:var(--pale-sage); border-radius:12px; border:1px solid var(--border);"></div><div class="t-small text-muted" style="margin-top:8px;">Card radius — 12px</div></div>
+    <div style="width:160px;"><div style="height:90px; background:var(--pale-sage); border-radius:8px; border:1px solid var(--border);"></div><div class="t-small text-muted" style="margin-top:8px;">Input radius — 8px</div></div>
+    <div style="width:160px;"><div style="height:90px; background:var(--pale-sage); border-radius:8px; box-shadow:var(--shadow-sm);"></div><div class="t-small text-muted" style="margin-top:8px;">Shadow — sm (cards)</div></div>
+    <div style="width:160px;"><div style="height:90px; background:#fff; border-radius:12px; box-shadow:var(--shadow-md);"></div><div class="t-small text-muted" style="margin-top:8px;">Shadow — md (raised)</div></div>
+  </div>
+</div>
+
+<!-- Buttons -->
+<div class="container section" style="background:#fff; border-top:1px solid var(--border);">
+  <h2 class="t-h2">Buttons</h2>
+  <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:20px; margin-top:24px; align-items:start;">
+    <div><button class="btn btn-primary">Primary</button><div class="t-small text-muted" style="margin-top:8px;">Default</div></div>
+    <div><button class="btn btn-primary" style="background:var(--primary-hover);">Primary</button><div class="t-small text-muted" style="margin-top:8px;">Hover</div></div>
+    <div><button class="btn btn-primary" disabled>Primary</button><div class="t-small text-muted" style="margin-top:8px;">Disabled</div></div>
+    <div><button class="btn btn-primary" style="gap:10px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2.4" stroke-dasharray="40" stroke-dashoffset="12"/></svg>Loading</button><div class="t-small text-muted" style="margin-top:8px;">Loading</div></div>
+    <div><button class="btn btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><div class="t-small text-muted" style="margin-top:8px;">Icon Button</div></div>
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:20px; margin-top:28px; align-items:start;">
+    <div><button class="btn btn-secondary">Secondary</button><div class="t-small text-muted" style="margin-top:8px;">Default</div></div>
+    <div><button class="btn btn-tertiary">Tertiary</button><div class="t-small text-muted" style="margin-top:8px;">Default</div></div>
+    <div><button class="btn btn-destructive">Delete Plant</button><div class="t-small text-muted" style="margin-top:8px;">Destructive</div></div>
+  </div>
+</div>
+
+<!-- Inputs -->
+<div class="container section">
+  <h2 class="t-h2">Form Inputs</h2>
+  <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin-top:24px; max-width:900px;">
+    <div class="field"><label>Default</label><input class="input" placeholder="Plant nickname"></div>
+    <div class="field"><label>Focused</label><input class="input" style="border-color:var(--secondary); box-shadow:0 0 0 3px rgba(79,138,82,0.15);" placeholder="Plant nickname"></div>
+    <div class="field"><label>Error</label><input class="input error" value="monstera@"><span class="hint error">Enter a valid value</span></div>
+    <div class="field"><label>Disabled</label><input class="input" disabled placeholder="Not editable"></div>
+    <div class="field"><label>Success</label><input class="input" value="Living Room"><span class="hint success">Looks good</span></div>
+    <div class="field"><label>Password</label>
+      <div class="input-wrap"><input class="input" type="password" value="supersecret">
+        <button class="icon-btn" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Badges -->
+<div class="container section" style="background:#fff; border-top:1px solid var(--border);">
+  <h2 class="t-h2">Status Badges</h2>
+  <p class="t-body text-secondary" style="margin-top:8px;">Status is never color-only — every badge pairs a label with its color.</p>
+  <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:20px;">
+    <span class="badge badge-warning"><span class="badge-dot"></span>Water Today</span>
+    <span class="badge badge-info"><span class="badge-dot"></span>Water Tomorrow</span>
+    <span class="badge badge-error"><span class="badge-dot"></span>Overdue</span>
+    <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
+    <span class="badge badge-warning"><span class="badge-dot"></span>Needs Attention</span>
+    <span class="badge badge-info"><span class="badge-dot"></span>Recovering</span>
+  </div>
+  <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:12px;">
+    <span class="badge badge-success"><span class="badge-dot"></span>Active</span>
+    <span class="badge badge-warning"><span class="badge-dot"></span>Pending Verification</span>
+    <span class="badge badge-error"><span class="badge-dot"></span>Suspended</span>
+    <span class="badge badge-success"><span class="badge-dot"></span>Published</span>
+    <span class="badge badge-neutral"><span class="badge-dot"></span>Draft</span>
+    <span class="badge badge-neutral"><span class="badge-dot"></span>Archived</span>
+  </div>
+</div>
+
+<!-- Cards -->
+<div class="container section">
+  <h2 class="t-h2">Cards</h2>
+  <div style="display:flex; gap:24px; margin-top:24px; flex-wrap:wrap;">
+    <div class="plant-card" style="width:220px;">
+      <div class="plant-photo" style="background:#4F8A52;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+      <div style="padding:14px 16px;"><div class="t-label">Monstera Deliciosa</div><div class="t-small text-secondary" style="font-style:italic;">Monstera deliciosa</div><span class="badge badge-success" style="margin-top:8px;"><span class="badge-dot"></span>Healthy</span></div>
+    </div>
+    <div class="stat-card" style="width:220px;">
+      <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#214E34" stroke-width="1.6"/></svg></div>
+      <div class="value">24</div>
+      <div class="t-small text-muted">Total Plants</div>
+    </div>
+  </div>
+</div>
+
+<footer style="background:var(--primary); color:#CFE0CC; padding:28px 32px; text-align:center; font-size:13px;">
+  © 2026 Plant Care — Design Foundations
+</footer>
+{% endblock %}

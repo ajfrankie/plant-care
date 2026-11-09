@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Care — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  <div data-include="../../nav/sidebar.html" data-current="settings"></div>
+
+  <div class="main-area">
+    <!-- Header (shared) — no search box on this page -->
+    <div data-include="../../nav/app-header.html"
+         data-title="Settings"
+         data-subtitle="Manage your account and preferences"></div>
+
+    <div style="padding:28px 32px;">
+
+      <!-- Settings Tabs -->
+      <div style="border-bottom:2px solid var(--border); margin-bottom:28px;">
+        <div style="display:flex; gap:4px; overflow-x:auto;">
+          <button class="settings-tab active" data-tab="account">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.6"/></svg>
+            Account
+          </button>
+          <button class="settings-tab" data-tab="notifications">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" stroke-width="1.6"/></svg>
+            Notifications
+          </button>
+          <button class="settings-tab" data-tab="care">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="currentColor" stroke-width="1.6"/></svg>
+            Care Preferences
+          </button>
+          <button class="settings-tab" data-tab="security">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4Z" stroke="currentColor" stroke-width="1.6"/></svg>
+            Security
+          </button>
+          <button class="settings-tab" data-tab="privacy">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.6"/></svg>
+            Privacy
+          </button>
+          <button class="settings-tab" data-tab="integrations">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Integrations
+          </button>
+          <button class="settings-tab" data-tab="appearance">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Appearance
+          </button>
+          <button class="settings-tab" data-tab="about">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            About
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Content Wrapper -->
+      <div>
+
+      <!-- Account Settings Tab -->
+      <section class="tab-content active" data-content="account" style="margin-bottom:40px;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Account Settings</h2>
+
+        <div class="card">
+          <div style="display:flex; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border);">
+            <div class="avatar" style="width:72px; height:72px; font-size:24px;">AF</div>
+            <div style="flex:1;">
+              <div class="t-h4">Alex Fischer</div>
+              <div class="t-body text-secondary">alex.fischer@email.com</div>
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                <button class="btn btn-secondary btn-sm">Change Photo</button>
+                <button class="btn btn-secondary btn-sm">Remove Photo</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding-top:20px;">
+            <div class="field" style="margin-bottom:16px;">
+              <label for="full-name">Full Name</label>
+              <input type="text" id="full-name" class="input" value="Alex Fischer">
+            </div>
+
+            <div class="field" style="margin-bottom:16px;">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" class="input" value="alex.fischer@email.com">
+              <div class="hint">We'll send watering reminders and updates to this email.</div>
+            </div>
+
+            <div class="field" style="margin-bottom:16px;">
+              <label for="timezone">Timezone</label>
+              <select id="timezone" class="select">
+                <option>UTC -08:00 Pacific Time (US & Canada)</option>
+                <option>UTC -07:00 Mountain Time (US & Canada)</option>
+                <option>UTC -06:00 Central Time (US & Canada)</option>
+                <option>UTC -05:00 Eastern Time (US & Canada)</option>
+              </select>
+              <div class="hint">Used for scheduling reminders at the right time.</div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              <button class="btn btn-primary">Save Changes</button>
+              <button class="btn btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notification Settings Tab -->
+      <section class="tab-content" data-content="notifications" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Notification Preferences</h2>
+
+        <div class="card">
+          <div style="padding-bottom:16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
+            <div class="t-h4" style="margin-bottom:8px;">Email Notifications</div>
+            <div class="t-body text-secondary">Receive reminders and updates via email</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div class="checkbox-row">
+              <input type="checkbox" id="email-watering" checked>
+              <label for="email-watering">Watering reminders</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="email-fertilizing" checked>
+              <label for="email-fertilizing">Fertilizing reminders</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="email-health">
+              <label for="email-health">Plant health alerts</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="email-weekly">
+              <label for="email-weekly">Weekly care summary</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="email-tips" checked>
+              <label for="email-tips">Plant care tips and guides</label>
+            </div>
+          </div>
+
+          <div style="padding-top:16px; border-top:1px solid var(--border); margin-top:16px;">
+            <div class="t-h4" style="margin-bottom:8px;">Push Notifications</div>
+            <div class="t-body text-secondary">Receive notifications in your browser</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:14px; margin-top:14px;">
+            <div class="checkbox-row">
+              <input type="checkbox" id="push-watering" checked>
+              <label for="push-watering">Watering reminders</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="push-critical" checked>
+              <label for="push-critical">Critical care alerts</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="push-achievements">
+              <label for="push-achievements">Care milestones and achievements</label>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;">
+            <button class="btn btn-primary">Save Preferences</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Care Preferences Tab -->
+      <section class="tab-content" data-content="care" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Care Preferences</h2>
+
+        <div class="card">
+          <div class="field" style="margin-bottom:16px;">
+            <label for="reminder-time">Default Reminder Time</label>
+            <select id="reminder-time" class="select">
+              <option>6:00 AM</option>
+              <option>7:00 AM</option>
+              <option selected>8:00 AM</option>
+              <option>9:00 AM</option>
+              <option>10:00 AM</option>
+              <option>5:00 PM</option>
+              <option>6:00 PM</option>
+            </select>
+            <div class="hint">Time when you'll receive daily watering reminders.</div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px;">
+            <label for="measurement-system">Measurement System</label>
+            <select id="measurement-system" class="select">
+              <option selected>Imperial (inches, °F)</option>
+              <option>Metric (cm, °C)</option>
+            </select>
+            <div class="hint">Units for displaying plant care information.</div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px;">
+            <label for="watering-method">Preferred Watering Method</label>
+            <select id="watering-method" class="select">
+              <option selected>Top Watering</option>
+              <option>Bottom Watering</option>
+              <option>Mixed Approach</option>
+            </select>
+            <div class="hint">Default method shown in watering instructions.</div>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <div class="t-label" style="margin-bottom:10px;">Care Approach</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="checkbox-row">
+                <input type="checkbox" id="organic-focus" checked>
+                <label for="organic-focus">Prioritize organic and natural care methods</label>
+              </div>
+              <div class="checkbox-row">
+                <input type="checkbox" id="seasonal-adjust" checked>
+                <label for="seasonal-adjust">Automatically adjust schedules for seasonal changes</label>
+              </div>
+              <div class="checkbox-row">
+                <input type="checkbox" id="beginner-mode">
+                <label for="beginner-mode">Show beginner-friendly tips and guidance</label>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary">Save Preferences</button>
+        </div>
+      </section>
+
+      <!-- Privacy & Data Tab -->
+      <section class="tab-content" data-content="privacy" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Privacy & Data</h2>
+
+        <div class="card">
+          <div style="margin-bottom:20px;">
+            <div class="t-h4" style="margin-bottom:8px;">Data Collection</div>
+            <div class="t-body text-secondary" style="margin-bottom:14px;">Control how we use your data to improve Plant Care</div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="checkbox-row">
+                <input type="checkbox" id="usage-analytics" checked>
+                <label for="usage-analytics">Allow usage analytics to improve the app</label>
+              </div>
+              <div class="checkbox-row">
+                <input type="checkbox" id="plant-data">
+                <label for="plant-data">Share anonymized plant data for research</label>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding-top:20px; border-top:1px solid var(--border);">
+            <div class="t-h4" style="margin-bottom:8px;">Data Export & Deletion</div>
+            <div class="t-body text-secondary" style="margin-bottom:14px;">Download or delete your Plant Care data</div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm">Download My Data</button>
+              <button class="btn btn-destructive btn-sm">Delete My Account</button>
+            </div>
+            <div class="hint" style="margin-top:10px;">Account deletion is permanent and cannot be undone.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Password & Security Tab -->
+      <section class="tab-content" data-content="security" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Password & Security</h2>
+
+        <div class="card">
+          <div style="margin-bottom:20px;">
+            <div class="t-h4" style="margin-bottom:14px;">Change Password</div>
+
+            <div class="field" style="margin-bottom:14px;">
+              <label for="current-password">Current Password</label>
+              <input type="password" id="current-password" class="input" placeholder="Enter current password">
+            </div>
+
+            <div class="field" style="margin-bottom:14px;">
+              <label for="new-password">New Password</label>
+              <input type="password" id="new-password" class="input" placeholder="Enter new password">
+            </div>
+
+            <div class="field" style="margin-bottom:14px;">
+              <label for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" class="input" placeholder="Confirm new password">
+            </div>
+
+            <button class="btn btn-primary">Update Password</button>
+          </div>
+
+          <div style="padding-top:20px; border-top:1px solid var(--border);">
+            <div class="t-h4" style="margin-bottom:8px;">Two-Factor Authentication</div>
+            <div class="t-body text-secondary" style="margin-bottom:14px;">Add an extra layer of security to your account</div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--pale-sage); border-radius:8px;">
+              <div>
+                <div class="t-label">Two-Factor Authentication</div>
+                <div class="t-small text-muted">Not enabled</div>
+              </div>
+              <button class="btn btn-secondary btn-sm">Enable 2FA</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connected Services Tab -->
+      <section class="tab-content" data-content="integrations" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Connected Services</h2>
+
+        <div class="card">
+          <div class="t-body text-secondary" style="margin-bottom:16px;">Connect external services to enhance your plant care experience</div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--border); border-radius:8px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:var(--pale-sage); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="var(--primary)" stroke-width="1.6"/><path d="M3 9h18" stroke="var(--primary)" stroke-width="1.6"/></svg>
+                </div>
+                <div>
+                  <div class="t-label">Google Calendar</div>
+                  <div class="t-small text-muted">Sync care tasks with your calendar</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm">Connect</button>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--border); border-radius:8px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:var(--pale-sage); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4v16m8-8H4" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </div>
+                <div>
+                  <div class="t-label">Weather Service</div>
+                  <div class="t-small text-muted">Get location-based care recommendations</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm">Connect</button>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--success); background:var(--success-bg); border-radius:8px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="var(--success)" stroke-width="1.6"/></svg>
+                </div>
+                <div>
+                  <div class="t-label">Smart Home (IoT)</div>
+                  <div class="t-small" style="color:var(--success);">Connected • 2 devices</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm">Manage</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Appearance Tab -->
+      <section class="tab-content" data-content="appearance" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Appearance</h2>
+
+        <div class="card">
+          <div class="field" style="margin-bottom:16px;">
+            <label>Theme</label>
+            <div style="display:flex; gap:12px; margin-top:10px;">
+              <button class="btn btn-secondary" style="flex:1; display:flex; flex-direction:column; gap:8px; height:auto; padding:14px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <span class="t-small">Light</span>
+              </button>
+              <button class="btn btn-secondary" style="flex:1; display:flex; flex-direction:column; gap:8px; height:auto; padding:14px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg>
+                <span class="t-small">Dark</span>
+              </button>
+              <button class="btn btn-primary" style="flex:1; display:flex; flex-direction:column; gap:8px; height:auto; padding:14px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1" fill="currentColor"/><rect x="13" y="4" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" fill="currentColor"/></svg>
+                <span class="t-small">Auto</span>
+              </button>
+            </div>
+            <div class="hint" style="margin-top:10px;">Auto theme matches your system preferences</div>
+          </div>
+
+          <div class="field">
+            <label>Dashboard Layout</label>
+            <select class="select">
+              <option selected>Comfortable (default)</option>
+              <option>Compact</option>
+              <option>Spacious</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Tab -->
+      <section class="tab-content" data-content="about" style="margin-bottom:40px; display:none;">
+        <h2 class="t-h3" style="margin-bottom:16px;">About</h2>
+
+        <div class="card">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#4F8A52"/><path d="M4 20c4-2 9-7 11-13" stroke="#EEF4EB" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <div>
+              <div class="t-h4">Plant Care</div>
+              <div class="t-small text-muted">Version 1.2.0</div>
+            </div>
+          </div>
+
+          <div class="t-body text-secondary" style="line-height:1.7; margin-bottom:16px;">
+            A calmer way to keep every plant in your life watered, healthy, and growing.
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <a href="#privacy" class="btn btn-secondary btn-sm">Privacy Policy</a>
+            <a href="#terms" class="btn btn-secondary btn-sm">Terms of Service</a>
+            <a href="#changelog" class="btn btn-secondary btn-sm">What's New</a>
+            <a href="#help" class="btn btn-secondary btn-sm">Help Center</a>
+          </div>
+
+          <div style="padding-top:20px; border-top:1px solid var(--border); margin-top:20px;">
+            <div class="t-small text-muted">© 2026 Plant Care. All rights reserved.</div>
+          </div>
+        </div>
+      </section>
+
+      </div><!-- End tab content wrapper -->
+
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/js/include.js"></script>
+<script src="../../assets/js/script.js"></script>
+<script>
+  // Tab switching functionality (page-specific, left inline)
+  const tabs = document.querySelectorAll('.settings-tab');
+  const contents = document.querySelectorAll('.tab-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.dataset.tab;
+
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => {
+        c.classList.remove('active');
+        c.style.display = 'none';
+      });
+
+      tab.classList.add('active');
+      const targetContent = document.querySelector(`[data-content="${targetTab}"]`);
+      if (targetContent) {
+        targetContent.classList.add('active');
+        targetContent.style.display = 'block';
+      }
+    });
+  });
+</script>
+</body>
+</html>
