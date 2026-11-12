@@ -191,6 +191,7 @@ img, svg { display: block; max-width: 100%; }
   padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500;
   color: #C9D8C6;
 }
+button.side-link { width: 100%; background: none; border: 0; font-family: inherit; text-align: left; cursor: pointer; }
 .side-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
 .side-link.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 600; }
 .side-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 12px 10px; }

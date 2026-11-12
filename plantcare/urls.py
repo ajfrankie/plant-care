@@ -12,6 +12,7 @@ urlpatterns = [
 
     # Accounts
     path("login/", accounts.login, name="login"),
+    path("logout/", accounts.logout, name="logout"),
     path("register/", accounts.register, name="register"),
     path("settings/", accounts.settings, name="settings"),
     path("notifications/", accounts.notifications, name="notifications"),
