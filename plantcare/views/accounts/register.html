@@ -32,43 +32,51 @@
       <h1 class="t-h1">Start Your Green Journey.</h1>
       <p class="t-body text-secondary" style="margin-top:8px;">Create an account to start tracking your plants.</p>
 
-      <form style="display:flex; flex-direction:column; gap:16px; margin-top:26px;" onsubmit="return false;">
+      <form method="post" style="display:flex; flex-direction:column; gap:16px; margin-top:26px;">
+        {% csrf_token %}
         <div class="field">
           <label for="name">Full Name</label>
-          <input class="input" type="text" id="name" placeholder="Jane Doe" required>
+          <input class="input{% if form.full_name.errors %} error{% endif %}" type="text" id="name" name="full_name" value="{{ form.full_name.value|default_if_none:'' }}" maxlength="150" placeholder="Jane Doe" required>
+          {% for error in form.full_name.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
         </div>
 
         <div class="field">
           <label for="r-email">Email Address</label>
-          <input class="input" type="email" id="r-email" placeholder="you@example.com" required>
+          <input class="input{% if form.email.errors %} error{% endif %}" type="email" id="r-email" name="email" value="{{ form.email.value|default_if_none:'' }}" maxlength="254" placeholder="you@example.com" required>
+          {% for error in form.email.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
         </div>
 
         <div class="field">
           <label for="r-password">Password</label>
           <div class="input-wrap">
-            <input class="input" type="password" id="r-password" placeholder="At least 8 characters" required>
+            <input class="input{% if form.password.errors %} error{% endif %}" type="password" id="r-password" name="password" placeholder="At least 8 characters" required>
             <button type="button" class="icon-btn" data-toggle-password data-target="r-password" aria-label="Show password" aria-pressed="false">
               <svg class="icon-show" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
               <svg class="icon-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:none;"><path d="M3 3l18 18M10.6 5.2A10.4 10.4 0 0 1 22 12s-3.5 7-10 7a9.9 9.9 0 0 1-3.6-.7M6.3 6.3C3.6 7.9 2 12 2 12s1.6 3.2 4.6 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </button>
           </div>
+          {% for error in form.password.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
         </div>
 
         <div class="field">
           <label for="r-confirm">Confirm Password</label>
           <div class="input-wrap">
-            <input class="input" type="password" id="r-confirm" placeholder="Re-enter your password" required>
+            <input class="input{% if form.confirm_password.errors %} error{% endif %}" type="password" id="r-confirm" name="confirm_password" placeholder="Re-enter your password" required>
             <button type="button" class="icon-btn" data-toggle-password data-target="r-confirm" aria-label="Show password" aria-pressed="false">
               <svg class="icon-show" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
               <svg class="icon-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:none;"><path d="M3 3l18 18M10.6 5.2A10.4 10.4 0 0 1 22 12s-3.5 7-10 7a9.9 9.9 0 0 1-3.6-.7M6.3 6.3C3.6 7.9 2 12 2 12s1.6 3.2 4.6 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </button>
           </div>
+          {% for error in form.confirm_password.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
         </div>
 
-        <label class="checkbox-row" style="align-items:flex-start;">
-          <input type="checkbox" style="margin-top:2px;" required>
-          <span>I agree to the <a href="#terms" style="color:var(--primary); font-weight:600;">Terms of Service</a> and <a href="#privacy" style="color:var(--primary); font-weight:600;">Privacy Policy</a></span>
-        </label>
+        <div>
+          <label class="checkbox-row" style="align-items:flex-start;">
+            <input type="checkbox" name="terms" style="margin-top:2px;"{% if form.terms.value %} checked{% endif %} required>
+            <span>I agree to the <a href="#terms" style="color:var(--primary); font-weight:600;">Terms of Service</a> and <a href="#privacy" style="color:var(--primary); font-weight:600;">Privacy Policy</a></span>
+          </label>
+          {% for error in form.terms.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+        </div>
 
         <button class="btn btn-primary btn-block" type="submit" style="margin-top:2px;">Create Account</button>
 

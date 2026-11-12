@@ -61,10 +61,10 @@
 
         <div class="card">
           <div style="display:flex; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border);">
-            <div class="avatar" style="width:72px; height:72px; font-size:24px;">AF</div>
+            <div class="avatar" style="width:72px; height:72px; font-size:24px;">{{ user.initials }}</div>
             <div style="flex:1;">
-              <div class="t-h4">Alex Fischer</div>
-              <div class="t-body text-secondary">alex.fischer@email.com</div>
+              <div class="t-h4">{{ user.full_name }}</div>
+              <div class="t-body text-secondary">{{ user.email }}</div>
               <div style="display:flex; gap:10px; margin-top:12px;">
                 <button class="btn btn-secondary btn-sm">Change Photo</button>
                 <button class="btn btn-secondary btn-sm">Remove Photo</button>
@@ -75,12 +75,12 @@
           <div style="padding-top:20px;">
             <div class="field" style="margin-bottom:16px;">
               <label for="full-name">Full Name</label>
-              <input type="text" id="full-name" class="input" value="Alex Fischer">
+              <input type="text" id="full-name" class="input" value="{{ user.full_name }}">
             </div>
 
             <div class="field" style="margin-bottom:16px;">
               <label for="email">Email Address</label>
-              <input type="email" id="email" class="input" value="alex.fischer@email.com">
+              <input type="email" id="email" class="input" value="{{ user.email }}">
               <div class="hint">We'll send watering reminders and updates to this email.</div>
             </div>
 
