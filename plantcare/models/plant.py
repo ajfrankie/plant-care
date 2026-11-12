@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 from django.conf import settings
@@ -31,6 +32,8 @@ class Plant(models.Model):
     )
     status = models.CharField(max_length=20, choices=Status, default=Status.HEALTHY)
     image = models.ImageField(upload_to="plants/%Y/%m/", blank=True)
+    has_flowers = models.BooleanField(default=False)
+    flower_colors = models.JSONField(default=list, blank=True)  # list of strings
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -40,6 +43,15 @@ class Plant(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def flower_swatches(self):
+        """(name, css color) pairs; css is None when the name isn't a plain word."""
+        swatches = []
+        for name in self.flower_colors:
+            css = name.lower().replace(" ", "")
+            swatches.append((name, css if re.fullmatch(r"[a-z]+", css) else None))
+        return swatches
 
     @property
     def next_check_date(self):

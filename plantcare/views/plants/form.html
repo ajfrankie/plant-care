@@ -95,6 +95,19 @@
             </div>
           </div>
 
+          <!-- Flowers -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Flowers</h3>
+            <label class="checkbox-row" style="font-size:14px;">
+              <input type="checkbox" id="id_has_flowers" name="has_flowers"{% if form.has_flowers.value %} checked{% endif %}> This plant has flowers
+            </label>
+            <div id="flowerColors" style="margin-top:16px; max-width:480px;{% if not form.has_flowers.value %} display:none;{% endif %}">
+              {% include "partials/list_field.html" with field=form.flower_colors placeholder="e.g., Red" add_label="Add flower color" %}
+              <span class="hint">Add one color per box, e.g. Red, Pink, White.</span>
+              <span class="hint" id="flowerColorsSuggested" style="display:none;">Filled in from the selected species — change them if yours are different.</span>
+            </div>
+          </div>
+
           <!-- Status -->
           <div style="margin-bottom:32px;">
             <h3 class="t-h3" style="margin-bottom:20px;">Status</h3>
@@ -150,6 +163,43 @@
 {% endblock %}
 
 {% block scripts %}
+{% include "partials/list_field_assets.html" %}
+{{ species_flower_colors|json_script:"speciesFlowerColors" }}
+<script>
+(function () {
+  // Show flower colors only for flowering plants. When turned on with no
+  // colors entered yet, fill them in from the selected species.
+  var toggle = document.getElementById('id_has_flowers');
+  var box = document.getElementById('flowerColors');
+  var species = document.getElementById('id_plant_species');
+  var suggested = document.getElementById('flowerColorsSuggested');
+  var speciesColors = JSON.parse(document.getElementById('speciesFlowerColors').textContent);
+
+  function fillFromSpecies() {
+    var colors = speciesColors[species.value];
+    var inputs = box.querySelectorAll('[data-list-rows] input');
+    var empty = Array.prototype.every.call(inputs, function (i) { return !i.value.trim(); });
+    if (!colors || !empty) return;
+    var rows = box.querySelector('[data-list-rows]');
+    var template = box.querySelector('template');
+    rows.innerHTML = '';
+    colors.forEach(function (color) {
+      var row = template.content.firstElementChild.cloneNode(true);
+      row.querySelector('input').value = color;
+      rows.appendChild(row);
+    });
+    suggested.style.display = '';
+  }
+
+  toggle.addEventListener('change', function () {
+    box.style.display = this.checked ? '' : 'none';
+    if (this.checked) fillFromSpecies();
+  });
+  species.addEventListener('change', function () {
+    if (toggle.checked) fillFromSpecies();
+  });
+})();
+</script>
 <script>
 (function () {
   var input = document.getElementById('plantPhoto');

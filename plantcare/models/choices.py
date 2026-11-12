@@ -33,3 +33,12 @@ class Humidity(models.TextChoices):
     MEDIUM = "medium", "Medium (40-60%)"
     HIGH = "high", "High (60-80%)"
     VERY_HIGH = "very_high", "Very High (80%+)"
+
+
+class SpecialFeature(models.TextChoices):
+    AIR_PURIFYING = "air_purifying", "Air Purifying"
+    PET_FRIENDLY = "pet_friendly", "Pet Friendly"
+    TOXIC = "toxic", "Toxic to Pets"
+    FLOWERING = "flowering", "Flowering"
+    FRAGRANT = "fragrant", "Fragrant"
+    EDIBLE = "edible", "Edible"

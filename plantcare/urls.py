@@ -22,7 +22,7 @@ urlpatterns = [
 
     path("my-plants/", plants.index, name="my_plants"),
     path("my-plants/add/", plants.add, name="plant_add"),
-    path("my-plants/view/", plants.view, name="plant_view"),
+    path("my-plants/<int:pk>/", plants.view, name="plant_view"),
     path("my-plants/<int:pk>/edit/", plants.edit, name="plant_edit"),
     path("my-plants/details/", plants.details, name="plant_details"),
     path("plant-health/", plants.health, name="plant_health"),

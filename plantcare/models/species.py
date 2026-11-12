@@ -1,6 +1,6 @@
 from django.db import models
 
-from .choices import Fertilizing, Humidity, Light, Watering
+from .choices import Fertilizing, Humidity, Light, SpecialFeature, Watering
 
 
 class PlantSpecies(models.Model):
@@ -59,3 +59,9 @@ class PlantSpecies(models.Model):
 
     def __str__(self):
         return f"{self.common_name} ({self.scientific_name})"
+
+    @property
+    def special_feature_labels(self):
+        """Display names for the comma-separated special_features."""
+        labels = dict(SpecialFeature.choices)
+        return [labels[f] for f in self.special_features.split(",") if f in labels]

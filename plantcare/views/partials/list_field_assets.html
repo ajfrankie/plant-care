@@ -1,0 +1,34 @@
+{# Styles and script for partials/list_field.html. Include once per page. #}
+<style>
+  .list-field-row { display:flex; gap:8px; align-items:center; }
+  .list-field-row + .list-field-row { margin-top:8px; }
+  .list-field-row .input { flex:1; min-width:0; }
+  .list-field-remove { flex:none; width:38px; padding:0; }
+</style>
+<script>
+(function () {
+  // "+ Add" clones the field's row template; "x" removes a row
+  // (the last remaining row is just cleared).
+  document.addEventListener('click', function (e) {
+    var add = e.target.closest('[data-list-add]');
+    if (add) {
+      var field = add.closest('[data-list-field]');
+      var rows = field.querySelector('[data-list-rows]');
+      var row = field.querySelector('template').content.firstElementChild.cloneNode(true);
+      rows.appendChild(row);
+      row.querySelector('input').focus();
+      return;
+    }
+    var remove = e.target.closest('[data-list-remove]');
+    if (remove) {
+      var rowsEl = remove.closest('[data-list-rows]');
+      var current = remove.closest('.list-field-row');
+      if (rowsEl.children.length > 1) {
+        current.remove();
+      } else {
+        current.querySelector('input').value = '';
+      }
+    }
+  });
+})();
+</script>
