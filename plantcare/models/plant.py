@@ -1,51 +1,36 @@
-from django.conf import settings
-from django.db import models
+from datetime import timedelta
 
-from .choices import Fertilizing, Humidity, Light, Watering
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils import timezone
+
 from .species import PlantSpecies
 
 
 class Plant(models.Model):
     """A plant in one user's personal collection."""
 
-    class Location(models.TextChoices):
-        LIVING_ROOM = "living_room", "Living Room"
-        BEDROOM = "bedroom", "Bedroom"
-        KITCHEN = "kitchen", "Kitchen"
-        BATHROOM = "bathroom", "Bathroom"
-        BALCONY = "balcony", "Balcony"
-        GARDEN = "garden", "Garden"
-        OFFICE = "office", "Office"
-        OTHER = "other", "Other"
-
-    class Health(models.TextChoices):
+    class Status(models.TextChoices):
         HEALTHY = "healthy", "Healthy"
         ATTENTION = "attention", "Needs Attention"
         CRITICAL = "critical", "Critical"
 
-    owner = models.ForeignKey(
+    created_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="plants"
     )
-    species = models.ForeignKey(
+    plant_species = models.ForeignKey(
         PlantSpecies, on_delete=models.SET_NULL, null=True, blank=True, related_name="plants"
     )
 
     name = models.CharField(max_length=120)
-    scientific_name = models.CharField(max_length=160, blank=True)
-    common_name = models.CharField(max_length=120, blank=True)
-    location = models.CharField(max_length=20, choices=Location)
-    date_acquired = models.DateField(null=True, blank=True)
-    notes = models.TextField(blank=True)
-
-    watering = models.CharField(max_length=20, choices=Watering)
-    next_watering_date = models.DateField(null=True, blank=True)
-    light = models.CharField(max_length=20, choices=Light, blank=True)
-    fertilizing = models.CharField(max_length=20, choices=Fertilizing, blank=True)
-    temperature_range = models.CharField(max_length=40, blank=True)
-    humidity = models.CharField(max_length=20, choices=Humidity, blank=True)
-
-    photo = models.ImageField(upload_to="plants/", blank=True)
-    health = models.CharField(max_length=20, choices=Health, default=Health.HEALTHY)
+    nickname = models.CharField(max_length=120, blank=True)
+    planting_date = models.DateField()
+    check_interval_days = models.PositiveSmallIntegerField(
+        default=7, validators=[MinValueValidator(1), MaxValueValidator(365)]
+    )
+    status = models.CharField(max_length=20, choices=Status, default=Status.HEALTHY)
+    image = models.ImageField(upload_to="plants/%Y/%m/", blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -55,3 +40,16 @@ class Plant(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def next_check_date(self):
+        """Last care activity (or the day it was added) plus the check interval."""
+        last_care = getattr(self, "last_care_at", None)
+        if last_care is None and not hasattr(self, "last_care_at"):
+            last_care = self.care_logs.aggregate(m=models.Max("performed_at"))["m"]
+        start = last_care or self.created_at or timezone.now()
+        return timezone.localdate(start) + timedelta(days=self.check_interval_days)
+
+    @property
+    def days_until_check(self):
+        return (self.next_check_date - timezone.localdate()).days
