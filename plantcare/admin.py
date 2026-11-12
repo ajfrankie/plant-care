@@ -38,9 +38,13 @@ class PlantSpeciesAdmin(admin.ModelAdmin):
 
 @admin.register(Plant)
 class PlantAdmin(admin.ModelAdmin):
-    list_display = ("name", "owner", "location", "health", "next_watering_date")
-    list_filter = ("health", "location")
-    search_fields = ("name", "scientific_name")
+    list_display = (
+        "name", "nickname", "created_user", "plant_species",
+        "planting_date", "check_interval_days", "status", "created_at",
+    )
+    list_filter = ("status", "plant_species")
+    search_fields = ("name", "nickname", "plant_species__common_name")
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(CareTask)

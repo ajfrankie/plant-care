@@ -1,0 +1,199 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — {% if plant %}Edit {{ plant.name }}{% else %}Add New Plant{% endif %}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .plant-form-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,380px); gap:40px; align-items:start; }
+  .plant-form-side { position:sticky; top:24px; }
+  @media (max-width: 1100px) {
+    .plant-form-grid { grid-template-columns:minmax(0,1fr); gap:0; }
+    .plant-form-side { position:static; margin-bottom:32px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="my-plants" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% if plant %}
+    {% include "partials/app_header.html" with title="Edit Plant" subtitle=plant.name %}
+    {% else %}
+    {% include "partials/app_header.html" with title="Add New Plant" subtitle="Add a new plant to your collection" %}
+    {% endif %}
+
+    <div style="padding:28px 32px;">
+
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'my_plants' %}" class="nav-link" style="font-size:14px;">&larr; Back to My Plants</a>
+      </div>
+
+      <div class="card" style="padding:32px;">
+        {% for error in form.non_field_errors %}
+        <div role="alert" style="background:var(--error-bg); border:1px solid var(--error); border-radius:var(--radius-card); color:var(--error); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ error }}</div>
+        {% endfor %}
+
+        <form method="post" id="plantForm" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <div class="plant-form-grid">
+          <div class="plant-form-main">
+
+          <!-- Basic Information -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Basic Information</h3>
+
+            <div style="display:grid; gap:20px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div>
+                  <label class="t-label" for="id_name" style="display:block; margin-bottom:6px;">Plant Name *</label>
+                  <input type="text" id="id_name" name="name" class="input{% if form.name.errors %} error{% endif %}" value="{{ form.name.value|default_if_none:'' }}" maxlength="120" placeholder="e.g., Monstera Deliciosa" required style="width:100%;">
+                  {% for error in form.name.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+                </div>
+                <div>
+                  <label class="t-label" for="id_nickname" style="display:block; margin-bottom:6px;">Nickname</label>
+                  <input type="text" id="id_nickname" name="nickname" class="input{% if form.nickname.errors %} error{% endif %}" value="{{ form.nickname.value|default_if_none:'' }}" maxlength="120" placeholder="e.g., Monty" style="width:100%;">
+                  {% for error in form.nickname.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+                </div>
+              </div>
+
+              <div>
+                <label class="t-label" for="id_plant_species" style="display:block; margin-bottom:6px;">Plant Species</label>
+                <select id="id_plant_species" name="plant_species" class="select{% if form.plant_species.errors %} input error{% endif %}" style="width:100%;">
+                  {% for value, label in form.plant_species.field.choices %}
+                  <option value="{{ value }}"{% if value|stringformat:"s" == form.plant_species.value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+                {% for error in form.plant_species.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+                {% if form.plant_species.field.choices|length <= 1 %}
+                <span class="hint">No species in the Plant Library yet — you can still add the plant and link a species later.</span>
+                {% endif %}
+              </div>
+
+              <div>
+                <label class="t-label" for="id_planting_date" style="display:block; margin-bottom:6px;">Planting Date *</label>
+                <input type="date" id="id_planting_date" name="planting_date" class="input{% if form.planting_date.errors %} error{% endif %}" value="{{ form.planting_date.value|default_if_none:'' }}" max="{% now 'Y-m-d' %}" required style="width:100%;">
+                {% for error in form.planting_date.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Care Schedule -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Care Schedule</h3>
+            <div>
+              <label class="t-label" for="id_check_interval_days" style="display:block; margin-bottom:6px;">Check Interval (days) *</label>
+              <input type="number" id="id_check_interval_days" name="check_interval_days" class="input{% if form.check_interval_days.errors %} error{% endif %}" value="{{ form.check_interval_days.value|default_if_none:'' }}" min="1" max="365" step="1" required style="width:100%; max-width:240px;">
+              <span class="hint">How often you want to check on this plant (1–365 days).</span>
+              {% for error in form.check_interval_days.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Status</h3>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+              {% for value, label in form.status.field.choices %}
+              <label style="display:flex; align-items:center; padding:12px; border:2px solid var(--border); border-radius:8px; cursor:pointer;">
+                <input type="radio" name="status" value="{{ value }}"{% if form.status.value == value %} checked{% endif %} style="margin-right:10px;">
+                <span class="badge {% if value == 'healthy' %}badge-success{% elif value == 'attention' %}badge-warning{% else %}badge-error{% endif %}"><span class="badge-dot"></span>{{ label }}</span>
+              </label>
+              {% endfor %}
+            </div>
+            {% for error in form.status.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+
+          </div>
+
+          <!-- Plant Photo -->
+          <div class="plant-form-side">
+            <h3 class="t-h3" style="margin-bottom:20px;">Plant Photo</h3>
+            <div style="border:2px dashed {% if form.image.errors %}var(--error){% else %}var(--border){% endif %}; border-radius:12px; padding:32px 24px; text-align:center; background:var(--bg-secondary);">
+              <img id="plantPhotoPreview" alt="Plant photo preview"{% if plant.image %} src="{{ plant.image.url }}" data-current="{{ plant.image.url }}"{% endif %} style="{% if not plant.image %}display:none; {% endif %} max-width:100%; max-height:320px; border-radius:8px; margin:0 auto 12px; object-fit:cover;">
+              <div id="plantPhotoPlaceholder"{% if plant.image %} style="display:none;"{% endif %}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto 12px;"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <div class="t-body" style="margin-bottom:8px;">Upload plant photo</div>
+                <div class="t-small text-muted" style="margin-bottom:12px;">PNG, JPG, WEBP up to 5MB (optional)</div>
+              </div>
+              <div id="plantPhotoName" class="t-small text-muted" style="margin-bottom:12px;"></div>
+              <input type="file" id="plantPhoto" name="image" accept="image/*" style="display:none;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('plantPhoto').click();">{% if plant.image %}Change Photo{% else %}Choose File{% endif %}</button>
+              {% if plant.image %}
+              <label class="checkbox-row" style="justify-content:center; margin-top:12px;">
+                <input type="checkbox" id="plantPhotoClear" name="image-clear"> Remove current photo
+              </label>
+              {% endif %}
+            </div>
+            {% for error in form.image.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            {% if form.errors and not form.image.errors %}<span class="hint">If you chose a photo, please select it again before saving.</span>{% endif %}
+          </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; gap:12px; justify-content:flex-end; padding-top:20px; border-top:1px solid var(--border);">
+            <a href="{% url 'my_plants' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{% if plant %}Save Changes{% else %}Add Plant{% endif %}</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var input = document.getElementById('plantPhoto');
+  var preview = document.getElementById('plantPhotoPreview');
+  var placeholder = document.getElementById('plantPhotoPlaceholder');
+  var name = document.getElementById('plantPhotoName');
+  var clear = document.getElementById('plantPhotoClear');
+  var current = preview.getAttribute('data-current');
+
+  function show(src) {
+    if (src) {
+      preview.src = src;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      placeholder.style.display = '';
+    }
+  }
+
+  input.addEventListener('change', function () {
+    var file = this.files[0];
+    if (file) {
+      if (clear) clear.checked = false;  // a new photo replaces the old one
+      show(URL.createObjectURL(file));
+      name.textContent = file.name;
+    } else {
+      show(clear && clear.checked ? null : current);
+      name.textContent = '';
+    }
+  });
+
+  if (clear) {
+    clear.addEventListener('change', function () {
+      if (this.checked) {
+        input.value = '';
+        name.textContent = '';
+        show(null);
+      } else {
+        show(current);
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

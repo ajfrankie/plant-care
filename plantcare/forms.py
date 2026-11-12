@@ -3,7 +3,46 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User
+from django.utils import timezone
+
+from .models import Plant, PlantSpecies, User
+
+
+class PlantForm(forms.ModelForm):
+    class Meta:
+        model = Plant
+        fields = [
+            "name", "nickname", "plant_species", "planting_date",
+            "check_interval_days", "status", "image",
+        ]
+
+    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image and image.size > self.MAX_IMAGE_SIZE:
+            raise ValidationError("Image must be 5 MB or smaller.")
+        return image
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["plant_species"].queryset = PlantSpecies.objects.order_by("common_name")
+        self.fields["plant_species"].empty_label = "Select a species..."
+        if self.instance.pk and self.instance.planting_date:
+            # Date inputs need YYYY-MM-DD, not the localized display format.
+            self.initial["planting_date"] = self.instance.planting_date.isoformat()
+
+    def clean_name(self):
+        return self.cleaned_data["name"].strip()
+
+    def clean_nickname(self):
+        return self.cleaned_data["nickname"].strip()
+
+    def clean_planting_date(self):
+        planting_date = self.cleaned_data["planting_date"]
+        if planting_date > timezone.localdate():
+            raise ValidationError("Planting date cannot be in the future.")
+        return planting_date
 
 
 class LoginForm(forms.Form):

@@ -1,10 +1,12 @@
 import uuid
+from datetime import date, timedelta
 
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .forms import LoginForm
-from .models import User
+from .models import Plant, PlantSpecies, User
 from .urls import urlpatterns
 
 
@@ -214,7 +216,7 @@ class AccessTests(TestCase):
         self.assertIn("dashboard", private)
         for name in private:
             with self.subTest(page=name):
-                url = reverse(name)
+                url = reverse(name, args=[1] if name == "plant_edit" else None)
                 self.assertRedirects(
                     self.client.get(url), f"{reverse('login')}?next={url}"
                 )
@@ -278,10 +280,15 @@ class PageRenderingTests(TestCase):
 
     def test_every_page_renders(self):
         # logout is POST only; login sends signed-in users on to the dashboard.
+        plant = Plant.objects.create(
+            created_user=self.user, name="Fern", planting_date=date(2026, 1, 1)
+        )
+        args = {"plant_edit": [plant.pk]}
         pages = [pattern for pattern in urlpatterns if pattern.name not in ("logout", "login")]
         for pattern in pages:
             with self.subTest(page=pattern.name):
-                self.assertEqual(self.client.get(reverse(pattern.name)).status_code, 200)
+                url = reverse(pattern.name, args=args.get(pattern.name))
+                self.assertEqual(self.client.get(url).status_code, 200)
 
     def test_sidebar_marks_current_page_active(self):
         html = self.client.get(reverse("dashboard")).content.decode()
@@ -298,7 +305,278 @@ class PageRenderingTests(TestCase):
         self.assertNotIn('data-field="search-box"', html)
 
     def test_my_plants_and_library_links_are_not_mixed_up(self):
+        Plant.objects.create(
+            created_user=self.user, name="Fern", planting_date=date(2026, 1, 1)
+        )
         plants = self.client.get(reverse("my_plants")).content.decode()
         library = self.client.get(reverse("library")).content.decode()
         self.assertIn(f'href="{reverse("plant_view")}"', plants)
         self.assertIn(f'href="{reverse("library_view")}"', library)
+
+
+class PlantCreateTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "grower@example.com", "Grower", "mossy-Fern-42!", is_active=True
+        )
+        cls.species = PlantSpecies.objects.create(
+            common_name="Swiss Cheese Plant", scientific_name="Monstera deliciosa",
+            category="tropical", difficulty="easy", light="bright_indirect", watering="weekly",
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.valid = {
+            "name": "Monstera",
+            "nickname": "Monty",
+            "plant_species": self.species.pk,
+            "planting_date": "2026-03-01",
+            "check_interval_days": "5",
+            "status": "healthy",
+        }
+
+    def test_valid_post_creates_plant_for_current_user(self):
+        response = self.client.post(reverse("plant_add"), self.valid, follow=True)
+        self.assertRedirects(response, reverse("my_plants"))
+        plant = Plant.objects.get()
+        self.assertEqual(plant.created_user, self.user)
+        self.assertEqual(plant.plant_species, self.species)
+        self.assertEqual(plant.nickname, "Monty")
+        self.assertEqual(plant.planting_date, date(2026, 3, 1))
+        self.assertEqual(plant.check_interval_days, 5)
+        self.assertContains(response, "Monstera was added to your plants.")
+
+    def test_species_is_optional(self):
+        self.valid["plant_species"] = ""
+        self.client.post(reverse("plant_add"), self.valid)
+        self.assertIsNone(Plant.objects.get().plant_species)
+
+    def test_invalid_submissions_rejected(self):
+        future = (timezone.localdate() + timedelta(days=1)).isoformat()
+        cases = {
+            "name": "",
+            "planting_date": future,
+            "check_interval_days": "0",
+            "status": "dead",
+            "plant_species": "9999",
+        }
+        for field, value in cases.items():
+            with self.subTest(field=field):
+                response = self.client.post(reverse("plant_add"), {**self.valid, field: value})
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.context["form"].errors.get(field))
+        self.assertFalse(Plant.objects.exists())
+
+    def test_post_cannot_assign_plant_to_another_user(self):
+        other = User.objects.create_user("other@example.com", "Other", "x-Pass-123!", is_active=True)
+        self.client.post(reverse("plant_add"), {**self.valid, "created_user": other.pk})
+        self.assertEqual(Plant.objects.get().created_user, self.user)
+
+
+class PlantListTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "lister@example.com", "Lister", "mossy-Fern-42!", is_active=True
+        )
+        other = User.objects.create_user("o@example.com", "O", "mossy-Fern-42!", is_active=True)
+        make = lambda **kw: Plant.objects.create(planting_date=date(2026, 1, 1), **kw)
+        make(created_user=cls.user, name="Aloe", status="healthy")
+        make(created_user=cls.user, name="Basil", nickname="Pesto", status="attention")
+        make(created_user=cls.user, name="Cactus", status="critical")
+        make(created_user=other, name="Not Mine")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def names(self, **params):
+        response = self.client.get(reverse("my_plants"), params)
+        return [p.name for p in response.context["page"].object_list]
+
+    def test_lists_only_own_plants(self):
+        self.assertEqual(self.names(), ["Aloe", "Basil", "Cactus"])
+
+    def test_stats(self):
+        stats = self.client.get(reverse("my_plants")).context["stats"]
+        self.assertEqual(stats["total"], 3)
+        self.assertEqual(stats["healthy"], 1)
+        self.assertEqual(stats["attention"], 2)
+
+    def test_search_filter_and_sort(self):
+        self.assertEqual(self.names(q="pesto"), ["Basil"])
+        self.assertEqual(self.names(status="critical"), ["Cactus"])
+        self.assertEqual(self.names(sort="-name"), ["Cactus", "Basil", "Aloe"])
+        self.assertEqual(self.names(sort="bogus"), ["Aloe", "Basil", "Cactus"])
+
+    def test_empty_state(self):
+        self.assertContains(self.client.get(reverse("my_plants"), {"q": "zzz"}), "No plants match")
+
+    def test_pagination_keeps_filters(self):
+        for i in range(10):
+            Plant.objects.create(created_user=self.user, name=f"Z{i:02}", planting_date=date(2026, 1, 1))
+        response = self.client.get(reverse("my_plants"), {"sort": "name"})
+        self.assertEqual(len(response.context["page"].object_list), 8)
+        self.assertContains(response, "?sort=name&amp;page=2")
+
+
+class PlantImageTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "photo@example.com", "Photo", "mossy-Fern-42!", is_active=True
+        )
+
+    def setUp(self):
+        import shutil, tempfile
+        from django.test import override_settings
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.client.force_login(self.user)
+        self.data = {
+            "name": "Ivy", "planting_date": "2026-01-01",
+            "check_interval_days": "7", "status": "healthy",
+        }
+
+    def png(self, name="ivy.png"):
+        import io
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new("RGB", (4, 4), "green").save(buf, "PNG")
+        return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+
+    def test_upload_saves_image_and_shows_on_list(self):
+        self.client.post(reverse("plant_add"), {**self.data, "image": self.png()})
+        plant = Plant.objects.get()
+        self.assertTrue(plant.image.name.startswith("plants/"))
+        self.assertContains(self.client.get(reverse("my_plants")), plant.image.url)
+
+    def test_non_image_rejected(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        bad = SimpleUploadedFile("x.png", b"not an image", content_type="image/png")
+        response = self.client.post(reverse("plant_add"), {**self.data, "image": bad})
+        self.assertTrue(response.context["form"].errors.get("image"))
+        self.assertFalse(Plant.objects.exists())
+
+    def test_oversized_image_rejected(self):
+        from unittest import mock
+        from .forms import PlantForm
+        with mock.patch.object(PlantForm, "MAX_IMAGE_SIZE", 10):
+            response = self.client.post(reverse("plant_add"), {**self.data, "image": self.png()})
+        self.assertIn("5 MB", str(response.context["form"].errors["image"]))
+
+    def test_image_is_optional(self):
+        self.client.post(reverse("plant_add"), self.data)
+        self.assertFalse(Plant.objects.get().image)
+
+
+class PlantEditTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "editor@example.com", "Editor", "mossy-Fern-42!", is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "nosy@example.com", "Nosy", "mossy-Fern-42!", is_active=True
+        )
+
+    def setUp(self):
+        import shutil, tempfile
+        from django.test import override_settings
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.client.force_login(self.user)
+        self.plant = Plant.objects.create(
+            created_user=self.user, name="Ivy", nickname="Ive",
+            planting_date=date(2026, 2, 3), check_interval_days=4, status="healthy",
+        )
+        self.url = reverse("plant_edit", args=[self.plant.pk])
+        self.data = {
+            "name": "English Ivy", "nickname": "", "planting_date": "2026-02-10",
+            "check_interval_days": "10", "status": "attention",
+        }
+
+    def png(self, name="ivy.png"):
+        import io
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new("RGB", (4, 4), "green").save(buf, "PNG")
+        return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+
+    def test_form_is_prefilled(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('value="Ivy"', html)
+        self.assertIn('value="Ive"', html)
+        self.assertIn('value="2026-02-03"', html)
+        self.assertIn('value="4"', html)
+        self.assertIn('value="healthy" checked', html)
+        self.assertIn("Save Changes", html)
+
+    def test_valid_post_updates_plant(self):
+        response = self.client.post(self.url, self.data, follow=True)
+        self.assertRedirects(response, reverse("my_plants"))
+        self.assertContains(response, "English Ivy was updated.")
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.name, "English Ivy")
+        self.assertEqual(self.plant.nickname, "")
+        self.assertEqual(self.plant.planting_date, date(2026, 2, 10))
+        self.assertEqual(self.plant.check_interval_days, 10)
+        self.assertEqual(self.plant.status, "attention")
+        self.assertEqual(self.plant.created_user, self.user)
+
+    def test_invalid_post_keeps_saved_values_in_header(self):
+        response = self.client.post(self.url, {**self.data, "name": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors.get("name"))
+        self.assertContains(response, 'data-field="subtitle">Ivy<')
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.name, "Ivy")
+
+    def test_other_users_cannot_view_or_edit(self):
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.client.post(self.url, self.data).status_code, 404)
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.name, "Ivy")
+
+    def test_cannot_reassign_owner(self):
+        self.client.post(self.url, {**self.data, "created_user": self.other.pk})
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.created_user, self.user)
+
+    def test_keep_replace_and_remove_photo(self):
+        self.client.post(self.url, {**self.data, "image": self.png("a.png")})
+        self.plant.refresh_from_db()
+        first = self.plant.image.name
+        storage = self.plant.image.storage
+        self.assertTrue(storage.exists(first))
+
+        # No new file: photo is kept.
+        self.client.post(self.url, self.data)
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.image.name, first)
+        self.assertContains(self.client.get(self.url), "Remove current photo")
+
+        # New file: replaced, old file deleted.
+        self.client.post(self.url, {**self.data, "image": self.png("b.png")})
+        self.plant.refresh_from_db()
+        second = self.plant.image.name
+        self.assertNotEqual(second, first)
+        self.assertFalse(storage.exists(first))
+
+        # Remove checkbox: cleared, file deleted.
+        self.client.post(self.url, {**self.data, "image-clear": "on"})
+        self.plant.refresh_from_db()
+        self.assertFalse(self.plant.image)
+        self.assertFalse(storage.exists(second))
+
+    def test_list_links_to_edit(self):
+        self.assertContains(self.client.get(reverse("my_plants")), f'href="{self.url}"')

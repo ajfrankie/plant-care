@@ -10,7 +10,7 @@
 
   <div class="main-area">
     <!-- Header (shared) -->
-    {% include "partials/app_header.html" with title="Plant Details" subtitle="Monstera Deliciosa 🌿" %}
+    {% include "partials/app_header.html" with title="Plant Details" subtitle="Monstera Deliciosa" %}
 
     <div style="padding:28px 32px;">
 
@@ -39,7 +39,7 @@
                   <span class="badge badge-info"><span class="badge-dot"></span>Water Tomorrow</span>
                 </div>
                 <div style="display:flex; gap:12px;">
-                  <a href="{% url 'plant_edit' %}" class="btn btn-primary btn-sm">Edit Plant</a>
+                  <a href="{% url 'my_plants' %}" class="btn btn-primary btn-sm">Edit Plant</a>
                   <button class="btn btn-secondary btn-sm">Water Now</button>
                   <button class="btn btn-secondary btn-sm">Log Care Activity</button>
                 </div>
