@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, library, plants, public
+from .controllers import accounts, care, dashboard, library, plants, public, species
 
 urlpatterns = [
     # Public site
@@ -31,6 +31,10 @@ urlpatterns = [
     path("library/create/", library.create, name="library_create"),
     path("library/view/", library.view, name="library_view"),
     path("library/edit/", library.edit, name="library_edit"),
+
+    path("species/", species.index, name="species"),
+    path("species/add/", species.add, name="species_add"),
+    path("species/<int:pk>/edit/", species.edit, name="species_edit"),
 
     path("care-schedule/", care.schedule, name="care_schedule"),
     path("watering-schedule/", care.watering, name="watering_schedule"),

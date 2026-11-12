@@ -45,6 +45,104 @@ class PlantForm(forms.ModelForm):
         return planting_date
 
 
+class MultipleTextInput(forms.TextInput):
+    """Several text inputs sharing one name; submits every value."""
+
+    def value_from_datadict(self, data, files, name):
+        if hasattr(data, "getlist"):
+            return data.getlist(name)
+        return data.get(name, [])
+
+    def value_omitted_from_data(self, data, files, name):
+        # No inputs submitted means an empty list, not "keep the old value".
+        return False
+
+
+class TextListField(forms.Field):
+    """A list of short strings, entered as several text inputs."""
+
+    widget = MultipleTextInput
+
+    def __init__(self, *, item_label, max_length=60, max_items=10, **kwargs):
+        self.item_label = item_label
+        self.max_length = max_length
+        self.max_items = max_items
+        super().__init__(**kwargs)
+
+    def to_python(self, value):
+        if not value:
+            return []
+        if isinstance(value, str):
+            value = [value]
+        items, seen = [], set()
+        for item in value:
+            item = str(item).strip()
+            if item and item.lower() not in seen:  # drop blanks and duplicates
+                seen.add(item.lower())
+                items.append(item)
+        return items
+
+    def validate(self, value):
+        super().validate(value)
+        if len(value) > self.max_items:
+            raise ValidationError(f"Add at most {self.max_items} {self.item_label}s.")
+        for item in value:
+            if len(item) > self.max_length:
+                raise ValidationError(
+                    f"Each {self.item_label} must be {self.max_length} characters or fewer."
+                )
+
+    def has_changed(self, initial, data):
+        return self.to_python(initial) != self.to_python(data)
+
+
+class SpeciesForm(forms.ModelForm):
+    FEATURES = [
+        ("air_purifying", "Air Purifying"),
+        ("pet_friendly", "Pet Friendly"),
+        ("toxic", "Toxic to Pets"),
+        ("flowering", "Flowering"),
+        ("fragrant", "Fragrant"),
+        ("edible", "Edible"),
+    ]
+    # Stored as a comma-separated list in PlantSpecies.special_features.
+    special_features = forms.MultipleChoiceField(choices=FEATURES, required=False)
+    soil_type = TextListField(item_label="soil type", max_length=120, required=False)
+    flower_color = TextListField(item_label="flower color", max_length=60, required=False)
+
+    class Meta:
+        model = PlantSpecies
+        fields = [
+            "common_name", "scientific_name", "family", "category", "origin",
+            "description", "difficulty", "light", "watering", "fertilizing",
+            "temperature_range", "humidity", "soil_type", "growth_rate",
+            "mature_height", "mature_width", "foliage_color", "flower_color",
+            "special_features",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.initial["special_features"] = [
+                f for f in self.instance.special_features.split(",") if f
+            ]
+
+    def clean_common_name(self):
+        return self.cleaned_data["common_name"].strip()
+
+    def clean_scientific_name(self):
+        name = self.cleaned_data["scientific_name"].strip()
+        taken = PlantSpecies.objects.filter(scientific_name__iexact=name)
+        if self.instance.pk:
+            taken = taken.exclude(pk=self.instance.pk)
+        if taken.exists():
+            raise ValidationError("A species with this scientific name already exists.")
+        return name
+
+    def clean_special_features(self):
+        return ",".join(self.cleaned_data["special_features"])
+
+
 class LoginForm(forms.Form):
     INVALID_CREDENTIALS = "Incorrect email or password."
     NOT_ACTIVE = "Your account is not active. Please activate your account to sign in."

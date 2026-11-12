@@ -41,15 +41,14 @@ class PlantSpecies(models.Model):
     fertilizing = models.CharField(max_length=20, choices=Fertilizing, blank=True)
     temperature_range = models.CharField(max_length=40, blank=True)
     humidity = models.CharField(max_length=20, choices=Humidity, blank=True)
-    soil_type = models.CharField(max_length=120, blank=True)
+    soil_type = models.JSONField(default=list, blank=True)  # list of strings
 
     growth_rate = models.CharField(max_length=20, choices=GrowthRate, blank=True)
     mature_height = models.CharField(max_length=40, blank=True)
     mature_width = models.CharField(max_length=40, blank=True)
     foliage_color = models.CharField(max_length=60, blank=True)
-    flower_color = models.CharField(max_length=60, blank=True)
+    flower_color = models.JSONField(default=list, blank=True)  # list of strings
     special_features = models.TextField(blank=True)
-    photo = models.ImageField(upload_to="species/", blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
