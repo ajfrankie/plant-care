@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import LoginForm
-from .models import Plant, PlantSpecies, User
+from .models import CareLog, CareTask, Plant, PlantSpecies, User
 from .urls import urlpatterns
 
 
@@ -216,7 +216,7 @@ class AccessTests(TestCase):
         self.assertIn("dashboard", private)
         for name in private:
             with self.subTest(page=name):
-                url = reverse(name, args=[1] if name in ("plant_edit", "species_edit") else None)
+                url = reverse(name, args=[1] if name in ("plant_edit", "plant_view", "species_edit") else None)
                 self.assertRedirects(
                     self.client.get(url), f"{reverse('login')}?next={url}"
                 )
@@ -287,7 +287,7 @@ class PageRenderingTests(TestCase):
             common_name="Fern", scientific_name="Nephrolepis exaltata",
             category="indoor", difficulty="easy", light="medium", watering="weekly",
         )
-        args = {"plant_edit": [plant.pk], "species_edit": [species.pk]}
+        args = {"plant_edit": [plant.pk], "plant_view": [plant.pk], "species_edit": [species.pk]}
         pages = [pattern for pattern in urlpatterns if pattern.name not in ("logout", "login")]
         for pattern in pages:
             with self.subTest(page=pattern.name):
@@ -309,12 +309,12 @@ class PageRenderingTests(TestCase):
         self.assertNotIn('data-field="search-box"', html)
 
     def test_my_plants_and_library_links_are_not_mixed_up(self):
-        Plant.objects.create(
+        plant = Plant.objects.create(
             created_user=self.user, name="Fern", planting_date=date(2026, 1, 1)
         )
         plants = self.client.get(reverse("my_plants")).content.decode()
         library = self.client.get(reverse("library")).content.decode()
-        self.assertIn(f'href="{reverse("plant_view")}"', plants)
+        self.assertIn(f'href="{reverse("plant_view", args=[plant.pk])}"', plants)
         self.assertIn(f'href="{reverse("library_view")}"', library)
 
 
@@ -598,7 +598,8 @@ class SpeciesTests(TestCase):
         self.data = {
             "common_name": " Snake Plant ", "scientific_name": "Dracaena trifasciata",
             "category": "indoor", "difficulty": "very_easy", "light": "low_to_bright",
-            "watering": "biweekly", "special_features": ["air_purifying", "toxic"],
+            "watering": "biweekly", "fertilizing": "monthly",
+            "special_features": ["air_purifying", "toxic"],
         }
 
     def make(self, **kw):
@@ -620,7 +621,7 @@ class SpeciesTests(TestCase):
     def test_add_requires_fields(self):
         response = self.client.post(reverse("species_add"), {"common_name": ""})
         errors = response.context["form"].errors
-        for field in ("common_name", "scientific_name", "category", "difficulty", "light", "watering"):
+        for field in ("common_name", "scientific_name", "category", "difficulty", "light", "watering", "fertilizing"):
             with self.subTest(field=field):
                 self.assertIn(field, errors)
         self.assertFalse(PlantSpecies.objects.exists())
@@ -700,3 +701,124 @@ class SpeciesTests(TestCase):
         )
         self.assertIn("flower_color", response.context["form"].errors)
         self.assertFalse(PlantSpecies.objects.exists())
+
+
+class PlantViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "viewer@example.com", "Viewer", "mossy-Fern-42!", is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "stranger@example.com", "Stranger", "mossy-Fern-42!", is_active=True
+        )
+        cls.species = PlantSpecies.objects.create(
+            common_name="Swiss Cheese Plant", scientific_name="Monstera deliciosa",
+            category="tropical", difficulty="easy", light="bright_indirect",
+            watering="weekly", soil_type=["Peat", "Perlite"], flower_color=["Cream"],
+            special_features="toxic,air_purifying", family="Araceae",
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.plant = Plant.objects.create(
+            created_user=self.user, plant_species=self.species, name="Monty",
+            nickname="Big M", planting_date=date(2025, 6, 1), check_interval_days=5,
+            status="attention",
+        )
+        self.url = reverse("plant_view", args=[self.plant.pk])
+
+    def test_shows_plant_and_species_details(self):
+        html = self.client.get(self.url).content.decode()
+        for text in ("Monty", "Big M", "Monstera deliciosa", "Needs Attention",
+                     "Bright Indirect", "Peat, Perlite", "Cream", "Araceae",
+                     "Toxic to Pets", "Air Purifying", "Jun 1, 2025",
+                     f'href="{reverse("plant_edit", args=[self.plant.pk])}"'):
+            with self.subTest(text=text):
+                self.assertIn(text, html)
+
+    def test_shows_care_logs_counts_and_open_tasks(self):
+        now = timezone.now()
+        CareLog.objects.create(plant=self.plant, activity="watering", performed_at=now - timedelta(days=2))
+        CareLog.objects.create(plant=self.plant, activity="watering", performed_at=now - timedelta(days=9))
+        CareLog.objects.create(plant=self.plant, activity="fertilizing", performed_at=now - timedelta(days=4), notes="Half strength")
+        CareTask.objects.create(plant=self.plant, kind="fertilize", due_date=timezone.localdate() + timedelta(days=3))
+        CareTask.objects.create(plant=self.plant, kind="prune", due_date=timezone.localdate(), completed_at=now)
+        response = self.client.get(self.url)
+        self.assertEqual(response.context["times_watered"], 2)
+        self.assertEqual(response.context["care_count"], 3)
+        self.assertEqual([t.kind for t in response.context["upcoming_tasks"]], ["fertilize"])
+        self.assertContains(response, "Half strength")
+        self.assertNotContains(response, "No care activity logged")
+
+    def test_plant_without_species(self):
+        self.plant.plant_species = None
+        self.plant.save()
+        response = self.client.get(self.url)
+        self.assertContains(response, "No species linked")
+        self.assertContains(response, "Link a Species")
+        self.assertContains(response, "No care activity logged")
+
+    def test_other_users_get_404(self):
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+
+    def test_missing_plant_is_404(self):
+        self.assertEqual(self.client.get(reverse("plant_view", args=[999])).status_code, 404)
+
+
+class PlantFlowerTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "flowers@example.com", "Flora", "mossy-Fern-42!", is_active=True
+        )
+        cls.species = PlantSpecies.objects.create(
+            common_name="Hibiscus", scientific_name="Hibiscus rosa-sinensis",
+            category="flowering", difficulty="easy", light="full_sun",
+            watering="every_2_3_days", flower_color=["Red", "Pink"],
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.data = {
+            "name": "Hibi", "plant_species": self.species.pk,
+            "planting_date": "2026-01-01", "check_interval_days": "3", "status": "healthy",
+        }
+
+    def test_flowering_plant_saves_colors(self):
+        self.client.post(reverse("plant_add"), {
+            **self.data, "has_flowers": "on", "flower_colors": ["Red", " ", "Light Pink"],
+        })
+        plant = Plant.objects.get()
+        self.assertTrue(plant.has_flowers)
+        self.assertEqual(plant.flower_colors, ["Red", "Light Pink"])
+        self.assertEqual(plant.flower_swatches, [("Red", "red"), ("Light Pink", "lightpink")])
+
+    def test_flowering_plant_needs_a_color(self):
+        response = self.client.post(reverse("plant_add"), {**self.data, "has_flowers": "on"})
+        self.assertIn("flower_colors", response.context["form"].errors)
+        self.assertFalse(Plant.objects.exists())
+
+    def test_colors_dropped_when_not_flowering(self):
+        self.client.post(reverse("plant_add"), {**self.data, "flower_colors": ["Red"]})
+        plant = Plant.objects.get()
+        self.assertFalse(plant.has_flowers)
+        self.assertEqual(plant.flower_colors, [])
+
+    def test_form_offers_species_colors(self):
+        html = self.client.get(reverse("plant_add")).content.decode()
+        self.assertIn('id="speciesFlowerColors"', html)
+        self.assertIn(f'"{self.species.pk}": ["Red", "Pink"]', html)
+
+    def test_colors_shown_on_view_and_list(self):
+        plant = Plant.objects.create(
+            created_user=self.user, name="Hibi", planting_date=date(2026, 1, 1),
+            has_flowers=True, flower_colors=["Red", "Sunset #1"],
+        )
+        view = self.client.get(reverse("plant_view", args=[plant.pk])).content.decode()
+        self.assertIn("background:red;", view)
+        self.assertIn("Sunset #1", view)
+        self.assertNotIn("background:sunset", view)
+        self.assertIn("Yes &middot; Red, Sunset #1", view)
+        self.assertIn("background:red;", self.client.get(reverse("my_plants")).content.decode())

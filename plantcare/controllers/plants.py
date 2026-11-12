@@ -3,9 +3,10 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from ..forms import PlantForm
-from ..models import Plant
+from ..models import CareLog, Plant, PlantSpecies
 
 PER_PAGE = 8
 
@@ -73,6 +74,16 @@ def index(request):
     })
 
 
+def _form_context(form, **extra):
+    # Species flower colors, so ticking "has flowers" can suggest them.
+    species_flower_colors = {
+        str(pk): colors
+        for pk, colors in PlantSpecies.objects.values_list("pk", "flower_color")
+        if colors
+    }
+    return {"form": form, "species_flower_colors": species_flower_colors, **extra}
+
+
 def add(request):
     form = PlantForm(request.POST or None, request.FILES or None)
 
@@ -83,11 +94,26 @@ def add(request):
         messages.success(request, f"{plant.name} was added to your plants.")
         return redirect("my_plants")
 
-    return render(request, "plants/form.html", {"form": form})
+    return render(request, "plants/form.html", _form_context(form))
 
 
-def view(request):
-    return render(request, "plants/view.html")
+def view(request, pk):
+    # Only the user who created the plant can see it; others get a 404.
+    plant = get_object_or_404(
+        Plant.objects.select_related("plant_species")
+        .annotate(last_care_at=Max("care_logs__performed_at")),
+        pk=pk, created_user=request.user,
+    )
+    logs = plant.care_logs.all()
+    return render(request, "plants/view.html", {
+        "plant": plant,
+        "species": plant.plant_species,
+        "recent_logs": logs[:5],
+        "care_count": logs.count(),
+        "times_watered": logs.filter(activity=CareLog.Activity.WATERING).count(),
+        "upcoming_tasks": plant.tasks.filter(completed_at__isnull=True).order_by("due_date")[:4],
+        "today": timezone.localdate(),
+    })
 
 
 def edit(request, pk):
@@ -109,7 +135,7 @@ def edit(request, pk):
         messages.success(request, f"{updated.name} was updated.")
         return redirect("my_plants")
 
-    return render(request, "plants/form.html", {"form": form, "plant": plant})
+    return render(request, "plants/form.html", _form_context(form, plant=plant))
 
 
 def details(request):

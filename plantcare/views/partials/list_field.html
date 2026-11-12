@@ -1,6 +1,7 @@
 {% comment %}
-  A list of text values, one input per value, with add/remove buttons. Usage:
-  {% include "species/_list_field.html" with field=form.soil_type placeholder="e.g., Loam" add_label="Add soil type" %}
+  A list of text values, one input per value, with add/remove buttons.
+  The page must also include "partials/list_field_assets.html" once. Usage:
+  {% include "partials/list_field.html" with field=form.soil_type placeholder="e.g., Loam" add_label="Add soil type" %}
 {% endcomment %}
 <div data-list-field>
   <span class="t-label" style="display:block; margin-bottom:6px;">{{ field.label }}{% if field.field.required %} *{% endif %}</span>

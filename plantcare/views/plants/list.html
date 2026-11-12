@@ -89,6 +89,7 @@
               <div class="t-small text-muted">No species linked</div>
               {% endif %}
             </div>
+            {% if plant.has_flowers %}<div>{% include "partials/flower_colors.html" with plant=plant %}</div>{% endif %}
             <div class="t-small text-muted">Planted {{ plant.planting_date|date:"M j, Y" }} &middot; every {{ plant.check_interval_days }} day{{ plant.check_interval_days|pluralize }}</div>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
               <span class="badge {% if plant.status == 'healthy' %}badge-success{% elif plant.status == 'attention' %}badge-warning{% else %}badge-error{% endif %}"><span class="badge-dot"></span>{{ plant.get_status_display }}</span>
@@ -105,7 +106,7 @@
               {% endwith %}
             </div>
             <div style="display:flex; gap:10px; margin-top:6px;">
-              <a href="{% url 'plant_view' %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+              <a href="{% url 'plant_view' plant.pk %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
               <a href="{% url 'plant_edit' plant.pk %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
             </div>
           </div>

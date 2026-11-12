@@ -1,0 +1,8 @@
+{# Flower color chips for a plant: a colored dot plus the name. Usage: {% include "partials/flower_colors.html" with plant=plant %} #}
+<span style="display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center;">
+  {% for name, css in plant.flower_swatches %}
+  <span style="display:inline-flex; align-items:center; gap:5px; padding:2px 8px 2px 4px; border:1px solid var(--border); border-radius:999px; font-size:12px; line-height:18px; background:#fff;">
+    <span aria-hidden="true" style="width:12px; height:12px; border-radius:50%; border:1px solid rgba(0,0,0,.15); flex:none;{% if css %} background:{{ css }};{% else %} background:repeating-linear-gradient(45deg,#ddd 0 2px,#fff 2px 4px);{% endif %}"></span>{{ name }}
+  </span>
+  {% endfor %}
+</span>

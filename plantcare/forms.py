@@ -6,43 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from .models import Plant, PlantSpecies, User
-
-
-class PlantForm(forms.ModelForm):
-    class Meta:
-        model = Plant
-        fields = [
-            "name", "nickname", "plant_species", "planting_date",
-            "check_interval_days", "status", "image",
-        ]
-
-    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
-
-    def clean_image(self):
-        image = self.cleaned_data.get("image")
-        if image and image.size > self.MAX_IMAGE_SIZE:
-            raise ValidationError("Image must be 5 MB or smaller.")
-        return image
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["plant_species"].queryset = PlantSpecies.objects.order_by("common_name")
-        self.fields["plant_species"].empty_label = "Select a species..."
-        if self.instance.pk and self.instance.planting_date:
-            # Date inputs need YYYY-MM-DD, not the localized display format.
-            self.initial["planting_date"] = self.instance.planting_date.isoformat()
-
-    def clean_name(self):
-        return self.cleaned_data["name"].strip()
-
-    def clean_nickname(self):
-        return self.cleaned_data["nickname"].strip()
-
-    def clean_planting_date(self):
-        planting_date = self.cleaned_data["planting_date"]
-        if planting_date > timezone.localdate():
-            raise ValidationError("Planting date cannot be in the future.")
-        return planting_date
+from .models.choices import SpecialFeature
 
 
 class MultipleTextInput(forms.TextInput):
@@ -96,17 +60,57 @@ class TextListField(forms.Field):
         return self.to_python(initial) != self.to_python(data)
 
 
+class PlantForm(forms.ModelForm):
+    flower_colors = TextListField(item_label="flower color", max_length=60, required=False)
+
+    class Meta:
+        model = Plant
+        fields = [
+            "name", "nickname", "plant_species", "planting_date",
+            "check_interval_days", "status", "image", "has_flowers", "flower_colors",
+        ]
+
+    MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image and image.size > self.MAX_IMAGE_SIZE:
+            raise ValidationError("Image must be 5 MB or smaller.")
+        return image
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["plant_species"].queryset = PlantSpecies.objects.order_by("common_name")
+        self.fields["plant_species"].empty_label = "Select a species..."
+        if self.instance.pk and self.instance.planting_date:
+            # Date inputs need YYYY-MM-DD, not the localized display format.
+            self.initial["planting_date"] = self.instance.planting_date.isoformat()
+
+    def clean_name(self):
+        return self.cleaned_data["name"].strip()
+
+    def clean_nickname(self):
+        return self.cleaned_data["nickname"].strip()
+
+    def clean_planting_date(self):
+        planting_date = self.cleaned_data["planting_date"]
+        if planting_date > timezone.localdate():
+            raise ValidationError("Planting date cannot be in the future.")
+        return planting_date
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("has_flowers"):
+            # Colors only make sense for a flowering plant.
+            cleaned_data["flower_colors"] = []
+        elif "flower_colors" in cleaned_data and not cleaned_data["flower_colors"]:
+            self.add_error("flower_colors", "Add at least one flower color.")
+        return cleaned_data
+
+
 class SpeciesForm(forms.ModelForm):
-    FEATURES = [
-        ("air_purifying", "Air Purifying"),
-        ("pet_friendly", "Pet Friendly"),
-        ("toxic", "Toxic to Pets"),
-        ("flowering", "Flowering"),
-        ("fragrant", "Fragrant"),
-        ("edible", "Edible"),
-    ]
     # Stored as a comma-separated list in PlantSpecies.special_features.
-    special_features = forms.MultipleChoiceField(choices=FEATURES, required=False)
+    special_features = forms.MultipleChoiceField(choices=SpecialFeature.choices, required=False)
     soil_type = TextListField(item_label="soil type", max_length=120, required=False)
     flower_color = TextListField(item_label="flower color", max_length=60, required=False)
 
@@ -122,6 +126,7 @@ class SpeciesForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["fertilizing"].required = True
         if self.instance.pk:
             self.initial["special_features"] = [
                 f for f in self.instance.special_features.split(",") if f
