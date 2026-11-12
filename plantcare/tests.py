@@ -216,7 +216,7 @@ class AccessTests(TestCase):
         self.assertIn("dashboard", private)
         for name in private:
             with self.subTest(page=name):
-                url = reverse(name, args=[1] if name == "plant_edit" else None)
+                url = reverse(name, args=[1] if name in ("plant_edit", "species_edit") else None)
                 self.assertRedirects(
                     self.client.get(url), f"{reverse('login')}?next={url}"
                 )
@@ -283,7 +283,11 @@ class PageRenderingTests(TestCase):
         plant = Plant.objects.create(
             created_user=self.user, name="Fern", planting_date=date(2026, 1, 1)
         )
-        args = {"plant_edit": [plant.pk]}
+        species = PlantSpecies.objects.create(
+            common_name="Fern", scientific_name="Nephrolepis exaltata",
+            category="indoor", difficulty="easy", light="medium", watering="weekly",
+        )
+        args = {"plant_edit": [plant.pk], "species_edit": [species.pk]}
         pages = [pattern for pattern in urlpatterns if pattern.name not in ("logout", "login")]
         for pattern in pages:
             with self.subTest(page=pattern.name):
@@ -580,3 +584,119 @@ class PlantEditTests(TestCase):
 
     def test_list_links_to_edit(self):
         self.assertContains(self.client.get(reverse("my_plants")), f'href="{self.url}"')
+
+
+class SpeciesTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "species@example.com", "Species Keeper", "mossy-Fern-42!", is_active=True
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.data = {
+            "common_name": " Snake Plant ", "scientific_name": "Dracaena trifasciata",
+            "category": "indoor", "difficulty": "very_easy", "light": "low_to_bright",
+            "watering": "biweekly", "special_features": ["air_purifying", "toxic"],
+        }
+
+    def make(self, **kw):
+        fields = {
+            "common_name": "Monstera", "scientific_name": "Monstera deliciosa",
+            "category": "tropical", "difficulty": "easy", "light": "bright_indirect",
+            "watering": "weekly",
+        }
+        return PlantSpecies.objects.create(**{**fields, **kw})
+
+    def test_add_creates_species(self):
+        response = self.client.post(reverse("species_add"), self.data, follow=True)
+        self.assertRedirects(response, reverse("species"))
+        self.assertContains(response, "Snake Plant was added")
+        species = PlantSpecies.objects.get()
+        self.assertEqual(species.common_name, "Snake Plant")
+        self.assertEqual(species.special_features, "air_purifying,toxic")
+
+    def test_add_requires_fields(self):
+        response = self.client.post(reverse("species_add"), {"common_name": ""})
+        errors = response.context["form"].errors
+        for field in ("common_name", "scientific_name", "category", "difficulty", "light", "watering"):
+            with self.subTest(field=field):
+                self.assertIn(field, errors)
+        self.assertFalse(PlantSpecies.objects.exists())
+
+    def test_scientific_name_unique_ignoring_case(self):
+        self.make(scientific_name="Dracaena Trifasciata")
+        response = self.client.post(reverse("species_add"), self.data)
+        self.assertIn("scientific_name", response.context["form"].errors)
+        self.assertEqual(PlantSpecies.objects.count(), 1)
+
+    def test_edit_is_prefilled_and_saves(self):
+        species = self.make(special_features="edible")
+        url = reverse("species_edit", args=[species.pk])
+        html = self.client.get(url).content.decode()
+        self.assertIn('value="Monstera"', html)
+        self.assertIn('value="tropical" selected', html)
+        self.assertIn('value="edible" checked', html)
+        self.assertIn("Save Changes", html)
+
+        response = self.client.post(url, {**self.data, "scientific_name": "Monstera deliciosa"})
+        self.assertRedirects(response, reverse("species"))
+        species.refresh_from_db()
+        self.assertEqual(species.common_name, "Snake Plant")
+        self.assertEqual(species.watering, "biweekly")
+
+    def test_edit_missing_species_is_404(self):
+        self.assertEqual(self.client.get(reverse("species_edit", args=[999])).status_code, 404)
+
+    def test_list_filters_and_counts(self):
+        self.make()
+        self.make(common_name="Aloe", scientific_name="Aloe vera", category="succulent", light="full_sun")
+        response = self.client.get(reverse("species"))
+        self.assertEqual(response.context["stats"]["total"], 2)
+        self.assertContains(response, "Monstera")
+        response = self.client.get(reverse("species"), {"category": "succulent"})
+        names = [s.common_name for s in response.context["page"].object_list]
+        self.assertEqual(names, ["Aloe"])
+        response = self.client.get(reverse("species"), {"q": "deliciosa"})
+        names = [s.common_name for s in response.context["page"].object_list]
+        self.assertEqual(names, ["Monstera"])
+
+    def test_soil_type_and_flower_color_save_as_lists(self):
+        data = {
+            **self.data,
+            "soil_type": [" Loam ", "", "Perlite mix", "loam"],
+            "flower_color": ["White", "Pink"],
+        }
+        self.client.post(reverse("species_add"), data)
+        species = PlantSpecies.objects.get()
+        # Blanks and case-insensitive duplicates are dropped; order is kept.
+        self.assertEqual(species.soil_type, ["Loam", "Perlite mix"])
+        self.assertEqual(species.flower_color, ["White", "Pink"])
+
+    def test_list_fields_default_to_empty(self):
+        self.client.post(reverse("species_add"), self.data)
+        species = PlantSpecies.objects.get()
+        self.assertEqual(species.soil_type, [])
+        self.assertEqual(species.flower_color, [])
+
+    def test_edit_shows_one_input_per_list_value(self):
+        species = self.make(soil_type=["Loam", "Bark"], flower_color=["Red"])
+        html = self.client.get(reverse("species_edit", args=[species.pk])).content.decode()
+        self.assertIn('name="soil_type" class="input" value="Loam"', html)
+        self.assertIn('name="soil_type" class="input" value="Bark"', html)
+        self.assertIn('name="flower_color" class="input" value="Red"', html)
+
+        url = reverse("species_edit", args=[species.pk])
+        self.client.post(url, {**self.data, "scientific_name": "Monstera deliciosa",
+                               "soil_type": ["Bark"], "flower_color": []})
+        species.refresh_from_db()
+        self.assertEqual(species.soil_type, ["Bark"])
+        self.assertEqual(species.flower_color, [])
+
+    def test_list_item_too_long_is_rejected(self):
+        response = self.client.post(
+            reverse("species_add"), {**self.data, "flower_color": ["x" * 61]}
+        )
+        self.assertIn("flower_color", response.context["form"].errors)
+        self.assertFalse(PlantSpecies.objects.exists())

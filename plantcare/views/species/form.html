@@ -1,0 +1,156 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — {% if species %}Edit {{ species.common_name }}{% else %}Add Plant Species{% endif %}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .species-form-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  @media (max-width: 640px) {
+    .species-form-pair { grid-template-columns:1fr; }
+  }
+  .list-field-row { display:flex; gap:8px; align-items:center; }
+  .list-field-row + .list-field-row { margin-top:8px; }
+  .list-field-row .input { flex:1; min-width:0; }
+  .list-field-remove { flex:none; width:38px; padding:0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  <!-- Sidebar (shared) -->
+  {% include "partials/sidebar.html" with current="species" %}
+
+  <div class="main-area">
+    <!-- Header (shared) -->
+    {% if species %}
+    {% include "partials/app_header.html" with title="Edit Plant Species" subtitle=species.common_name %}
+    {% else %}
+    {% include "partials/app_header.html" with title="Add Plant Species" subtitle="Add a new species to the list" %}
+    {% endif %}
+
+    <div style="padding:28px 32px;">
+
+      <!-- Breadcrumb -->
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'species' %}" class="nav-link" style="font-size:14px;">&larr; Back to Species</a>
+      </div>
+
+      <div class="card" style="padding:32px;">
+        {% for error in form.non_field_errors %}
+        <div role="alert" style="background:var(--error-bg); border:1px solid var(--error); border-radius:var(--radius-card); color:var(--error); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ error }}</div>
+        {% endfor %}
+
+        <form method="post" id="speciesForm" novalidate>
+          {% csrf_token %}
+
+          <!-- Basic Information -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Basic Information</h3>
+            <div style="display:grid; gap:20px;">
+              {% include "species/_field.html" with field=form.common_name placeholder="e.g., Swiss Cheese Plant" %}
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.scientific_name placeholder="e.g., Monstera deliciosa" %}
+                {% include "species/_field.html" with field=form.family placeholder="e.g., Araceae" %}
+              </div>
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.category empty="Select category..." %}
+                {% include "species/_field.html" with field=form.origin placeholder="e.g., Central America" %}
+              </div>
+              {% include "species/_field.html" with field=form.description placeholder="Add a description of this plant species..." %}
+            </div>
+          </div>
+
+          <!-- Care Requirements -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Care Requirements</h3>
+            <div style="display:grid; gap:20px;">
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.difficulty empty="Select difficulty..." %}
+                {% include "species/_field.html" with field=form.light empty="Select light level..." %}
+              </div>
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.watering empty="Select frequency..." %}
+                {% include "species/_field.html" with field=form.fertilizing empty="Select schedule..." %}
+              </div>
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.temperature_range placeholder="e.g., 18-24°C" %}
+                {% include "species/_field.html" with field=form.humidity empty="Select humidity..." %}
+              </div>
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.growth_rate empty="Select growth rate..." %}
+                {% include "species/_list_field.html" with field=form.soil_type placeholder="e.g., Well-draining potting mix" add_label="Add soil type" %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Plant Characteristics -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Plant Characteristics</h3>
+            <div style="display:grid; gap:20px;">
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.mature_height placeholder="e.g., 2-3 meters" %}
+                {% include "species/_field.html" with field=form.mature_width placeholder="e.g., 1-2 meters" %}
+              </div>
+              <div class="species-form-pair">
+                {% include "species/_field.html" with field=form.foliage_color placeholder="e.g., Dark green" %}
+                {% include "species/_list_field.html" with field=form.flower_color placeholder="e.g., White" add_label="Add flower color" %}
+              </div>
+              <div>
+                <span class="t-label" style="display:block; margin-bottom:6px;">Special Features</span>
+                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;">
+                  {% for value, label in form.special_features.field.choices %}
+                  <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="special_features" value="{{ value }}"{% if value in form.special_features.value %} checked{% endif %}>
+                    <span class="t-small">{{ label }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+                {% for error in form.special_features.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; gap:12px; justify-content:flex-end; padding-top:20px; border-top:1px solid var(--border);">
+            <a href="{% url 'species' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{% if species %}Save Changes{% else %}Add Species{% endif %}</button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  // "+ Add" clones the field's row template; "×" removes a row
+  // (the last remaining row is just cleared).
+  document.addEventListener('click', function (e) {
+    var add = e.target.closest('[data-list-add]');
+    if (add) {
+      var field = add.closest('[data-list-field]');
+      var rows = field.querySelector('[data-list-rows]');
+      var row = field.querySelector('template').content.firstElementChild.cloneNode(true);
+      rows.appendChild(row);
+      row.querySelector('input').focus();
+      return;
+    }
+    var remove = e.target.closest('[data-list-remove]');
+    if (remove) {
+      var rowsEl = remove.closest('[data-list-rows]');
+      var current = remove.closest('.list-field-row');
+      if (rowsEl.children.length > 1) {
+        current.remove();
+      } else {
+        current.querySelector('input').value = '';
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}

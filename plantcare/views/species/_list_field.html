@@ -1,0 +1,28 @@
+{% comment %}
+  A list of text values, one input per value, with add/remove buttons. Usage:
+  {% include "species/_list_field.html" with field=form.soil_type placeholder="e.g., Loam" add_label="Add soil type" %}
+{% endcomment %}
+<div data-list-field>
+  <span class="t-label" style="display:block; margin-bottom:6px;">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+  <div data-list-rows>
+    {% for item in field.value %}
+    <div class="list-field-row">
+      <input type="text" name="{{ field.html_name }}" class="input{% if field.errors %} error{% endif %}" value="{{ item }}" maxlength="{{ field.field.max_length }}" placeholder="{{ placeholder }}" aria-label="{{ field.label }}">
+      <button type="button" class="btn btn-secondary btn-sm list-field-remove" data-list-remove aria-label="Remove">&times;</button>
+    </div>
+    {% empty %}
+    <div class="list-field-row">
+      <input type="text" name="{{ field.html_name }}" class="input{% if field.errors %} error{% endif %}" value="" maxlength="{{ field.field.max_length }}" placeholder="{{ placeholder }}" aria-label="{{ field.label }}">
+      <button type="button" class="btn btn-secondary btn-sm list-field-remove" data-list-remove aria-label="Remove">&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+  <template>
+    <div class="list-field-row">
+      <input type="text" name="{{ field.html_name }}" class="input" value="" maxlength="{{ field.field.max_length }}" placeholder="{{ placeholder }}" aria-label="{{ field.label }}">
+      <button type="button" class="btn btn-secondary btn-sm list-field-remove" data-list-remove aria-label="Remove">&times;</button>
+    </div>
+  </template>
+  <button type="button" class="btn btn-secondary btn-sm" data-list-add style="margin-top:8px;">+ {{ add_label|default:"Add another" }}</button>
+  {% for error in field.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+</div>

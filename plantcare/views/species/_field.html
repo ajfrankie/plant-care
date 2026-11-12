@@ -1,0 +1,23 @@
+{% comment %}
+  One labelled form field. Usage:
+  {% include "species/_field.html" with field=form.family placeholder="e.g., Araceae" empty="Select..." %}
+{% endcomment %}
+<div>
+  <label class="t-label" for="{{ field.id_for_label }}" style="display:block; margin-bottom:6px;">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+  {% if field.widget_type == "select" %}
+  <select id="{{ field.id_for_label }}" name="{{ field.html_name }}" class="select{% if field.errors %} input error{% endif %}"{% if field.field.required %} required{% endif %} style="width:100%;">
+    {% for value, label in field.field.choices %}
+    {% if value == "" %}
+    <option value="">{{ empty|default:"Select..." }}</option>
+    {% else %}
+    <option value="{{ value }}"{% if value|stringformat:"s" == field.value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+    {% endif %}
+    {% endfor %}
+  </select>
+  {% elif field.widget_type == "textarea" %}
+  <textarea id="{{ field.id_for_label }}" name="{{ field.html_name }}" class="input{% if field.errors %} error{% endif %}" rows="4" placeholder="{{ placeholder }}" style="width:100%; resize:vertical;">{{ field.value|default_if_none:'' }}</textarea>
+  {% else %}
+  <input type="text" id="{{ field.id_for_label }}" name="{{ field.html_name }}" class="input{% if field.errors %} error{% endif %}" value="{{ field.value|default_if_none:'' }}"{% if field.field.max_length %} maxlength="{{ field.field.max_length }}"{% endif %} placeholder="{{ placeholder }}"{% if field.field.required %} required{% endif %} style="width:100%;">
+  {% endif %}
+  {% for error in field.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+</div>
