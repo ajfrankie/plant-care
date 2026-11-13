@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, library, plants, public, species
+from .controllers import accounts, care, dashboard, library, plants, public, species, watering
 
 urlpatterns = [
     # Public site
@@ -24,6 +24,7 @@ urlpatterns = [
     path("my-plants/add/", plants.add, name="plant_add"),
     path("my-plants/<int:pk>/", plants.view, name="plant_view"),
     path("my-plants/<int:pk>/edit/", plants.edit, name="plant_edit"),
+    path("my-plants/<int:pk>/care-plan/", plants.replan, name="plant_replan"),
     path("my-plants/details/", plants.details, name="plant_details"),
     path("plant-health/", plants.health, name="plant_health"),
 
@@ -37,6 +38,17 @@ urlpatterns = [
     path("species/<int:pk>/edit/", species.edit, name="species_edit"),
 
     path("care-schedule/", care.schedule, name="care_schedule"),
-    path("watering-schedule/", care.watering, name="watering_schedule"),
+    path("care-schedule/auto-plan/", care.auto_plan, name="care_auto_plan"),
+    path("care-schedule/tasks/add/", care.task_add, name="care_task_add"),
+    path("care-schedule/tasks/<int:pk>/complete/", care.task_complete, name="care_task_complete"),
+    path("care-schedule/tasks/<int:pk>/delete/", care.task_delete, name="care_task_delete"),
+    path("watering-schedule/", watering.index, name="watering_schedule"),
+    path("watering-schedule/add/", watering.add, name="water_reminder_add"),
+    path("watering-schedule/auto/", watering.auto_create, name="water_reminder_auto"),
+    path("watering-schedule/water-all/", watering.water_all, name="water_reminder_water_all"),
+    path("watering-schedule/<int:pk>/edit/", watering.edit, name="water_reminder_edit"),
+    path("watering-schedule/<int:pk>/water/", watering.water, name="water_reminder_water"),
+    path("watering-schedule/<int:pk>/toggle/", watering.toggle, name="water_reminder_toggle"),
+    path("watering-schedule/<int:pk>/delete/", watering.delete, name="water_reminder_delete"),
     path("care-history/", care.history, name="care_history"),
 ]

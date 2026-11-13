@@ -2,6 +2,13 @@
 
 {% block title %}Plant Care — Care Schedule{% endblock %}
 
+{% block head_extra %}
+<style>
+  #task-dialog::backdrop { background: rgba(20, 32, 24, .45); }
+  .task-card:hover, .task-card:focus-visible { box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="app-shell">
 
@@ -10,429 +17,375 @@
 
   <div class="main-area">
     <!-- Header (shared) -->
-    {% include "partials/app_header.html" with title="Care Schedule" subtitle="Your week-by-week plant care plan" search="Search your plants..." %}
+    {% include "partials/app_header.html" with title="Care Schedule" subtitle="Your week-by-week plant care plan" %}
 
     <div style="padding:28px 32px;">
+
+      {% for message in messages %}
+      <div role="status" style="background:var(--success-bg); border:1px solid var(--success); border-radius:var(--radius-card); color:var(--success); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ message }}</div>
+      {% endfor %}
 
       <!-- Quick stats row -->
       <div class="grid-3" style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px;">
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#A86712" stroke-width="1.6"/></svg></div>
-            <div class="value">3</div>
+            <div class="value" data-stat="today">{{ stats.today }}</div>
           </div>
           <div class="t-small text-muted" style="margin-top:4px;">Tasks Due Today</div>
         </div>
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <div class="stat-icon" style="background:var(--info-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#2563A6" stroke-width="1.6"/><path d="M3 9h18" stroke="#2563A6" stroke-width="1.6"/></svg></div>
-            <div class="value">8</div>
+            <div class="value" data-stat="week">{{ stats.week }}</div>
           </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Tasks This Week</div>
+          <div class="t-small text-muted" style="margin-top:4px;">Open Tasks This Week</div>
         </div>
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <div class="stat-icon" style="background:var(--error-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#B42318" stroke-width="1.6"/><path d="M12 8v4M12 16v.5" stroke="#B42318" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-            <div class="value">1</div>
+            <div class="value" data-stat="overdue">{{ stats.overdue }}</div>
           </div>
           <div class="t-small text-muted" style="margin-top:4px;">Overdue Tasks</div>
         </div>
       </div>
 
+      {% if unplanned %}
+      <!-- Plants without a schedule -->
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:var(--info-bg); border:1px solid var(--info); border-radius:var(--radius-card); padding:14px 18px; margin-top:20px;" data-unplanned="{{ unplanned }}">
+        <div class="t-small" style="color:var(--info);">
+          <strong>{{ unplanned }} plant{{ unplanned|pluralize }} {{ unplanned|pluralize:"has,have" }} no care schedule.</strong>
+          We can analyse {{ unplanned|pluralize:"its,their" }} species care needs and create one automatically.
+        </div>
+        <form method="post" action="{% url 'care_auto_plan' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="btn btn-primary btn-sm">Create Schedules</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Filters (the selects below point at this form) -->
+      <form id="filters" method="get">
+        <input type="hidden" name="view" value="{{ view }}">
+        <input type="hidden" name="date" value="{{ anchor|date:'Y-m-d' }}">
+      </form>
+
       <!-- View controls -->
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-top:32px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <button class="btn btn-sm" style="background:var(--primary); color:#fff;">Week View</button>
-          <button class="btn btn-secondary btn-sm">Month View</button>
-          <button class="btn btn-secondary btn-sm">List View</button>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          {% for value, label in views %}
+          <a href="?view={{ value }}&amp;date={{ anchor|date:'Y-m-d' }}{% if kind %}&amp;kind={{ kind }}{% endif %}{% if plant_id %}&amp;plant={{ plant_id }}{% endif %}{% if status != 'open' %}&amp;status={{ status }}{% endif %}"
+             class="btn btn-sm{% if value == view %} btn-primary{% else %} btn-secondary{% endif %}"{% if value == view %} aria-current="page"{% endif %}>{{ label }}</a>
+          {% endfor %}
         </div>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button class="btn-icon" aria-label="Previous week">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <div class="t-label">Nov 8 – Nov 14, 2026</div>
-          <button class="btn-icon" aria-label="Next week">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <button class="btn btn-secondary btn-sm">Today</button>
-        </div>
-      </div>
-
-      <!-- Calendar week view -->
-      <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-card); margin-top:20px; overflow:hidden;">
-
-        <!-- Day headers -->
-        <div style="display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-bottom:1px solid var(--border);">
-          <div style="padding:14px 16px; border-right:1px solid var(--border);">
-            <div class="t-label">Sunday</div>
-            <div class="t-small text-muted">Nov 8</div>
-          </div>
-          <div style="padding:14px 16px; border-right:1px solid var(--border);">
-            <div class="t-label">Monday</div>
-            <div class="t-small text-muted">Nov 9</div>
-          </div>
-          <div style="padding:14px 16px; border-right:1px solid var(--border);">
-            <div class="t-label">Tuesday</div>
-            <div class="t-small text-muted">Nov 10</div>
-          </div>
-          <div style="padding:14px 16px; border-right:1px solid var(--border);">
-            <div class="t-label">Wednesday</div>
-            <div class="t-small text-muted">Nov 11</div>
-          </div>
-          <div style="padding:14px 16px; border-right:1px solid var(--border);">
-            <div class="t-label">Thursday</div>
-            <div class="t-small text-muted">Nov 12</div>
-          </div>
-          <div style="padding:14px 16px; border-right:1px solid var(--border);">
-            <div class="t-label">Friday</div>
-            <div class="t-small text-muted">Nov 13</div>
-          </div>
-          <div style="padding:14px 16px;">
-            <div class="t-label">Saturday</div>
-            <div class="t-small text-muted">Nov 14</div>
-          </div>
-        </div>
-
-        <!-- Day cells with tasks -->
-        <div style="display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); min-height:400px;">
-
-          <!-- Sunday (Today) -->
-          <div style="padding:12px; border-right:1px solid var(--border); background:var(--pale-sage);">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:600; margin-bottom:10px;">8</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--warning); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Snake Plant</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#A86712" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--warning); font-weight:600;">Water</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Bedroom</div>
-              </div>
-
-              <div style="background:#fff; border:1px solid var(--error); border-left:3px solid var(--error); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Peace Lily</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#B42318" stroke-width="1.8"/><circle cx="12" cy="12" r="8" stroke="#B42318" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--error); font-weight:600;">Fertilize</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Overdue</div>
-              </div>
-
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Pothos</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Mist</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Kitchen</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Monday -->
-          <div style="padding:12px; border-right:1px solid var(--border);">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">9</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Monstera</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Water</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Living Room</div>
-              </div>
-
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Aloe Vera</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Water</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Garden</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tuesday -->
-          <div style="padding:12px; border-right:1px solid var(--border);">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">10</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Fiddle Leaf Fig</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="#2563A6" stroke-width="1.8" stroke-linecap="round"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Prune</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Living Room</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Wednesday -->
-          <div style="padding:12px; border-right:1px solid var(--border);">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">11</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Spider Plant</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Water</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Office</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Thursday -->
-          <div style="padding:12px; border-right:1px solid var(--border);">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">12</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Pothos</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Water</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Kitchen</div>
-              </div>
-
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Rubber Plant</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Wipe Leaves</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Office</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Friday -->
-          <div style="padding:12px; border-right:1px solid var(--border);">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">13</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Boston Fern</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Mist</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Bathroom</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Saturday -->
-          <div style="padding:12px;">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">14</div>
-
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <div style="background:#fff; border:1px solid var(--border); border-left:3px solid var(--info); border-radius:6px; padding:8px 10px; cursor:pointer;">
-                <div class="t-small" style="font-weight:600; margin-bottom:4px;">Jade Plant</div>
-                <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.8"/></svg>
-                  <span style="font-size:11px; color:var(--info); font-weight:600;">Water</span>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted);">Windowsill</div>
-              </div>
-            </div>
-          </div>
-
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <select name="kind" form="filters" class="select" style="width:160px; height:36px;" onchange="this.form.submit()" aria-label="Task type">
+            <option value="">All Tasks</option>
+            {% for value, label in kind_choices %}
+            <option value="{{ value }}"{% if value == kind %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <select name="plant" form="filters" class="select" style="width:170px; height:36px;" onchange="this.form.submit()" aria-label="Plant">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+            <option value="{{ plant.pk }}"{% if plant.pk|stringformat:"s" == plant_id %} selected{% endif %}>{{ plant.name }}</option>
+            {% endfor %}
+          </select>
+          <noscript><button type="submit" form="filters" class="btn btn-secondary btn-sm">Filter</button></noscript>
+          {% if is_filtered %}<a href="?view={{ view }}&amp;date={{ anchor|date:'Y-m-d' }}" class="btn btn-secondary btn-sm">Clear</a>{% endif %}
+          <button type="button" class="btn btn-primary btn-sm" onclick="var p=document.getElementById('add-task'); p.open=!p.open; if(p.open){p.scrollIntoView({behavior:'smooth', block:'nearest'});}">+ Add Task</button>
         </div>
       </div>
 
-      <!-- Upcoming tasks -->
+      <!-- Add task -->
+      <details id="add-task" class="card" style="margin-top:20px;"{% if show_form %} open{% endif %}>
+        <summary class="t-h4" style="cursor:pointer;">Schedule a Care Task</summary>
+        {% if plants %}
+        <form method="post" action="{% url 'care_task_add' %}" style="margin-top:16px;" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+          {% for error in form.non_field_errors %}<p class="hint error">{{ error }}</p>{% endfor %}
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; align-items:start;">
+            <div>
+              <label class="t-label" for="id_plant" style="display:block; margin-bottom:6px;">Plant *</label>
+              <select id="id_plant" name="plant" class="select{% if form.plant.errors %} input error{% endif %}" required style="width:100%;">
+                <option value="">Select a plant...</option>
+                {% for plant in plants %}
+                <option value="{{ plant.pk }}"{% if plant.pk|stringformat:"s" == form.plant.value|stringformat:"s" %} selected{% endif %}>{{ plant.name }}</option>
+                {% endfor %}
+              </select>
+              {% for error in form.plant.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              <label class="t-label" for="id_kind" style="display:block; margin-bottom:6px;">Task *</label>
+              <select id="id_kind" name="kind" class="select{% if form.kind.errors %} input error{% endif %}" required style="width:100%;">
+                <option value="">Select a task...</option>
+                {% for value, label in kind_choices %}
+                <option value="{{ value }}"{% if value == form.kind.value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% for error in form.kind.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              <label class="t-label" for="id_due_date" style="display:block; margin-bottom:6px;">Due Date *</label>
+              <input type="date" id="id_due_date" name="due_date" class="input{% if form.due_date.errors %} error{% endif %}" value="{{ form.due_date.value|default_if_none:'' }}" min="{{ today|date:'Y-m-d' }}" required style="width:100%;">
+              {% for error in form.due_date.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              <label class="t-label" for="id_repeat_every_days" style="display:block; margin-bottom:6px;">Repeat Every (days)</label>
+              <input type="number" id="id_repeat_every_days" name="repeat_every_days" class="input{% if form.repeat_every_days.errors %} error{% endif %}" value="{{ form.repeat_every_days.value|default_if_none:'' }}" min="1" max="365" step="1" placeholder="Doesn't repeat" style="width:100%;">
+              {% for error in form.repeat_every_days.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label class="t-label" for="id_notes" style="display:block; margin-bottom:6px;">Notes</label>
+            <input type="text" id="id_notes" name="notes" class="input{% if form.notes.errors %} error{% endif %}" value="{{ form.notes.value|default_if_none:'' }}" maxlength="200" placeholder="e.g., Half-strength liquid fertilizer" style="width:100%;">
+            {% for error in form.notes.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="this.closest('details').open=false">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm">Schedule Task</button>
+          </div>
+        </form>
+        {% else %}
+        <p class="t-small text-secondary" style="margin-top:12px;">Add a plant first, then you can schedule its care. <a href="{% url 'plant_add' %}">Add a plant</a></p>
+        {% endif %}
+      </details>
+
+      {% if view != "list" %}
+      <!-- Calendar navigation -->
+      <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:24px;">
+        <a href="?{{ nav_query }}&amp;date={{ prev_date|date:'Y-m-d' }}" class="btn-icon" aria-label="Previous {% if view == 'month' %}month{% else %}week{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </a>
+        <div class="t-label" style="min-width:170px; text-align:center;">{{ range_label }}</div>
+        <a href="?{{ nav_query }}&amp;date={{ next_date|date:'Y-m-d' }}" class="btn-icon" aria-label="Next {% if view == 'month' %}month{% else %}week{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </a>
+        <a href="?{{ nav_query }}" class="btn btn-secondary btn-sm">Today</a>
+      </div>
+
+      <!-- Calendar -->
+      <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius-card); margin-top:16px; overflow-x:auto;">
+        <div style="min-width:760px;">
+
+          <!-- Day headers -->
+          <div style="display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-bottom:1px solid var(--border);">
+            {% if view == "week" %}
+            {% for cell in weeks.0 %}
+            <div style="padding:14px 16px;{% if not forloop.last %} border-right:1px solid var(--border);{% endif %}">
+              <div class="t-label">{{ cell.date|date:"l" }}</div>
+              <div class="t-small text-muted">{{ cell.date|date:"M j" }}</div>
+            </div>
+            {% endfor %}
+            {% else %}
+            {% for name in weekdays %}
+            <div class="t-label" style="padding:12px 16px;{% if not forloop.last %} border-right:1px solid var(--border);{% endif %}">{{ name|slice:":3" }}</div>
+            {% endfor %}
+            {% endif %}
+          </div>
+
+          {% for week in weeks %}
+          <div style="display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); min-height:{% if view == 'week' %}400px{% else %}120px{% endif %};{% if not forloop.last %} border-bottom:1px solid var(--border);{% endif %}">
+            {% for cell in week %}
+            <div style="padding:{% if view == 'week' %}12px{% else %}8px{% endif %};{% if not forloop.last %} border-right:1px solid var(--border);{% endif %}{% if cell.is_today %} background:var(--pale-sage);{% elif not cell.in_month %} background:var(--bg-secondary);{% endif %}"{% if cell.is_today %} data-today{% endif %}>
+              <div style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-size:12px; margin-bottom:{% if view == 'week' %}10px{% else %}6px{% endif %};{% if cell.is_today %} background:var(--primary); color:#fff; font-weight:600;{% else %} color:var(--text-muted);{% endif %}{% if not cell.in_month %} opacity:.5;{% endif %}">{{ cell.date.day }}</div>
+
+              <div style="display:flex; flex-direction:column; gap:{% if view == 'week' %}8px{% else %}4px{% endif %};">
+                {% for task in cell.tasks %}
+                {% if view == "week" or forloop.counter <= 3 %}
+                {% if task.is_done %}{% with tone="var(--success)" %}{% include "care/_task_card.html" %}{% endwith %}
+                {% elif task.due_date < today %}{% with tone="var(--error)" %}{% include "care/_task_card.html" %}{% endwith %}
+                {% elif task.due_date == today %}{% with tone="var(--warning)" %}{% include "care/_task_card.html" %}{% endwith %}
+                {% else %}{% with tone="var(--info)" %}{% include "care/_task_card.html" %}{% endwith %}{% endif %}
+                {% endif %}
+                {% endfor %}
+                {% if view == "month" and cell.tasks|length > 3 %}
+                <a href="?{{ nav_query }}&amp;view=week&amp;date={{ cell.date|date:'Y-m-d' }}" class="t-small" style="font-size:11px;">+{{ cell.tasks|length|add:"-3" }} more</a>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Task list -->
       <div style="margin-top:32px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-          <h3 class="t-h3">Upcoming Tasks</h3>
-          <div style="display:flex; gap:10px;">
-            <select class="select" style="width:160px; height:38px;">
-              <option>All Tasks</option>
-              <option>Watering Only</option>
-              <option>Fertilizing Only</option>
-              <option>Maintenance</option>
-            </select>
-            <select class="select" style="width:140px; height:38px;">
-              <option>All Locations</option>
-              <option>Living Room</option>
-              <option>Bedroom</option>
-              <option>Kitchen</option>
-              <option>Office</option>
-              <option>Garden</option>
-            </select>
-          </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <h3 class="t-h3">{% if status == "open" %}Upcoming Tasks{% elif status == "done" %}Completed Tasks{% else %}All Tasks{% endif %}</h3>
+          <select name="status" form="filters" class="select" style="width:160px; height:38px;" onchange="this.form.submit()" aria-label="Show">
+            {% for value, label in status_choices %}
+            <option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="card">
-          <div style="display:flex; flex-direction:column; gap:0;">
+          {% for task in page.object_list %}
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:16px 0;{% if not forloop.last %} border-bottom:1px solid var(--border);{% endif %}{% if task.is_done %} opacity:.7;{% endif %}" data-task="{{ task.pk }}">
+            {% if task.is_done %}
+            <input type="checkbox" checked disabled aria-label="Done" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
+            {% else %}
+            <form method="post" action="{% url 'care_task_complete' task.pk %}" style="display:flex; flex:none;">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <input type="checkbox" onchange="this.form.submit()" aria-label="Mark {{ task.get_kind_display|lower }} for {{ task.plant.name }} as done" style="width:20px; height:20px; accent-color:var(--primary); cursor:pointer;">
+              <noscript><button type="submit" class="btn btn-secondary btn-sm">Done</button></noscript>
+            </form>
+            {% endif %}
 
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#214E34; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Snake Plant</div>
-                <div class="t-small text-muted">Dracaena trifasciata • Bedroom</div>
+            <a href="{% url 'plant_view' task.plant.pk %}" style="flex:none;" tabindex="-1">
+              {% if task.plant.image %}
+              <img src="{{ task.plant.image.url }}" alt="" loading="lazy" style="width:46px; height:46px; border-radius:8px; object-fit:cover; display:block;">
+              {% else %}
+              <div style="width:46px; height:46px; border-radius:8px; background:var(--pale-sage); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600;">{{ task.plant.name|first|upper }}</div>
+              {% endif %}
+            </a>
+            <div style="flex:1; min-width:160px;">
+              <a href="{% url 'plant_view' task.plant.pk %}" class="t-label" style="color:inherit; text-decoration:none;">{{ task.plant.name }}</a>
+              <div class="t-small text-muted">
+                {% if task.plant.plant_species %}<em>{{ task.plant.plant_species.scientific_name }}</em>{% else %}No species linked{% endif %}
+                {% if task.notes %} &bull; {{ task.notes }}{% endif %}
               </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Water</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-warning"><span class="badge-dot"></span>Today</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
             </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#5C9A5F; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Peace Lily</div>
-                <div class="t-small text-muted">Spathiphyllum wallisii • Balcony</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--text-2)" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Fertilize</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-error"><span class="badge-dot"></span>Overdue</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:220px;">
+              {% include "care/_kind_icon.html" with kind=task.kind size=16 color="var(--text-2)" %}
+              <span class="t-body">{{ task.get_kind_display }}</span>
+              {% if task.repeat_every_days %}<span class="t-small text-muted">&#x21bb; {% include "care/_repeat_label.html" with every=task.repeat_every_days %}</span>{% endif %}
+              {% if task.auto_generated %}<span class="badge badge-neutral" title="Created automatically from the plant's species care needs">Auto</span>{% endif %}
             </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#2F6B3C; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Pothos</div>
-                <div class="t-small text-muted">Epipremnum aureum • Kitchen</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Mist</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-info"><span class="badge-dot"></span>Today</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
+            <div style="min-width:140px;">
+              {% if task.is_done %}
+              <span class="badge badge-success"><span class="badge-dot"></span>Done {{ task.completed_at|date:"M j" }}</span>
+              {% elif task.due_date < today %}
+              <span class="badge badge-error"><span class="badge-dot"></span>Overdue &middot; {{ task.due_date|date:"M j" }}</span>
+              {% elif task.due_date == today %}
+              <span class="badge badge-warning"><span class="badge-dot"></span>Today</span>
+              {% elif task.due_date == tomorrow %}
+              <span class="badge badge-info"><span class="badge-dot"></span>Tomorrow</span>
+              {% else %}
+              <span class="badge badge-info"><span class="badge-dot"></span>{{ task.due_date|date:"M j" }}</span>
+              {% endif %}
             </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#4F8A52; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Monstera Deliciosa</div>
-                <div class="t-small text-muted">Monstera deliciosa • Living Room</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Water</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-info"><span class="badge-dot"></span>Tomorrow</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+            <form method="post" action="{% url 'care_task_delete' task.pk %}" style="flex:none;" onsubmit="return confirm('Remove this {{ task.get_kind_display|lower|escapejs }} task for {{ task.plant.name|escapejs }}?');">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next_url }}">
+              <button type="submit" class="btn-icon" style="border:none;" aria-label="Remove {{ task.get_kind_display|lower }} task for {{ task.plant.name }}" title="Remove task">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#3C7A48; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Aloe Vera</div>
-                <div class="t-small text-muted">Aloe barbadensis • Garden</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Water</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-info"><span class="badge-dot"></span>Tomorrow</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Fiddle Leaf Fig</div>
-                <div class="t-small text-muted">Ficus lyrata • Living Room</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="var(--text-2)" stroke-width="1.6" stroke-linecap="round"/></svg>
-                <span class="t-body">Prune</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-info"><span class="badge-dot"></span>Nov 10</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#6AA66B; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Spider Plant</div>
-                <div class="t-small text-muted">Chlorophytum comosum • Office</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Water</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-info"><span class="badge-dot"></span>Nov 11</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px 0;">
-              <input type="checkbox" style="width:20px; height:20px; accent-color:var(--primary); flex:none;">
-              <div style="width:46px; height:46px; border-radius:8px; background:#2F6B3C; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Pothos</div>
-                <div class="t-small text-muted">Epipremnum aureum • Kitchen</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; min-width:120px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--text-2)" stroke-width="1.6"/></svg>
-                <span class="t-body">Water</span>
-              </div>
-              <div style="min-width:140px;">
-                <span class="badge badge-info"><span class="badge-dot"></span>Nov 12</span>
-              </div>
-              <button class="btn-icon" style="border:none;" aria-label="More options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-              </button>
-            </div>
-
+            </form>
           </div>
+          {% empty %}
+          <div style="text-align:center; padding:32px 0;">
+            <p class="t-body text-secondary">
+              {% if status == "done" %}No completed tasks yet.{% elif is_filtered %}No tasks match these filters.{% else %}Nothing scheduled — you're all caught up!{% endif %}
+            </p>
+            {% if status == "open" and not is_filtered %}
+            <button type="button" class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="var p=document.getElementById('add-task'); p.open=true; p.scrollIntoView({behavior:'smooth'});">+ Schedule a Task</button>
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
 
-        <div style="text-align:center; margin-top:16px;">
-          <button class="btn btn-secondary btn-sm">Load More Tasks</button>
+        {% if page.has_other_pages %}
+        <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-top:16px;">
+          {% if page.has_previous %}<a href="?{{ query_string }}&amp;page={{ page.previous_page_number }}" class="btn btn-secondary btn-sm">Previous</a>{% endif %}
+          <span class="t-small text-muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+          {% if page.has_next %}<a href="?{{ query_string }}&amp;page={{ page.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>{% endif %}
         </div>
+        {% endif %}
       </div>
 
     </div>
   </div>
 </div>
+
+<!-- Task popup (filled in from the clicked calendar card) -->
+<dialog id="task-dialog" aria-labelledby="task-dialog-title" style="border:none; border-radius:var(--radius-card); padding:0; width:min(420px, calc(100vw - 32px)); box-shadow:0 12px 40px rgba(0,0,0,.2);">
+  <div style="padding:20px 22px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+    <div>
+      <div class="t-small text-muted" data-field="kind"></div>
+      <h3 id="task-dialog-title" class="t-h4" data-field="plant" style="margin-top:2px;"></h3>
+      <div class="t-small text-muted" data-field="species" style="font-style:italic;"></div>
+    </div>
+    <button type="button" class="btn-icon" style="border:none;" aria-label="Close" data-close>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <dl style="padding:16px 22px; margin:0; display:grid; grid-template-columns:auto 1fr; gap:10px 16px; font-size:14px;">
+    <dt class="text-muted">Status</dt><dd style="margin:0;"><span class="badge" data-field="status"><span class="badge-dot"></span><span></span></span></dd>
+    <dt class="text-muted">Due</dt><dd style="margin:0;" data-field="due"></dd>
+    <dt class="text-muted" data-row="repeat">Repeats</dt><dd style="margin:0;" data-row="repeat" data-field="repeat"></dd>
+    <dt class="text-muted" data-row="notes">Notes</dt><dd style="margin:0;" data-row="notes" data-field="notes"></dd>
+  </dl>
+  <p class="t-small text-secondary" data-row="planned" style="padding:0 22px; margin:0 0 12px;">This is an upcoming repeat. It becomes a task you can complete once the one before it is done.</p>
+  <div style="padding:16px 22px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end;">
+    <form method="post" data-form="delete" onsubmit="return confirm('Remove this task?');" style="margin-right:auto;">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" class="btn btn-destructive btn-sm">Delete</button>
+    </form>
+    <a class="btn btn-secondary btn-sm" data-field="plant-link">View Plant</a>
+    <form method="post" data-form="complete">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" class="btn btn-primary btn-sm">Mark as Done</button>
+    </form>
+  </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var dialog = document.getElementById("task-dialog");
+  if (!dialog || typeof dialog.showModal !== "function") return;  // falls back to the plant link
+
+  function field(name) { return dialog.querySelector('[data-field="' + name + '"]'); }
+  function showRow(name, visible) {
+    dialog.querySelectorAll('[data-row="' + name + '"]').forEach(function (el) { el.hidden = !visible; });
+  }
+
+  document.addEventListener("click", function (event) {
+    var card = event.target.closest(".task-card");
+    if (!card) return;
+    event.preventDefault();
+    var d = card.dataset;
+
+    field("kind").textContent = d.kindLabel + (d.auto ? " · Auto-scheduled" : "");
+    field("plant").textContent = d.plant;
+    field("species").textContent = d.species;
+    field("due").textContent = d.due;
+    field("repeat").textContent = d.repeat.trim();
+    field("notes").textContent = d.notes;
+    var status = field("status");
+    status.className = "badge badge-" + d.tone;
+    status.lastElementChild.textContent = d.status;
+    field("plant-link").href = d.plantUrl;
+
+    showRow("repeat", !!d.repeat.trim());
+    showRow("notes", !!d.notes);
+    showRow("planned", card.hasAttribute("data-planned"));
+
+    var complete = dialog.querySelector('[data-form="complete"]');
+    var remove = dialog.querySelector('[data-form="delete"]');
+    complete.hidden = !d.completeUrl;
+    if (d.completeUrl) complete.action = d.completeUrl;
+    remove.hidden = !d.deleteUrl;
+    if (d.deleteUrl) remove.action = d.deleteUrl;
+
+    dialog.showModal();
+  });
+
+  dialog.addEventListener("click", function (event) {
+    // Close on the X button or a click on the dimmed backdrop.
+    if (event.target.closest("[data-close]") || event.target === dialog) dialog.close();
+  });
+})();
+</script>
 {% endblock %}

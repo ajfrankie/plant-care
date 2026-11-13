@@ -1,0 +1,121 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — {% if reminder %}Edit{% else %}Add{% endif %} Watering Reminder{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="watering" %}
+
+  <div class="main-area">
+    {% if reminder %}
+    {% include "partials/app_header.html" with title="Edit Watering Reminder" subtitle=reminder.plant.name %}
+    {% else %}
+    {% include "partials/app_header.html" with title="Add Watering Reminder" subtitle="Choose a plant and how often it needs water" %}
+    {% endif %}
+
+    <div style="padding:28px 32px; max-width:820px;">
+
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'watering_schedule' %}" class="t-small">&larr; Back to Watering Reminders</a>
+      </div>
+
+      <form method="post" class="card" novalidate>
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<p class="hint error">{{ error }}</p>{% endfor %}
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+
+          <div>
+            <label class="t-label" for="id_plant" style="display:block; margin-bottom:6px;">Plant *</label>
+            <select id="id_plant" name="plant" class="select{% if form.plant.errors %} input error{% endif %}" required style="width:100%;">
+              <option value="">Select a plant...</option>
+              {% for value, label in form.fields.plant.choices %}{% if value %}
+              <option value="{{ value }}"{% if value|stringformat:"s" == form.plant.value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+              {% endif %}{% endfor %}
+            </select>
+            {% for error in form.plant.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            {% if not form.fields.plant.queryset.exists %}<span class="hint">You have no plants yet. <a href="{% url 'plant_add' %}">Add a plant</a> first.</span>{% endif %}
+          </div>
+
+          <div>
+            <label class="t-label" for="id_frequency_days" style="display:block; margin-bottom:6px;">Water Every (days) *</label>
+            <input type="number" id="id_frequency_days" name="frequency_days" class="input{% if form.frequency_days.errors %} error{% endif %}" value="{{ form.frequency_days.value|default_if_none:'' }}" min="1" max="365" step="1" required style="width:100%;">
+            {% for error in form.frequency_days.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            <span class="hint" id="frequency-hint" hidden></span>
+          </div>
+
+          <div>
+            <label class="t-label" for="id_next_due_date" style="display:block; margin-bottom:6px;">Next Watering *</label>
+            <input type="date" id="id_next_due_date" name="next_due_date" class="input{% if form.next_due_date.errors %} error{% endif %}" value="{{ form.next_due_date.value|default_if_none:'' }}"{% if not reminder %} min="{{ today|date:'Y-m-d' }}"{% endif %} required style="width:100%;">
+            {% for error in form.next_due_date.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+
+          <div>
+            <label class="t-label" for="id_reminder_time" style="display:block; margin-bottom:6px;">Remind Me At *</label>
+            <input type="time" id="id_reminder_time" name="reminder_time" class="input{% if form.reminder_time.errors %} error{% endif %}" value="{{ form.reminder_time.value|default_if_none:''|stringformat:'s'|slice:':5' }}" required style="width:100%;">
+            {% for error in form.reminder_time.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+
+          <div>
+            <label class="t-label" for="id_method" style="display:block; margin-bottom:6px;">Watering Method</label>
+            <select id="id_method" name="method" class="select{% if form.method.errors %} input error{% endif %}" style="width:100%;">
+              {% for value, label in method_choices %}
+              <option value="{{ value }}"{% if value == form.method.value %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for error in form.method.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+
+          <div>
+            <label class="t-label" for="id_amount_ml" style="display:block; margin-bottom:6px;">Amount (ml)</label>
+            <input type="number" id="id_amount_ml" name="amount_ml" class="input{% if form.amount_ml.errors %} error{% endif %}" value="{{ form.amount_ml.value|default_if_none:'' }}" min="1" max="20000" step="1" placeholder="Optional, e.g. 250" style="width:100%;">
+            {% for error in form.amount_ml.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <label class="t-label" for="id_notes" style="display:block; margin-bottom:6px;">Notes</label>
+          <input type="text" id="id_notes" name="notes" class="input{% if form.notes.errors %} error{% endif %}" value="{{ form.notes.value|default_if_none:'' }}" maxlength="200" placeholder="e.g., Let the top 2 cm of soil dry out first" style="width:100%;">
+          {% for error in form.notes.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:20px; font-size:14px;">
+          <input type="checkbox" name="is_active"{% if form.is_active.value %} checked{% endif %} style="width:18px; height:18px; accent-color:var(--primary);">
+          Reminder is on
+        </label>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px;">
+          <a href="{% url 'watering_schedule' %}" class="btn btn-secondary btn-sm">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-sm">{% if reminder %}Save Changes{% else %}Add Reminder{% endif %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{{ suggestions|json_script:"water-suggestions" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  // Suggest the analysed watering interval for the chosen plant.
+  var suggestions = JSON.parse(document.getElementById("water-suggestions").textContent);
+  var plant = document.getElementById("id_plant");
+  var frequency = document.getElementById("id_frequency_days");
+  var hint = document.getElementById("frequency-hint");
+  var edited = !!frequency.value && {{ reminder|yesno:"true,false" }};
+  frequency.addEventListener("input", function () { edited = true; });
+
+  function suggest() {
+    var days = suggestions[plant.value];
+    hint.hidden = !days;
+    if (!days) return;
+    hint.textContent = "Suggested for this plant: every " + days + " day" + (days === 1 ? "" : "s") + ".";
+    if (!edited) frequency.value = days;
+  }
+  plant.addEventListener("change", suggest);
+  suggest();
+})();
+</script>
+{% endblock %}
