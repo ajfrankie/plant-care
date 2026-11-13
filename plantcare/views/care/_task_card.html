@@ -1,0 +1,35 @@
+{% comment %}
+  One task in a calendar day cell. Expects: task, tone (CSS color), view, today.
+  task.planned marks a future repeat of a repeating task (not saved, can't be ticked).
+  Clicking opens the task popup (#task-dialog); without JavaScript it links to the plant.
+{% endcomment %}
+<a href="{% url 'plant_view' task.plant.pk %}" class="task-card"
+   data-plant="{{ task.plant.name }}"
+   data-species="{{ task.plant.plant_species.scientific_name|default:'' }}"
+   data-kind="{{ task.kind }}"
+   data-kind-label="{{ task.get_kind_display }}"
+   data-due="{{ task.due_date|date:'l, M j, Y' }}"
+   data-status="{% if task.is_done %}Done {{ task.completed_at|date:'M j' }}{% elif task.planned %}Planned{% elif task.due_date < today %}Overdue{% elif task.due_date == today %}Due today{% else %}Scheduled{% endif %}"
+   data-tone="{% if task.is_done %}success{% elif task.planned %}neutral{% elif task.due_date < today %}error{% elif task.due_date == today %}warning{% else %}info{% endif %}"
+   data-repeat="{% if task.repeat_every_days %}{% include 'care/_repeat_label.html' with every=task.repeat_every_days %}{% endif %}"
+   data-notes="{{ task.notes }}"
+   data-auto="{% if task.auto_generated %}1{% endif %}"
+   data-plant-url="{% url 'plant_view' task.plant.pk %}"
+   {% if not task.planned %}data-delete-url="{% url 'care_task_delete' task.pk %}"{% if not task.is_done %} data-complete-url="{% url 'care_task_complete' task.pk %}"{% endif %}{% endif %}
+   aria-haspopup="dialog"
+   title="{{ task.get_kind_display }} — {{ task.plant.name }}{% if task.notes %}: {{ task.notes }}{% endif %}"
+   style="display:block; text-decoration:none; color:inherit; background:#fff; border:1px solid {% if tone == 'var(--error)' %}var(--error){% else %}var(--border){% endif %}; border-left:3px solid {{ tone }}; border-radius:6px; cursor:pointer; padding:{% if view == 'week' %}8px 10px{% else %}4px 6px{% endif %};{% if task.is_done %} opacity:.65;{% endif %}{% if task.planned %} border-style:dashed; border-left-style:solid; opacity:.8;{% endif %}"{% if task.planned %} data-planned{% endif %}>
+  {% if view == "week" %}
+  <div class="t-small" style="font-weight:600; margin-bottom:4px;{% if task.is_done %} text-decoration:line-through;{% endif %}">{{ task.plant.name }}</div>
+  <div style="display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+    {% include "care/_kind_icon.html" with kind=task.kind size=12 color=tone %}
+    <span style="font-size:11px; color:{{ tone }}; font-weight:600;">{{ task.get_kind_display }}</span>
+  </div>
+  <div style="font-size:11px; color:var(--text-muted);">{% if task.is_done %}Done{% elif task.due_date < today %}Overdue{% elif task.due_date == today %}Due today{% elif task.planned %}{% include "care/_repeat_label.html" with every=task.repeat_every_days %}{% else %}Scheduled{% endif %}</div>
+  {% else %}
+  <div style="display:flex; align-items:center; gap:4px; font-size:11px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">
+    {% include "care/_kind_icon.html" with kind=task.kind size=11 color=tone %}
+    <span style="overflow:hidden; text-overflow:ellipsis;{% if task.is_done %} text-decoration:line-through;{% endif %}">{{ task.plant.name }}</span>
+  </div>
+  {% endif %}
+</a>

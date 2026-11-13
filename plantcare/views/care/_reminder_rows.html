@@ -1,0 +1,52 @@
+{% comment %}
+  A titled list of water reminders. Expects: key, rows, title, tone (warning|info|neutral), empty, today, tomorrow, next_url.
+{% endcomment %}
+<section style="margin-top:36px;" data-section="{{ key }}">
+  <div class="section-head" style="background:var(--{% if tone == 'neutral' %}pale-sage{% else %}{{ tone }}-bg{% endif %}); border:1px solid var(--{% if tone == 'neutral' %}border{% else %}{{ tone }}{% endif %});">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.6"/></svg>
+    <div class="t-label" style="color:var(--{% if tone == 'neutral' %}text-2{% else %}{{ tone }}{% endif %});">{{ title }} ({{ rows|length }} plant{{ rows|length|pluralize }})</div>
+  </div>
+
+  {% if rows %}
+  <div class="card" style="padding-top:4px; padding-bottom:4px;">
+    {% for r in rows %}
+    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:14px 0;{% if not forloop.last %} border-bottom:1px solid var(--border);{% endif %}{% if not r.is_active %} opacity:.7;{% endif %}" data-reminder="{{ r.pk }}">
+      {% include "care/_plant_thumb.html" with plant=r.plant size=52 %}
+      <div style="flex:1; min-width:180px;">
+        <a href="{% url 'plant_view' r.plant.pk %}" class="t-label" style="color:inherit; text-decoration:none;">{{ r.plant.name }}</a>
+        <div class="t-small text-muted">
+          {% if r.plant.plant_species %}<em>{{ r.plant.plant_species.scientific_name }}</em> &bull; {% endif %}{{ r.get_method_display }}{% if r.amount_ml %} · {{ r.amount_ml }} ml{% endif %} &bull; {{ r.reminder_time|time:"g:i A" }}
+        </div>
+        <div class="t-small text-muted">Last watered: {% if r.last_watered_at %}{{ r.last_watered_at|timesince }} ago{% else %}not yet{% endif %}</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; min-width:130px;">
+        {% if not r.is_active %}
+        <span class="badge badge-neutral"><span class="badge-dot"></span>Paused</span>
+        {% elif r.next_due_date == tomorrow %}
+        <span class="badge badge-warning"><span class="badge-dot"></span>Tomorrow</span>
+        {% else %}
+        <span class="badge badge-{% if tone == 'warning' %}warning{% else %}info{% endif %}"><span class="badge-dot"></span>{{ r.next_due_date|date:"D, M j" }}</span>
+        {% endif %}
+        <div style="font-size:11px; color:var(--text-muted);">{% include "care/_repeat_label.html" with every=r.frequency_days %}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; flex:none;">
+        {% if r.is_active %}
+        <form method="post" action="{% url 'water_reminder_water' r.pk %}">
+          {% csrf_token %}<input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="btn btn-secondary btn-sm">Mark Watered</button>
+        </form>
+        {% else %}
+        <form method="post" action="{% url 'water_reminder_toggle' r.pk %}">
+          {% csrf_token %}<input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="btn btn-secondary btn-sm">Resume</button>
+        </form>
+        {% endif %}
+        {% include "care/_reminder_menu.html" %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="t-body text-secondary">{{ empty }}</p>
+  {% endif %}
+</section>

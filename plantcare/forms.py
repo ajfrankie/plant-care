@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 from django.utils import timezone
 
-from .models import Plant, PlantSpecies, User
+from .models import CareTask, Plant, PlantSpecies, User, WaterReminder
 from .models.choices import SpecialFeature
 
 
@@ -106,6 +106,63 @@ class PlantForm(forms.ModelForm):
         elif "flower_colors" in cleaned_data and not cleaned_data["flower_colors"]:
             self.add_error("flower_colors", "Add at least one flower color.")
         return cleaned_data
+
+
+class CareTaskForm(forms.ModelForm):
+    class Meta:
+        model = CareTask
+        fields = ["plant", "kind", "due_date", "repeat_every_days", "notes"]
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Tasks can only be scheduled for the user's own plants.
+        self.fields["plant"].queryset = Plant.objects.filter(created_user=user).order_by("name")
+        self.fields["plant"].empty_label = "Select a plant..."
+        self.fields["repeat_every_days"].label = "Repeat every (days)"
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data["due_date"]
+        if due_date < timezone.localdate():
+            raise ValidationError("Due date cannot be in the past.")
+        return due_date
+
+    def clean_notes(self):
+        return self.cleaned_data["notes"].strip()
+
+
+class WaterReminderForm(forms.ModelForm):
+    class Meta:
+        model = WaterReminder
+        fields = [
+            "plant", "frequency_days", "next_due_date", "reminder_time",
+            "method", "amount_ml", "notes", "is_active",
+        ]
+        labels = {
+            "frequency_days": "Water every (days)",
+            "next_due_date": "Next watering",
+            "amount_ml": "Amount (ml)",
+            "is_active": "Reminder is on",
+        }
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Reminders can only be set for the user's own plants.
+        self.fields["plant"].queryset = Plant.objects.filter(created_user=user).order_by("name")
+        self.fields["plant"].empty_label = "Select a plant..."
+        if self.instance.pk:
+            # Date/time inputs need ISO values, not the localized display format.
+            self.initial["next_due_date"] = self.instance.next_due_date.isoformat()
+            self.initial["reminder_time"] = self.instance.reminder_time.strftime("%H:%M")
+
+    def clean_next_due_date(self):
+        due = self.cleaned_data["next_due_date"]
+        unchanged = self.instance.pk and due == self.instance.next_due_date
+        if due < timezone.localdate() and not unchanged:
+            raise ValidationError("Next watering cannot be in the past.")
+        return due
+
+    def clean_notes(self):
+        return self.cleaned_data["notes"].strip()
 
 
 class SpeciesForm(forms.ModelForm):

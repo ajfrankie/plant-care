@@ -1,0 +1,20 @@
+{% comment %}
+  "⋯" menu for one water reminder: edit, pause/resume, delete. Expects: r, next_url.
+{% endcomment %}
+<details class="menu">
+  <summary class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options for {{ r.plant.name }}">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+  </summary>
+  <div class="menu-list">
+    <a href="{% url 'water_reminder_edit' r.pk %}">Edit reminder</a>
+    <a href="{% url 'plant_view' r.plant.pk %}">View plant</a>
+    <form method="post" action="{% url 'water_reminder_toggle' r.pk %}">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit">{% if r.is_active %}Pause reminder{% else %}Resume reminder{% endif %}</button>
+    </form>
+    <form method="post" action="{% url 'water_reminder_delete' r.pk %}" onsubmit="return confirm('Remove the watering reminder for {{ r.plant.name|escapejs }}?');">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" style="color:var(--error);">Delete reminder</button>
+    </form>
+  </div>
+</details>

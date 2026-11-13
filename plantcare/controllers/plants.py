@@ -4,7 +4,9 @@ from django.core.paginator import Paginator
 from django.db.models import Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
+from .. import care_plan
 from ..forms import PlantForm
 from ..models import CareLog, Plant, PlantSpecies
 
@@ -91,7 +93,11 @@ def add(request):
         plant = form.save(commit=False)
         plant.created_user = request.user
         plant.save()
-        messages.success(request, f"{plant.name} was added to your plants.")
+        plan = care_plan.apply(plant)
+        messages.success(
+            request,
+            f"{plant.name} was added to your plants. Care schedule created: {care_plan.summary(plan)}.",
+        )
         return redirect("my_plants")
 
     return render(request, "plants/form.html", _form_context(form))
@@ -132,10 +138,26 @@ def edit(request, pk):
         if old_image and updated.image.name != old_image:
             # Photo was replaced or removed: don't leave the old file behind.
             updated.image.storage.delete(old_image)
-        messages.success(request, f"{updated.name} was updated.")
+        message = f"{updated.name} was updated."
+        if {"plant_species", "check_interval_days"} & set(form.changed_data):
+            # Its care needs changed: re-plan the automatic schedule.
+            plan = care_plan.apply(updated)
+            message += f" Care schedule updated: {care_plan.summary(plan)}."
+        messages.success(request, message)
         return redirect("my_plants")
 
     return render(request, "plants/form.html", _form_context(form, plant=plant))
+
+
+@require_POST
+def replan(request, pk):
+    """Re-analyse the plant and rebuild its automatic care schedule."""
+    plant = get_object_or_404(
+        Plant.objects.select_related("plant_species"), pk=pk, created_user=request.user
+    )
+    plan = care_plan.apply(plant)
+    messages.success(request, f"Care schedule for {plant.name} updated: {care_plan.summary(plan)}.")
+    return redirect("plant_view", pk=plant.pk)
 
 
 def details(request):

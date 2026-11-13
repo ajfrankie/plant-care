@@ -35,6 +35,10 @@
 
     <div style="padding:28px 32px;">
 
+      {% for message in messages %}
+      <div role="status" style="background:var(--success-bg); border:1px solid var(--success); border-radius:var(--radius-card); color:var(--success); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ message }}</div>
+      {% endfor %}
+
       <!-- Breadcrumb -->
       <div style="margin-bottom:20px;">
         <a href="{% url 'my_plants' %}" class="nav-link" style="font-size:14px;">&larr; Back to My Plants</a>
@@ -254,17 +258,25 @@
 
           <!-- Upcoming Care -->
           <div class="card">
-            <h3 class="t-h4" style="margin-bottom:16px;">Upcoming Care</h3>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:16px;">
+              <h3 class="t-h4">Upcoming Care</h3>
+              <a href="{% url 'care_schedule' %}?view=list&amp;plant={{ plant.pk }}" class="t-small">View all</a>
+            </div>
             <div style="display:flex; flex-direction:column; gap:12px;">
               {% for task in upcoming_tasks %}
               <div style="padding:10px 12px; border-radius:8px; {% if task.due_date < today %}background:var(--error-bg); border-left:3px solid var(--error);{% elif task.due_date == today %}background:var(--warning-bg); border-left:3px solid var(--warning);{% else %}background:var(--bg-secondary); border-left:3px solid var(--border);{% endif %}">
-                <div class="t-label">{{ task.get_kind_display }}</div>
+                <div class="t-label">{{ task.get_kind_display }}{% if task.repeat_every_days %} <span class="t-small text-muted" style="font-weight:400;">&middot; {% include "care/_repeat_label.html" with every=task.repeat_every_days %}</span>{% endif %}</div>
+                {% if task.notes %}<div class="t-small text-secondary">{{ task.notes }}</div>{% endif %}
                 <div class="t-small text-muted">{% if task.due_date < today %}Overdue since {{ task.due_date|date:"M j" }}{% elif task.due_date == today %}Today{% else %}In {{ task.due_date|timeuntil:today }} &middot; {{ task.due_date|date:"M j" }}{% endif %}</div>
               </div>
               {% empty %}
               <p class="t-small text-secondary">No care tasks scheduled.</p>
               {% endfor %}
             </div>
+            <form method="post" action="{% url 'plant_replan' plant.pk %}" style="margin-top:16px;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-secondary btn-sm" style="width:100%;" title="Analyse this plant's species and rebuild its automatic tasks. Tasks you added yourself are kept.">{% if upcoming_tasks %}Re-analyse Care Schedule{% else %}Generate Care Schedule{% endif %}</button>
+            </form>
           </div>
 
           {% if species.special_features %}

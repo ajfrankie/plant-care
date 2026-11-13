@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import CareLog, CareTask, Notification, Plant, PlantSpecies, User
+from .models import CareLog, CareTask, Notification, Plant, PlantSpecies, User, WaterReminder
 
 
 @admin.register(User)
@@ -63,3 +63,10 @@ class CareLogAdmin(admin.ModelAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ("title", "recipient", "kind", "is_read", "created_at")
     list_filter = ("kind", "is_read")
+
+
+@admin.register(WaterReminder)
+class WaterReminderAdmin(admin.ModelAdmin):
+    list_display = ("plant", "frequency_days", "next_due_date", "reminder_time", "is_active", "last_watered_at")
+    list_filter = ("is_active", "method")
+    search_fields = ("plant__name",)

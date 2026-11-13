@@ -1,0 +1,8 @@
+{% comment %}Frequency / last watered / method details for one reminder. Expects: r.{% endcomment %}
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; font-size:11px; color:var(--text-muted);">
+  <div><strong>Frequency:</strong> {% include "care/_repeat_label.html" with every=r.frequency_days %}</div>
+  <div><strong>Last watered:</strong> {% if r.last_watered_at %}{{ r.last_watered_at|timesince }} ago{% else %}Not yet{% endif %}</div>
+  <div><strong>Method:</strong> {{ r.get_method_display }}{% if r.amount_ml %} · {{ r.amount_ml }} ml{% endif %}</div>
+  <div><strong>Remind at:</strong> {{ r.reminder_time|time:"g:i A" }}</div>
+  {% if r.notes %}<div style="grid-column:1/-1;"><strong>Notes:</strong> {{ r.notes }}</div>{% endif %}
+</div>
