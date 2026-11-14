@@ -6,7 +6,9 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import LoginForm
-from .models import CareLog, CareTask, Plant, PlantSpecies, User, WaterReminder
+from .models import (
+    CareLog, CareTask, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder,
+)
 from .urls import urlpatterns
 
 
@@ -289,13 +291,16 @@ class PageRenderingTests(TestCase):
             category="indoor", difficulty="easy", light="medium", watering="weekly",
         )
         reminder = WaterReminder.objects.create(plant=plant, next_due_date=date(2026, 1, 1))
+        case = HealthCase.objects.create(plant=plant, title="Rust", next_check_date=date(2026, 1, 1))
         args = {"plant_edit": [plant.pk], "plant_view": [plant.pk], "species_edit": [species.pk],
-                "water_reminder_edit": [reminder.pk]}
+                "water_reminder_edit": [reminder.pk], "health_case": [case.pk]}
         # The care task and water reminder actions are POST only too.
         post_only = (
             "logout", "login", "care_task_add", "care_task_complete", "care_task_delete",
             "care_auto_plan", "plant_replan", "water_reminder_auto", "water_reminder_water_all",
             "water_reminder_water", "water_reminder_toggle", "water_reminder_delete",
+            "health_check_new", "health_case_update", "health_case_issue", "health_case_reanalyse",
+            "health_case_resolve", "health_case_frequency", "health_case_delete",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -1396,3 +1401,332 @@ class WaterReminderTests(TestCase):
 
     def test_empty_state(self):
         self.assertContains(self.client.get(self.url), "No watering reminders yet")
+
+
+def _png(name="leaf.png", color=(40, 140, 60)):
+    import io
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 64), color).save(buf, format="PNG")
+    return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+
+
+AI_APHIDS = {
+    "is_plant": True, "overall": "severe", "progress": "first",
+    "summary": "Clusters of aphids on the new shoots.",
+    "issues": [
+        {"key": "aphids", "name": "Aphids", "confidence": "high",
+         "evidence": "Green insects clustered on stem tips.",
+         "organic_treatments": [
+             {"name": "Neem Oil", "how": "duplicate of library entry"},
+             {"name": "Garlic Spray", "how": "Blend 2 garlic bulbs in 1 litre of water, strain, spray weekly."},
+         ],
+         "prevention": "Check new growth weekly."},
+        {"key": "other", "name": "Sooty Mould", "confidence": "low",
+         "evidence": "Dark film on lower leaves.",
+         "organic_treatments": [{"name": "Wipe Leaves", "how": "Wipe with soapy water."}],
+         "prevention": "Control the aphids."},
+    ],
+}
+AI_HEALTHY = {"is_plant": True, "overall": "healthy", "progress": "first",
+              "summary": "Leaves look green and firm.", "issues": []}
+
+
+class PlantHealthTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "doctor@example.com", "Doctor", "mossy-Fern-42!", is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "nosy@example.com", "Nosy", "mossy-Fern-42!", is_active=True
+        )
+
+    def setUp(self):
+        import shutil, tempfile
+        from django.test import override_settings
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+        self.plant = Plant.objects.create(
+            created_user=self.user, name="Rosie", planting_date=date(2026, 1, 1)
+        )
+
+    def analyse_returns(self, result=None, error=None):
+        from unittest import mock
+        from . import health_ai
+        kwargs = {"side_effect": health_ai.AnalysisError(error)} if error else {"return_value": result}
+        patcher = mock.patch("plantcare.health_ai.analyse", **kwargs)
+        mocked = patcher.start()
+        self.addCleanup(patcher.stop)
+        return mocked
+
+    def post_check(self, **data):
+        payload = {"plant": self.plant.pk, "image": _png(), "notes": "", "issue_key": "",
+                   "other_issue": "", "severity": "moderate", "check_every_days": "7",
+                   "action": "find", **data}
+        return self.client.post(reverse("health_check_new"), payload)
+
+    def test_page_renders_form_and_library(self):
+        response = self.client.get(reverse("plant_health"))
+        self.assertContains(response, 'action="/plant-health/check/"')
+        self.assertContains(response, 'enctype="multipart/form-data"')
+        self.assertContains(response, "Find it from the photo")
+        self.assertContains(response, "I know the issue")
+        self.assertContains(response, "Powdery Mildew")
+
+    def test_known_issue_starts_case_with_organic_plan(self):
+        mocked = self.analyse_returns(AI_APHIDS)
+        response = self.post_check(action="known", issue_key="aphids", severity="mild")
+        mocked.assert_not_called()
+        case = HealthCase.objects.get()
+        self.assertRedirects(response, reverse("health_case", args=[case.pk]))
+        self.assertEqual((case.title, case.issue_key, case.source, case.severity),
+                         ("Aphids", "aphids", "user", "mild"))
+        self.assertEqual(case.next_check_date, self.today + timedelta(days=7))
+        self.assertEqual(case.checks.get().analysis_status, "skipped")
+        task = CareTask.objects.get(kind="health")
+        self.assertEqual((task.due_date, task.repeat_every_days), (case.next_check_date, 7))
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.status, "attention")
+        page = self.client.get(response.url)
+        self.assertContains(page, "Neem Oil")
+        self.assertContains(page, "Mix 1–2 tablespoons per gallon of water")
+        self.assertContains(page, "Insecticidal Soap")
+
+    def test_known_issue_can_be_typed(self):
+        self.post_check(action="known", other_issue="Leaf miner")
+        self.assertEqual(HealthCase.objects.get().title, "Leaf miner")
+
+    def test_known_issue_requires_an_issue(self):
+        response = self.post_check(action="known")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("issue_key", response.context["form"].errors)
+        self.assertFalse(HealthCheck.objects.exists())
+
+    def test_find_issue_from_photo(self):
+        mocked = self.analyse_returns(AI_APHIDS)
+        response = self.post_check(notes="Sticky leaves")
+        self.assertEqual(mocked.call_args.kwargs["notes"], "Sticky leaves")
+        case = HealthCase.objects.get()
+        self.assertEqual((case.title, case.issue_key, case.source, case.severity),
+                         ("Aphids", "aphids", "ai", "severe"))
+        self.plant.refresh_from_db()
+        self.assertEqual(self.plant.status, "critical")
+        page = self.client.get(response.url)
+        self.assertContains(page, "Clusters of aphids on the new shoots.")
+        self.assertContains(page, "Green insects clustered on stem tips.")
+        self.assertContains(page, "Garlic Spray")  # extra suggestion from the analysis
+        names = [t["name"] for t in page.context["treatments"]]
+        self.assertEqual(names.count("Neem Oil"), 1)  # no duplicates
+        self.assertContains(page, "Sooty Mould")  # other possible issue
+
+    def test_healthy_photo_needs_no_case(self):
+        self.analyse_returns(AI_HEALTHY)
+        response = self.post_check()
+        self.assertRedirects(response, reverse("plant_health"))
+        self.assertFalse(HealthCase.objects.exists())
+        check = HealthCheck.objects.get()
+        self.assertIsNone(check.case)
+        self.assertContains(self.client.get(reverse("plant_health")), "Recent Healthy Checks")
+
+    def test_failed_analysis_keeps_photo_and_lets_user_pick_issue(self):
+        self.analyse_returns(error="Photo analysis isn't set up.")
+        response = self.post_check()
+        case = HealthCase.objects.get()
+        self.assertEqual((case.title, case.source), ("Unidentified issue", "unknown"))
+        self.assertEqual(case.checks.get().analysis_status, "failed")
+        page = self.client.get(response.url)
+        self.assertContains(page, "Photo analysis isn&#x27;t set up.")
+        self.client.post(reverse("health_case_issue", args=[case.pk]),
+                         {"issue_key": "powdery_mildew", "severity": "mild"})
+        case.refresh_from_db()
+        self.assertEqual((case.title, case.source, case.severity), ("Powdery Mildew", "user", "mild"))
+        self.assertContains(self.client.get(response.url), "Baking Soda Spray")
+
+    def test_photo_update_compares_and_tracks_progress(self):
+        self.post_check(action="known", issue_key="aphids")
+        case = HealthCase.objects.get()
+        mocked = self.analyse_returns({**AI_APHIDS, "overall": "mild", "progress": "better"})
+        response = self.client.post(reverse("health_case_update", args=[case.pk]),
+                                    {"image": _png("week2.png"), "progress": "", "notes": "Sprayed", "analyse": "on"})
+        self.assertRedirects(response, reverse("health_case", args=[case.pk]))
+        self.assertIsNotNone(mocked.call_args.kwargs["previous_image"])
+        case.refresh_from_db()
+        self.assertEqual((case.status, case.severity), ("improving", "mild"))
+        latest = case.checks.order_by("-created_at").first()
+        self.assertEqual((latest.progress, latest.notes), ("better", "Sprayed"))
+        self.assertEqual(CareTask.objects.filter(kind="health", completed_at__isnull=True).count(), 1)
+        self.assertEqual(CareLog.objects.filter(activity="health").count(), 2)
+
+    def test_photo_update_without_analysis_uses_chosen_progress(self):
+        self.post_check(action="known", issue_key="aphids")
+        case = HealthCase.objects.get()
+        mocked = self.analyse_returns(AI_APHIDS)
+        self.client.post(reverse("health_case_update", args=[case.pk]),
+                         {"image": _png(), "progress": "worse"})
+        mocked.assert_not_called()
+        self.assertEqual(case.checks.order_by("-created_at").first().progress, "worse")
+
+    def test_resolve_and_reopen(self):
+        self.post_check(action="known", issue_key="rust", severity="severe")
+        case = HealthCase.objects.get()
+        url = reverse("health_case_resolve", args=[case.pk])
+        self.client.post(url)
+        case.refresh_from_db()
+        self.plant.refresh_from_db()
+        self.assertEqual(case.status, "resolved")
+        self.assertEqual(self.plant.status, "healthy")
+        self.assertFalse(CareTask.objects.filter(kind="health", completed_at__isnull=True).exists())
+        self.client.post(url)
+        case.refresh_from_db()
+        self.plant.refresh_from_db()
+        self.assertEqual(case.status, "active")
+        self.assertEqual(self.plant.status, "critical")
+        self.assertTrue(CareTask.objects.filter(kind="health", completed_at__isnull=True).exists())
+
+    def test_change_update_frequency(self):
+        self.post_check(action="known", issue_key="rust")
+        case = HealthCase.objects.get()
+        self.client.post(reverse("health_case_frequency", args=[case.pk]), {"check_every_days": "3"})
+        case.refresh_from_db()
+        self.assertEqual((case.check_every_days, case.next_check_date), (3, self.today + timedelta(days=3)))
+        self.assertEqual(CareTask.objects.get(kind="health", completed_at__isnull=True).repeat_every_days, 3)
+
+    def test_due_updates_are_listed(self):
+        self.post_check(action="known", issue_key="rust")
+        HealthCase.objects.update(next_check_date=self.today - timedelta(days=1))
+        response = self.client.get(reverse("plant_health"))
+        self.assertEqual(response.context["stats"]["due"], 1)
+        self.assertContains(response, "Time for a photo update")
+
+    def test_delete_after_analysed_photo_update(self):
+        # Runs the real photo encoding (only the API call is faked): the earlier
+        # photo must be closed again, or Windows refuses to delete it.
+        import json
+        from types import SimpleNamespace
+        from unittest import mock
+        self.post_check(action="known", issue_key="aphids")
+        case = HealthCase.objects.get()
+        reply = SimpleNamespace(stop_reason="end_turn", content=[
+            SimpleNamespace(type="text", text=json.dumps({**AI_APHIDS, "progress": "better"}))])
+        client = mock.MagicMock()
+        client.beta.messages.create.return_value = reply
+        with mock.patch("anthropic.Anthropic", return_value=client):
+            self.client.post(reverse("health_case_update", args=[case.pk]),
+                             {"image": _png("week2.png"), "analyse": "on"})
+        images = [c.image for c in case.checks.all()]
+        self.assertEqual(len(images), 2)
+        response = self.client.post(reverse("health_case_delete", args=[case.pk]))
+        self.assertRedirects(response, reverse("plant_health"))
+        for image in images:
+            self.assertFalse(image.storage.exists(image.name))
+
+    def test_delete_survives_a_locked_photo(self):
+        from unittest import mock
+        self.post_check(action="known", issue_key="rust")
+        case = HealthCase.objects.get()
+        with mock.patch("django.core.files.storage.FileSystemStorage.delete",
+                        side_effect=PermissionError("[WinError 32] in use")):
+            response = self.client.post(reverse("health_case_delete", args=[case.pk]))
+        self.assertRedirects(response, reverse("plant_health"))
+        self.assertFalse(HealthCase.objects.exists())
+
+    def test_delete_removes_case_photos_and_reminder(self):
+        self.post_check(action="known", issue_key="rust")
+        case = HealthCase.objects.get()
+        image = case.checks.get().image
+        self.assertTrue(image.storage.exists(image.name))
+        self.client.post(reverse("health_case_delete", args=[case.pk]))
+        self.assertFalse(HealthCase.objects.exists())
+        self.assertFalse(image.storage.exists(image.name))
+        self.assertFalse(CareTask.objects.filter(kind="health").exists())
+
+    def test_other_users_cannot_see_or_change_cases(self):
+        self.post_check(action="known", issue_key="rust")
+        case = HealthCase.objects.get()
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(reverse("health_case", args=[case.pk])).status_code, 404)
+        for name in ("health_case_update", "health_case_issue", "health_case_reanalyse",
+                     "health_case_resolve", "health_case_frequency", "health_case_delete"):
+            with self.subTest(action=name):
+                self.assertEqual(self.client.post(reverse(name, args=[case.pk])).status_code, 404)
+        response = self.client.post(reverse("health_check_new"), {
+            "plant": self.plant.pk, "image": _png(), "action": "known", "issue_key": "rust",
+            "severity": "mild", "check_every_days": "7",
+        })
+        self.assertIn("plant", response.context["form"].errors)
+        self.assertEqual(HealthCase.objects.count(), 1)
+
+    def test_rejects_non_image_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        response = self.post_check(action="known", issue_key="rust",
+                                   image=SimpleUploadedFile("x.png", b"not an image", content_type="image/png"))
+        self.assertIn("image", response.context["form"].errors)
+
+
+class HealthAITests(TestCase):
+    """The request sent to Claude and how its reply is handled (no network)."""
+
+    def setUp(self):
+        self.plant = Plant(name="Rosie", check_interval_days=7)
+
+    def fake_client(self, *, stop_reason="end_turn", text=None):
+        import json
+        from types import SimpleNamespace
+        from unittest import mock
+        reply = SimpleNamespace(
+            stop_reason=stop_reason,
+            content=[SimpleNamespace(type="text", text=text if text is not None else json.dumps(AI_APHIDS))],
+        )
+        client = mock.MagicMock()
+        client.beta.messages.create.return_value = reply
+        patcher = mock.patch("anthropic.Anthropic", return_value=client)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return client
+
+    def test_sends_photo_with_structured_output(self):
+        from . import health_ai
+        client = self.fake_client()
+        result = health_ai.analyse(_png(), plant=self.plant, notes="Sticky", previous_image=_png(),
+                                   previous_title="Aphids")
+        self.assertEqual(result["issues"][0]["key"], "aphids")
+        kwargs = client.beta.messages.create.call_args.kwargs
+        self.assertEqual(kwargs["model"], "claude-opus-5-5")
+        self.assertEqual(kwargs["output_config"]["format"]["type"], "json_schema")
+        content = kwargs["messages"][0]["content"]
+        images = [b for b in content if b["type"] == "image"]
+        self.assertEqual(len(images), 2)  # earlier + latest photo
+        self.assertEqual(images[0]["source"]["media_type"], "image/jpeg")
+        self.assertIn("Sticky", content[-1]["text"])
+        self.assertIn("Aphids", content[-1]["text"])
+
+    def test_refusal_and_bad_replies_raise_readable_errors(self):
+        from . import health_ai
+        for stop_reason, text in (("refusal", ""), ("max_tokens", "{"), ("end_turn", "{not json")):
+            with self.subTest(stop_reason=stop_reason):
+                self.fake_client(stop_reason=stop_reason, text=text)
+                with self.assertRaises(health_ai.AnalysisError):
+                    health_ai.analyse(_png(), plant=self.plant)
+
+    def test_not_a_plant(self):
+        import json
+        from . import health_ai
+        self.fake_client(text=json.dumps({**AI_HEALTHY, "is_plant": False}))
+        with self.assertRaisesMessage(health_ai.AnalysisError, "doesn't look like a plant"):
+            health_ai.analyse(_png(), plant=self.plant)
+
+    def test_missing_credentials_is_a_readable_error(self):
+        import os
+        from unittest import mock
+        from . import health_ai
+        env = {k: v for k, v in os.environ.items() if not k.startswith("ANTHROPIC_")}
+        with mock.patch.dict(os.environ, env, clear=True):
+            with self.assertRaisesMessage(health_ai.AnalysisError, "no Anthropic API key"):
+                health_ai.analyse(_png(), plant=self.plant)

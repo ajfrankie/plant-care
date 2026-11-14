@@ -162,7 +162,3 @@ def replan(request, pk):
 
 def details(request):
     return render(request, "plants/details.html")
-
-
-def health(request):
-    return render(request, "plants/health.html")

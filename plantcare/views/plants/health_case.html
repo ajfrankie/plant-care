@@ -1,0 +1,265 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — {{ case.title }} on {{ case.plant.name }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .treatment { padding:14px 16px; border-radius:10px; background:var(--bg-secondary); border-left:3px solid var(--primary); }
+  .photo-drop { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; border:2px dashed var(--border); border-radius:12px; min-height:140px; padding:12px; text-align:center; cursor:pointer; background:var(--bg-secondary); position:relative; overflow:hidden; }
+  .photo-drop img { max-width:100%; max-height:200px; border-radius:8px; }
+  .photo-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .two-col { display:grid; grid-template-columns:minmax(0,2fr) minmax(280px,1fr); gap:24px; margin-top:24px; align-items:start; }
+  @media (max-width: 900px) { .two-col { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="health" %}
+
+  <div class="main-area">
+    {% include "partials/app_header.html" with title="Plant Health" subtitle=case.plant.name %}
+
+    <div style="padding:28px 32px;">
+
+      {% for message in messages %}
+      <div role="status" style="background:var(--{% if message.tags == 'error' %}error{% else %}success{% endif %}-bg); border:1px solid var(--{% if message.tags == 'error' %}error{% else %}success{% endif %}); border-radius:var(--radius-card); color:var(--{% if message.tags == 'error' %}error{% else %}success{% endif %}); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ message }}</div>
+      {% endfor %}
+
+      <div style="margin-bottom:16px;"><a href="{% url 'plant_health' %}" class="t-small">&larr; Back to Plant Health</a></div>
+
+      <!-- Case header -->
+      <div class="card" style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+        {% if latest %}<img src="{{ latest.image.url }}" alt="Latest photo of {{ case.plant.name }}" style="width:120px; height:120px; border-radius:10px; object-fit:cover; flex:none;">{% endif %}
+        <div style="flex:1; min-width:220px;">
+          <div class="t-small text-muted">{% if entry %}{{ entry.type }} · {% endif %}{{ case.get_source_display }}</div>
+          <h2 class="t-h2" style="margin:2px 0 4px;">{{ case.title }}</h2>
+          <div class="t-body text-secondary"><a href="{% url 'plant_view' case.plant.pk %}">{{ case.plant.name }}</a>{% if case.plant.plant_species %} · <em>{{ case.plant.plant_species.scientific_name }}</em>{% endif %} · since {{ case.started_at|date:"M j, Y" }}</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+            {% if case.is_open %}
+            <span class="badge badge-{% if case.severity == 'severe' %}error{% elif case.severity == 'moderate' %}warning{% else %}info{% endif %}"><span class="badge-dot"></span>{{ case.get_severity_display }}</span>
+            <span class="badge badge-{% if case.status == 'improving' %}success{% else %}neutral{% endif %}">{{ case.get_status_display }}</span>
+            {% else %}
+            <span class="badge badge-success"><span class="badge-dot"></span>Resolved {{ case.resolved_at|date:"M j, Y" }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <form method="post" action="{% url 'health_case_resolve' case.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if case.is_open %}btn-primary{% else %}btn-secondary{% endif %}">{% if case.is_open %}✓ Mark as Resolved{% else %}Reopen Case{% endif %}</button>
+          </form>
+          <form method="post" action="{% url 'health_case_delete' case.pk %}" onsubmit="return confirm('Delete this health case and all its photos?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-destructive btn-sm">Delete</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div style="display:flex; flex-direction:column; gap:24px; min-width:0;">
+
+          <!-- Diagnosis -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:12px;">🔎 Diagnosis</h3>
+            {% if analysis.summary %}
+            <p class="t-body">{{ analysis.summary }}</p>
+            {% for issue in analysis.issues %}{% if issue.name == case.title or issue.key == case.issue_key %}
+            <p class="t-small text-secondary" style="margin-top:8px;"><strong>What we saw:</strong> {{ issue.evidence }} <span class="badge badge-neutral" style="margin-left:4px;">{{ issue.confidence|capfirst }} confidence</span></p>
+            {% endif %}{% endfor %}
+            {% elif entry %}
+            <p class="t-body"><strong>Typical signs:</strong> {{ entry.symptoms }}</p>
+            {% endif %}
+
+            {% if latest.analysis_status == "failed" %}
+            <p class="hint error" style="margin-top:10px;">{{ latest.analysis_error }}</p>
+            {% endif %}
+
+            {% if case.source == "unknown" %}
+            <p class="t-small text-secondary" style="margin-top:10px;">The problem hasn't been identified yet. Try analysing the photo again, or choose the issue yourself.</p>
+            {% endif %}
+
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;">
+              {% if latest %}
+              <form method="post" action="{% url 'health_case_reanalyse' case.pk %}" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Analysing…';">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm">{% if analysis %}Re-analyse Latest Photo{% else %}Find the Issue from Photo{% endif %}</button>
+              </form>
+              {% endif %}
+            </div>
+
+            <details style="margin-top:14px;"{% if case.source == "unknown" %} open{% endif %}>
+              <summary class="t-small" style="cursor:pointer; color:var(--primary); font-weight:600;">{% if case.source == "unknown" %}I know the issue{% else %}Not right? Change the issue{% endif %}</summary>
+              <form method="post" action="{% url 'health_case_issue' case.pk %}" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:12px; align-items:end;">
+                {% csrf_token %}
+                <div>
+                  <label class="t-label" for="id_issue_key" style="display:block; margin-bottom:6px;">Issue</label>
+                  <select id="id_issue_key" name="issue_key" class="select" style="width:100%;">
+                    <option value="">Select an issue...</option>
+                    {% for value, label in issue_choices %}
+                    <option value="{{ value }}"{% if value == case.issue_key %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div>
+                  <label class="t-label" for="id_other_issue" style="display:block; margin-bottom:6px;">Or type another</label>
+                  <input type="text" id="id_other_issue" name="other_issue" class="input" maxlength="120" placeholder="e.g., Leaf miner" style="width:100%;">
+                </div>
+                <div>
+                  <label class="t-label" for="id_severity" style="display:block; margin-bottom:6px;">Severity</label>
+                  <select id="id_severity" name="severity" class="select" style="width:100%;">
+                    {% for value, label in severity_choices %}
+                    <option value="{{ value }}"{% if value == case.severity %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Save Issue</button>
+              </form>
+            </details>
+          </div>
+
+          <!-- Organic treatment plan -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:4px;">🌿 Organic Treatment Plan</h3>
+            <p class="t-small text-muted" style="margin-bottom:14px;">Test any spray on one leaf first and apply in the evening, out of direct sun.</p>
+            {% if treatments %}
+            <div style="display:flex; flex-direction:column; gap:12px;" data-treatments>
+              {% for t in treatments %}
+              <div class="treatment">
+                <div class="t-label">{{ forloop.counter }}. {{ t.name }}{% if t.suggested %} <span class="badge badge-info" style="margin-left:6px;">From photo analysis</span>{% endif %}</div>
+                <div class="t-body text-secondary" style="margin-top:4px;">{{ t.how }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="t-body text-secondary">Choose or identify the issue to see its organic treatments.</p>
+            {% endif %}
+            {% if prevention %}
+            <div style="margin-top:16px; padding:12px 14px; border-radius:10px; background:var(--pale-sage);">
+              <div class="t-label">🛡️ Prevent it coming back</div>
+              <div class="t-small text-secondary" style="margin-top:4px;">{{ prevention }}</div>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if other_issues %}
+          <!-- Other possible issues -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:12px;">Other Possible Issues</h3>
+            {% for issue in other_issues %}
+            <details style="padding:10px 0;{% if not forloop.last %} border-bottom:1px solid var(--border);{% endif %}">
+              <summary style="cursor:pointer;"><strong>{{ issue.name }}</strong> <span class="t-small text-muted">· {{ issue.confidence }} confidence</span></summary>
+              <p class="t-small text-secondary" style="margin-top:8px;">{{ issue.evidence }}</p>
+              <ul style="margin:8px 0 0; padding-left:18px;">
+                {% for t in issue.organic_treatments %}<li class="t-small"><strong>{{ t.name }}:</strong> {{ t.how }}</li>{% endfor %}
+              </ul>
+            </details>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- Progress timeline -->
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:14px;">📈 Progress ({{ checks|length }} photo{{ checks|length|pluralize }})</h3>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px;">
+              {% for check in checks %}
+              <figure style="margin:0;" data-check="{{ check.pk }}">
+                <a href="{{ check.image.url }}" target="_blank" rel="noopener"><img src="{{ check.image.url }}" alt="Photo from {{ check.created_at|date:'M j' }}" loading="lazy" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px;"></a>
+                <figcaption style="margin-top:6px;">
+                  <div class="t-small" style="font-weight:600;">{{ check.created_at|date:"M j, Y" }}</div>
+                  <span class="badge badge-{% if check.progress == 'better' %}success{% elif check.progress == 'worse' %}error{% else %}neutral{% endif %}" style="margin-top:4px;">{{ check.get_progress_display }}</span>
+                  {% if check.notes %}<div class="t-small text-secondary" style="margin-top:4px;">{{ check.notes }}</div>{% endif %}
+                  {% if check.analysis.summary %}<div class="t-small text-muted" style="margin-top:4px;">{{ check.analysis.summary|truncatewords:30 }}</div>{% endif %}
+                </figcaption>
+              </figure>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo updates -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          {% if case.is_open %}
+          <div class="card" id="update">
+            <h3 class="t-h4">📷 Photo Update</h3>
+            <p class="t-small {% if case.next_check_date <= today %}text-warning{% else %}text-muted{% endif %}" style="margin:4px 0 14px;{% if case.next_check_date <= today %} color:var(--warning); font-weight:600;{% endif %}">
+              {% if case.next_check_date < today %}Overdue since {{ case.next_check_date|date:"M j" }}{% elif case.next_check_date == today %}Due today{% else %}Next update {{ case.next_check_date|date:"D, M j" }}{% endif %}
+            </p>
+            <form method="post" action="{% url 'health_case_update' case.pk %}" enctype="multipart/form-data" id="update-form" novalidate>
+              {% csrf_token %}
+              <label class="photo-drop{% if form.image.errors %} input error{% endif %}" for="id_image">
+                <img id="photo-preview" alt="" hidden>
+                <span id="photo-prompt" class="t-small text-muted">Take the photo from the same angle as before</span>
+                <input type="file" id="id_image" name="image" accept="image/*" capture="environment" required>
+              </label>
+              {% for error in form.image.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+
+              <label class="t-label" for="id_progress" style="display:block; margin:14px 0 6px;">How does it look?</label>
+              <select id="id_progress" name="progress" class="select" style="width:100%;">
+                {% for value, label in form.fields.progress.choices %}
+                <option value="{{ value }}"{% if value == form.progress.value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+
+              <label class="t-label" for="id_update_notes" style="display:block; margin:14px 0 6px;">Notes</label>
+              <textarea id="id_update_notes" name="notes" class="input" rows="2" maxlength="500" placeholder="e.g., Sprayed neem oil on Monday" style="width:100%; resize:vertical;">{{ form.notes.value|default_if_none:'' }}</textarea>
+
+              <label style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:14px;">
+                <input type="checkbox" name="analyse" checked style="width:18px; height:18px; accent-color:var(--primary);">
+                Analyse and compare with the last photo
+              </label>
+
+              <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px;" id="update-submit">Save Photo Update</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 class="t-h4" style="margin-bottom:10px;">⏰ Update Reminder</h3>
+            <form method="post" action="{% url 'health_case_frequency' case.pk %}" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              {% csrf_token %}
+              <select name="check_every_days" class="select" style="flex:1; min-width:140px;" aria-label="Photo update frequency">
+                <option value="3"{% if case.check_every_days == 3 %} selected{% endif %}>Every 3 days</option>
+                <option value="7"{% if case.check_every_days == 7 %} selected{% endif %}>Every week</option>
+                <option value="14"{% if case.check_every_days == 14 %} selected{% endif %}>Every 2 weeks</option>
+                <option value="30"{% if case.check_every_days == 30 %} selected{% endif %}>Every month</option>
+              </select>
+              <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+            </form>
+            <p class="t-small text-muted" style="margin-top:10px;">The reminder also shows on your <a href="{% url 'care_schedule' %}">Care Schedule</a>.</p>
+          </div>
+          {% endif %}
+
+          <p class="t-small text-muted">Photo analysis is a helpful guide, not a lab test. If a plant keeps getting worse, ask a local nursery or plant clinic.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var file = document.getElementById("id_image");
+  if (file) {
+    file.addEventListener("change", function () {
+      if (!file.files.length) return;
+      var preview = document.getElementById("photo-preview");
+      preview.src = URL.createObjectURL(file.files[0]);
+      preview.hidden = false;
+      document.getElementById("photo-prompt").hidden = true;
+    });
+  }
+  var form = document.getElementById("update-form");
+  if (form) {
+    form.addEventListener("submit", function () {
+      var button = document.getElementById("update-submit");
+      button.disabled = true;
+      button.textContent = form.analyse.checked ? "Analysing photo…" : "Saving…";
+    });
+  }
+})();
+</script>
+{% endblock %}
