@@ -1,12 +1,15 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator
 
 from django.utils import timezone
 
 from . import health_library
-from .models import CareTask, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder
+from .models import CareLog, CareTask, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder
 from .models.choices import SpecialFeature
 
 
@@ -126,6 +129,35 @@ class CareTaskForm(forms.ModelForm):
         if due_date < timezone.localdate():
             raise ValidationError("Due date cannot be in the past.")
         return due_date
+
+    def clean_notes(self):
+        return self.cleaned_data["notes"].strip()
+
+
+class CareLogForm(forms.ModelForm):
+    """Record something already done to a plant (Care History page)."""
+
+    performed_at = forms.DateTimeField(
+        label="When", input_formats=["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M", "%Y-%m-%d"]
+    )
+
+    class Meta:
+        model = CareLog
+        fields = ["plant", "activity", "performed_at", "notes"]
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Activities can only be logged for the user's own plants.
+        self.fields["plant"].queryset = Plant.objects.filter(created_user=user).order_by("name")
+        self.fields["plant"].empty_label = "Select a plant..."
+        self.fields["notes"].max_length = 1000
+        self.fields["notes"].validators.append(MaxLengthValidator(1000))
+
+    def clean_performed_at(self):
+        performed_at = self.cleaned_data["performed_at"]
+        if performed_at > timezone.now() + timedelta(minutes=1):
+            raise ValidationError("This can't be in the future.")
+        return performed_at
 
     def clean_notes(self):
         return self.cleaned_data["notes"].strip()

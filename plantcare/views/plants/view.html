@@ -89,7 +89,7 @@
                 {% endif %}
                 <div style="display:flex; gap:12px; flex-wrap:wrap;">
                   <a href="{% url 'plant_edit' plant.pk %}" class="btn btn-primary btn-sm">Edit Plant</a>
-                  <a href="{% url 'care_history' %}" class="btn btn-secondary btn-sm">Care History</a>
+                  <a href="{% url 'care_history' %}?plant={{ plant.pk }}" class="btn btn-secondary btn-sm">Care History</a>
                 </div>
               </div>
             </div>
@@ -188,7 +188,7 @@
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <h3 class="t-h3">Recent Care History</h3>
-              {% if recent_logs %}<a href="{% url 'care_history' %}" class="nav-link" style="font-size:14px;">View All &rarr;</a>{% endif %}
+              {% if recent_logs %}<a href="{% url 'care_history' %}?plant={{ plant.pk }}" class="nav-link" style="font-size:14px;">View All &rarr;</a>{% endif %}
             </div>
             {% for log in recent_logs %}
             <div class="care-row">

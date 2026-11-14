@@ -1,0 +1,8 @@
+{% comment %}Plant photo, name and species for a timeline section. Expects: plant.{% endcomment %}
+{% include "care/_plant_thumb.html" with plant=plant size=48 %}
+<div style="flex:1; min-width:0;">
+  <div class="t-label" style="font-size:16px;">{{ plant.name }}</div>
+  {% if plant.plant_species or plant.nickname %}
+  <div class="t-small text-muted">{% if plant.plant_species %}<em>{{ plant.plant_species.scientific_name }}</em>{% endif %}{% if plant.plant_species and plant.nickname %} &bull; {% endif %}{% if plant.nickname %}"{{ plant.nickname }}"{% endif %}</div>
+  {% endif %}
+</div>
