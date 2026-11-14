@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, health, library, notifications, plants, public, species, watering
+from .controllers import accounts, care, dashboard, health, history, library, notifications, plants, public, species, watering
 
 urlpatterns = [
     # Public site
@@ -64,5 +64,8 @@ urlpatterns = [
     path("watering-schedule/<int:pk>/water/", watering.water, name="water_reminder_water"),
     path("watering-schedule/<int:pk>/toggle/", watering.toggle, name="water_reminder_toggle"),
     path("watering-schedule/<int:pk>/delete/", watering.delete, name="water_reminder_delete"),
-    path("care-history/", care.history, name="care_history"),
+    path("care-history/", history.index, name="care_history"),
+    path("care-history/add/", history.add, name="care_log_add"),
+    path("care-history/export/", history.export, name="care_history_export"),
+    path("care-history/<int:pk>/delete/", history.delete, name="care_log_delete"),
 ]

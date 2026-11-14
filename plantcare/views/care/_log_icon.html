@@ -1,0 +1,5 @@
+{% comment %}
+  Icon for a care history activity. Usage:
+  {% include "care/_log_icon.html" with activity=log.activity size=16 color=log.color %}
+{% endcomment %}
+{% if activity == "watering" %}{% include "care/_kind_icon.html" with kind="water" %}{% elif activity == "fertilizing" %}{% include "care/_kind_icon.html" with kind="fertilize" %}{% elif activity == "maintenance" %}{% include "care/_kind_icon.html" with kind="prune" %}{% elif activity == "health" %}{% include "care/_kind_icon.html" with kind="health" %}{% else %}<svg width="{{ size|default:16 }}" height="{{ size|default:16 }}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z" stroke="{{ color|default:'currentColor' }}" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12h7M9 16h5" stroke="{{ color|default:'currentColor' }}" stroke-width="1.8" stroke-linecap="round"/></svg>{% endif %}

@@ -304,6 +304,7 @@ class PageRenderingTests(TestCase):
             "health_case_resolve", "health_case_frequency", "health_case_delete",
             "notifications_read_all", "notifications_clear", "notification_open",
             "notification_toggle_read", "notification_complete", "notification_dismiss",
+            "care_log_add", "care_log_delete",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -1733,6 +1734,210 @@ class HealthAITests(TestCase):
         with mock.patch.dict(os.environ, env, clear=True):
             with self.assertRaisesMessage(health_ai.AnalysisError, "no Anthropic API key"):
                 health_ai.analyse(_png(), plant=self.plant)
+
+
+class CareHistoryTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "history@example.com", "History Tester", "mossy-Fern-42!", is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "other-history@example.com", "Other", "mossy-Fern-42!", is_active=True
+        )
+        cls.species = PlantSpecies.objects.create(
+            common_name="Snake Plant", scientific_name="Dracaena trifasciata",
+            category="indoor", difficulty="easy", light="medium", watering="weekly",
+        )
+        cls.plant = Plant.objects.create(
+            created_user=cls.user, name="Snake Plant", planting_date=date(2026, 1, 1),
+            plant_species=cls.species,
+        )
+        cls.fern = Plant.objects.create(
+            created_user=cls.user, name="Fern", planting_date=date(2026, 1, 1)
+        )
+        cls.theirs = Plant.objects.create(
+            created_user=cls.other, name="Cactus", planting_date=date(2026, 1, 1)
+        )
+        cls.url = reverse("care_history")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.now = timezone.now()
+
+    def log(self, plant, activity, days_ago=0, notes=""):
+        return CareLog.objects.create(
+            plant=plant, activity=activity, notes=notes,
+            performed_at=self.now - timedelta(days=days_ago),
+        )
+
+    def stamp(self, moment):
+        return timezone.localtime(moment).strftime("%Y-%m-%dT%H:%M")
+
+    def test_groups_own_history_by_plant(self):
+        old = self.log(self.plant, "watering", 3, notes="Soil was dry")
+        older = self.log(self.plant, "health", 5)
+        new = self.log(self.fern, "fertilizing", 0)
+        self.log(self.theirs, "watering", 0, notes="Not yours")
+        response = self.client.get(self.url)
+        self.assertIsNone(response.context["page"])
+        groups = response.context["groups"]
+        # Most recently cared-for plant first, each with its own entries newest first.
+        self.assertEqual([g["plant"] for g in groups], [self.fern, self.plant])
+        self.assertEqual(groups[0]["logs"], [new])
+        self.assertEqual(groups[1]["logs"], [old, older])
+        self.assertEqual(groups[1]["total"], 2)
+        html = response.content.decode()
+        self.assertIn("Soil was dry", html)
+        self.assertIn("Dracaena trifasciata", html)
+        self.assertNotIn("Not yours", html)
+        # Several plants: every section starts closed.
+        self.assertEqual(html.count('class="card plant-group"'), 2)
+        self.assertNotIn('style="padding:0;" open>', html)
+        self.assertIn(f"plant={self.plant.pk}", html)
+
+    def test_single_plant_section_starts_open(self):
+        self.log(self.plant, "watering")
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('style="padding:0;" open>', html)
+
+    def test_plant_section_shows_latest_entries_only(self):
+        for i in range(12):
+            self.log(self.plant, "watering", i)
+        group = self.client.get(self.url).context["groups"][0]
+        self.assertEqual((len(group["logs"]), group["total"], group["more"]), (10, 12, 2))
+
+    def test_selected_plant_shows_full_timeline(self):
+        mine = self.log(self.plant, "watering", 0)
+        self.log(self.fern, "watering", 0)
+        response = self.client.get(self.url, {"plant": self.plant.pk})
+        self.assertEqual(response.context["groups"], [])
+        self.assertEqual(list(response.context["page"].object_list), [mine])
+        self.assertIn("Today —", response.content.decode())
+
+    def test_stats_and_filters(self):
+        self.log(self.plant, "watering", 1)
+        self.log(self.plant, "watering", 40)
+        self.log(self.fern, "maintenance", 2)
+        self.log(self.fern, "health", 100)
+        stats = self.client.get(self.url).context["stats"]
+        self.assertEqual((stats["watering"], stats["maintenance"], stats["health"]), (2, 1, 1))
+
+        response = self.client.get(self.url, {"period": "30d"})
+        self.assertEqual(response.context["stats"]["watering"], 1)
+        self.assertEqual(sum(g["total"] for g in response.context["groups"]), 2)
+
+        response = self.client.get(self.url, {"plant": self.fern.pk, "activity": "maintenance"})
+        self.assertEqual([log.activity for log in response.context["page"].object_list], ["maintenance"])
+        # Stats ignore the activity filter but follow the plant.
+        self.assertEqual(response.context["stats"]["health"], 1)
+        self.assertEqual(response.context["stats"]["watering"], 0)
+
+    def test_invalid_filters_are_ignored(self):
+        self.log(self.plant, "watering")
+        response = self.client.get(self.url, {
+            "plant": self.theirs.pk, "activity": "dance", "period": "forever",
+        })
+        context = response.context
+        self.assertEqual((context["plant_id"], context["activity"], context["period"]), ("", "", "all"))
+        self.assertEqual(len(context["groups"]), 1)
+
+    def test_chart_buckets(self):
+        self.log(self.plant, "watering", 0)
+        self.log(self.plant, "fertilizing", 0)
+        self.log(self.plant, "watering", 2)
+        self.log(self.plant, "watering", 20)  # outside the 7 day chart
+        chart = self.client.get(self.url, {"period": "7d"}).context["chart"]
+        self.assertEqual(len(chart["bars"]), 7)
+        self.assertEqual(chart["total"], 3)
+        today_bar = chart["bars"][-1]
+        self.assertTrue(today_bar["is_current"])
+        self.assertEqual(today_bar["height"], 100)
+        self.assertEqual({s["activity"]: s["count"] for s in today_bar["segments"]},
+                         {"watering": 1, "fertilizing": 1})
+        self.assertEqual(len(self.client.get(self.url, {"period": "30d"}).context["chart"]["bars"]), 30)
+        self.assertEqual(len(self.client.get(self.url, {"period": "90d"}).context["chart"]["bars"]), 13)
+        chart = self.client.get(self.url).context["chart"]
+        self.assertEqual(len(chart["bars"]), 12)
+        self.assertEqual(chart["total"], 4)
+
+    def test_pagination_keeps_filters(self):
+        for i in range(25):
+            self.log(self.plant, "watering", i)
+        query = {"activity": "watering", "plant": self.plant.pk}
+        response = self.client.get(self.url, query)
+        self.assertEqual(len(response.context["page"].object_list), 20)
+        self.assertIn(f"activity=watering&amp;plant={self.plant.pk}&amp;page=2", response.content.decode())
+        response = self.client.get(self.url, {**query, "page": 2})
+        self.assertEqual(len(response.context["page"].object_list), 5)
+
+    def test_empty_states(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn("No care activity yet", html)
+        html = self.client.get(self.url, {"activity": "note"}).content.decode()
+        self.assertIn("Nothing matches these filters", html)
+
+    def test_log_activity(self):
+        when = self.stamp(self.now - timedelta(hours=3))
+        back = f"{self.url}?plant={self.plant.pk}"
+        response = self.client.post(reverse("care_log_add"), {
+            "plant": self.plant.pk, "activity": "maintenance", "performed_at": when,
+            "notes": "  Removed two yellow leaves  ", "next": back,
+        })
+        self.assertRedirects(response, back)
+        log = CareLog.objects.get()
+        self.assertEqual((log.plant, log.activity, log.notes),
+                         (self.plant, "maintenance", "Removed two yellow leaves"))
+        self.assertEqual(self.stamp(log.performed_at), when)
+
+    def test_log_activity_rejects_future_and_other_users_plant(self):
+        response = self.client.post(reverse("care_log_add"), {
+            "plant": self.theirs.pk, "activity": "watering",
+            "performed_at": self.stamp(self.now + timedelta(days=1)),
+        })
+        self.assertEqual(response.status_code, 200)
+        errors = response.context["form"].errors
+        self.assertIn("plant", errors)
+        self.assertIn("performed_at", errors)
+        self.assertTrue(response.context["show_form"])
+        self.assertFalse(CareLog.objects.exists())
+
+    def test_log_activity_ignores_offsite_next(self):
+        response = self.client.post(reverse("care_log_add"), {
+            "plant": self.plant.pk, "activity": "note", "performed_at": self.stamp(self.now),
+            "next": "https://evil.example.com/",
+        })
+        self.assertRedirects(response, self.url)
+
+    def test_delete_entry(self):
+        log = self.log(self.plant, "watering")
+        response = self.client.post(reverse("care_log_delete", args=[log.pk]))
+        self.assertRedirects(response, self.url)
+        self.assertFalse(CareLog.objects.exists())
+
+    def test_cannot_delete_other_users_entry(self):
+        log = self.log(self.theirs, "watering")
+        response = self.client.post(reverse("care_log_delete", args=[log.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(CareLog.objects.filter(pk=log.pk).exists())
+        self.assertEqual(self.client.get(reverse("care_log_delete", args=[log.pk])).status_code, 405)
+
+    def test_export_csv(self):
+        self.log(self.plant, "watering", 1, notes="=HYPERLINK(1)")
+        self.log(self.fern, "fertilizing", 1)
+        self.log(self.theirs, "watering", 1)
+        response = self.client.get(reverse("care_history_export"), {"plant": self.plant.pk})
+        self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+        self.assertIn("attachment;", response["Content-Disposition"])
+        rows = response.content.decode("utf-8-sig").strip().splitlines()
+        self.assertEqual(rows[0], "Date,Time,Plant,Species,Activity,Notes")
+        self.assertEqual(len(rows), 2)
+        self.assertIn("Snake Plant,Dracaena trifasciata,Watering,'=HYPERLINK(1)", rows[1])
+
+    def test_plant_page_links_to_its_history(self):
+        self.log(self.plant, "watering")
+        html = self.client.get(reverse("plant_view", args=[self.plant.pk])).content.decode()
+        self.assertIn(f"{self.url}?plant={self.plant.pk}", html)
 
 
 class NotificationTests(TestCase):

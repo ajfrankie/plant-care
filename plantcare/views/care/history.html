@@ -2,6 +2,28 @@
 
 {% block title %}Plant Care — Care History{% endblock %}
 
+{% block head_extra %}
+<style>
+  .history-entry { display:flex; gap:16px; padding:12px 16px; margin-left:12px; position:relative; border-left:3px solid var(--entry-color); }
+  .history-entry::before { content:""; position:absolute; left:-8px; top:16px; width:12px; height:12px; border-radius:50%; background:var(--entry-color); border:2px solid var(--surface); }
+  .plant-group > summary::-webkit-details-marker { display:none; }
+  .plant-group > summary:hover { background:var(--pale-sage); border-radius:var(--radius-card); }
+  .plant-group .group-chevron { transition:transform .2s; color:var(--text-muted); }
+  .plant-group[open] .group-chevron { transform:rotate(180deg); }
+  .plant-group[open] > summary { border-bottom:1px solid var(--border); border-radius:var(--radius-card) var(--radius-card) 0 0; }
+  .history-entry .entry-delete { opacity:0; transition:opacity .15s; }
+  .history-entry:hover .entry-delete, .history-entry:focus-within .entry-delete { opacity:1; }
+  .chart-bar { width:100%; display:flex; flex-direction:column-reverse; border-radius:4px 4px 0 0; overflow:hidden; min-height:0; }
+  .chart-bar.empty { min-height:3px; background:var(--border); }
+  .chart-col { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  @media (hover: none) { .history-entry .entry-delete { opacity:1; } }
+  @media (max-width: 600px) {
+    .history-entry { padding:14px 8px 14px 14px; gap:12px; }
+    .history-entry .entry-meta { flex-direction:column; gap:2px; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="app-shell">
 
@@ -14,389 +36,227 @@
 
     <div style="padding:28px 32px;">
 
-      <!-- Activity summary stats -->
-      <div class="grid-4" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px;">
+      {% for message in messages %}
+      <div role="status" style="background:var(--success-bg); border:1px solid var(--success); border-radius:var(--radius-card); color:var(--success); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ message }}</div>
+      {% endfor %}
+
+      <!-- Activity summary stats ({{ period_label }}) -->
+      <div class="grid-4">
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--info-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="1.6"/></svg></div>
-            <div class="value">47</div>
+            <div class="stat-icon" style="background:var(--info-bg);">{% include "care/_kind_icon.html" with kind="water" size=18 color="#2563A6" %}</div>
+            <div class="value" data-stat="watering">{{ stats.watering }}</div>
           </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Waterings This Month</div>
+          <div class="t-small text-muted" style="margin-top:4px;">Waterings &middot; {{ period_label }}</div>
         </div>
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#287A4B" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="#287A4B" stroke-width="1.6"/></svg></div>
-            <div class="value">12</div>
+            <div class="stat-icon" style="background:var(--success-bg);">{% include "care/_kind_icon.html" with kind="fertilize" size=18 color="#287A4B" %}</div>
+            <div class="value" data-stat="fertilizing">{{ stats.fertilizing }}</div>
           </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Fertilizing Events</div>
+          <div class="t-small text-muted" style="margin-top:4px;">Fertilizing Events &middot; {{ period_label }}</div>
         </div>
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="#214E34" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-            <div class="value">8</div>
+            <div class="stat-icon" style="background:var(--pale-sage);">{% include "care/_kind_icon.html" with kind="prune" size=18 color="#214E34" %}</div>
+            <div class="value" data-stat="maintenance">{{ stats.maintenance }}</div>
           </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Maintenance Tasks</div>
+          <div class="t-small text-muted" style="margin-top:4px;">Maintenance Tasks &middot; {{ period_label }}</div>
         </div>
         <div class="stat-card">
           <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="#A86712" stroke-width="1.6"/></svg></div>
-            <div class="value">15</div>
+            <div class="stat-icon" style="background:var(--warning-bg);">{% include "care/_kind_icon.html" with kind="health" size=18 color="#A86712" %}</div>
+            <div class="value" data-stat="health">{{ stats.health }}</div>
           </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Health Updates</div>
+          <div class="t-small text-muted" style="margin-top:4px;">Health Updates &middot; {{ period_label }}</div>
         </div>
       </div>
+
+      <!-- Filters (the selects below point at this form) -->
+      <form id="filters" method="get" action="{% url 'care_history' %}"></form>
 
       <!-- Activity chart -->
       <div class="card" style="margin-top:24px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-          <h3 class="t-h4">Activity Overview</h3>
-          <div style="display:flex; gap:10px;">
-            <select class="select" style="width:140px; height:38px;">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-              <option>Last 90 Days</option>
-              <option>This Year</option>
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+          <div>
+            <h3 class="t-h4">Activity Overview</h3>
+            <div class="t-small text-muted">{{ chart.total }} activit{{ chart.total|pluralize:"y,ies" }} &middot; by {{ chart.step }}{% if period == "all" %} (last 12 months){% endif %}</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <select name="period" form="filters" class="select" style="width:150px; height:38px;" onchange="this.form.submit()" aria-label="Time period">
+              {% for value, label in periods %}
+              <option value="{{ value }}"{% if value == period %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
             </select>
-            <button class="btn btn-secondary btn-sm">Export History</button>
+            <a href="{% url 'care_history_export' %}{% if query_string %}?{{ query_string }}{% endif %}" class="btn btn-secondary btn-sm" style="height:38px; display:inline-flex; align-items:center;" data-action="export">Export History</a>
           </div>
         </div>
-        <div style="display:flex; align-items:flex-end; gap:8px; height:180px; padding:20px 0;">
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:70%;"></div>
-            </div>
-            <div class="t-small text-muted">Mon</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:45%;"></div>
-            </div>
-            <div class="t-small text-muted">Tue</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:85%;"></div>
-            </div>
-            <div class="t-small text-muted">Wed</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:55%;"></div>
-            </div>
-            <div class="t-small text-muted">Thu</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:40%;"></div>
-            </div>
-            <div class="t-small text-muted">Fri</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--info); border-radius:4px 4px 0 0; height:95%;"></div>
-            </div>
-            <div class="t-small text-muted">Sat</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; height:160px;">
-              <div style="width:100%; background:var(--primary); border-radius:4px 4px 0 0; height:60%;"></div>
-            </div>
-            <div class="t-small text-muted">Today</div>
-          </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:6px 16px; margin-bottom:8px;">
+          {% for key, label, color in legend %}
+          <span class="t-small text-muted" style="display:inline-flex; align-items:center; gap:6px;"><span style="width:10px; height:10px; border-radius:3px; background:{{ color }};"></span>{{ label }}</span>
+          {% endfor %}
         </div>
+
+        {% if chart.total %}
+        <div style="display:flex; align-items:flex-end; gap:{% if chart.bars|length > 14 %}3{% else %}8{% endif %}px; padding:12px 0 0;" role="img" aria-label="Care activity chart">
+          {% for bar in chart.bars %}
+          <div class="chart-col" title="{{ bar.title }}">
+            <div style="width:100%; height:160px; display:flex; flex-direction:column; justify-content:flex-end;">
+              <div class="chart-bar{% if not bar.segments %} empty{% endif %}" style="height:{% if bar.segments %}{{ bar.height }}%{% else %}3px{% endif %};{% if bar.is_current %} outline:2px solid var(--primary); outline-offset:1px;{% endif %}">
+                {% for seg in bar.segments %}<div style="flex:{{ seg.count }} 1 0; background:{{ seg.color }};" title="{{ seg.label }}: {{ seg.count }}"></div>{% endfor %}
+              </div>
+            </div>
+            <div class="t-small {% if bar.is_current %}text-secondary{% else %}text-muted{% endif %}" style="white-space:nowrap; height:18px;{% if bar.is_current %} font-weight:600;{% endif %}">{% if chart.label_every == 1 or forloop.counter0|divisibleby:chart.label_every or forloop.last %}{{ bar.label }}{% endif %}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="t-body text-secondary" style="text-align:center; padding:48px 0;">No care activity in this period.</div>
+        {% endif %}
       </div>
 
-      <!-- Filter controls -->
+      <!-- Timeline controls -->
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:32px;">
         <h3 class="t-h3">Activity Timeline</h3>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <select class="select" style="width:160px; height:38px;">
-            <option>All Activities</option>
-            <option>Watering</option>
-            <option>Fertilizing</option>
-            <option>Pruning/Maintenance</option>
-            <option>Health Updates</option>
-            <option>Notes</option>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <select name="activity" form="filters" class="select" style="width:180px; height:38px;" onchange="this.form.submit()" aria-label="Activity type">
+            <option value="">All Activities</option>
+            {% for value, label in activity_choices %}
+            <option value="{{ value }}"{% if value == activity %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
-          <select class="select" style="width:140px; height:38px;">
-            <option>All Plants</option>
-            <option>Monstera Deliciosa</option>
-            <option>Snake Plant</option>
-            <option>Peace Lily</option>
-            <option>Pothos</option>
+          <select name="plant" form="filters" class="select" style="width:170px; height:38px;" onchange="this.form.submit()" aria-label="Plant">
+            <option value="">All Plants</option>
+            {% for plant in plants %}
+            <option value="{{ plant.pk }}"{% if plant.pk|stringformat:"s" == plant_id %} selected{% endif %}>{{ plant.name }}</option>
+            {% endfor %}
           </select>
-          <select class="select" style="width:140px; height:38px;">
-            <option>All Locations</option>
-            <option>Living Room</option>
-            <option>Bedroom</option>
-            <option>Kitchen</option>
-            <option>Office</option>
-            <option>Garden</option>
-          </select>
+          <noscript><button type="submit" form="filters" class="btn btn-secondary btn-sm">Filter</button></noscript>
+          {% if is_filtered %}<a href="{% url 'care_history' %}" class="btn btn-secondary btn-sm">Clear</a>{% endif %}
+          {% if plants %}<button type="button" class="btn btn-primary btn-sm" onclick="var p=document.getElementById('log-activity'); p.open=!p.open; if(p.open){p.scrollIntoView({behavior:'smooth', block:'nearest'});}">+ Log Activity</button>{% endif %}
         </div>
       </div>
 
+      {% if plants %}
+      <!-- Log an activity -->
+      <details id="log-activity" class="card" style="margin-top:20px;"{% if show_form %} open{% endif %}>
+        <summary class="t-h4" style="cursor:pointer;">Log a Care Activity</summary>
+        <p class="t-small text-muted" style="margin-top:6px;">Record something you've already done. Completing tasks on the Care Schedule or Watering Reminders adds them here automatically.</p>
+        <form method="post" action="{% url 'care_log_add' %}" style="margin-top:16px;" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+          {% for error in form.non_field_errors %}<p class="hint error">{{ error }}</p>{% endfor %}
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; align-items:start;">
+            <div>
+              <label class="t-label" for="id_log_plant" style="display:block; margin-bottom:6px;">Plant *</label>
+              <select id="id_log_plant" name="plant" class="select{% if form.plant.errors %} input error{% endif %}" required style="width:100%;">
+                <option value="">Select a plant...</option>
+                {% for plant in plants %}
+                <option value="{{ plant.pk }}"{% if plant.pk|stringformat:"s" == form.plant.value|stringformat:"s" %} selected{% endif %}>{{ plant.name }}</option>
+                {% endfor %}
+              </select>
+              {% for error in form.plant.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              <label class="t-label" for="id_log_activity" style="display:block; margin-bottom:6px;">Activity *</label>
+              <select id="id_log_activity" name="activity" class="select{% if form.activity.errors %} input error{% endif %}" required style="width:100%;">
+                {% for value, label in activity_choices %}
+                <option value="{{ value }}"{% if value == form.activity.value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% for error in form.activity.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              <label class="t-label" for="id_log_performed_at" style="display:block; margin-bottom:6px;">When *</label>
+              <input type="datetime-local" id="id_log_performed_at" name="performed_at" class="input{% if form.performed_at.errors %} error{% endif %}" value="{{ form.performed_at.value|default_if_none:'' }}" max="{{ now_local }}" required style="width:100%;">
+              {% for error in form.performed_at.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label class="t-label" for="id_log_notes" style="display:block; margin-bottom:6px;">Notes</label>
+            <textarea id="id_log_notes" name="notes" class="input{% if form.notes.errors %} error{% endif %}" rows="3" maxlength="1000" placeholder="e.g. Soil was dry to touch. Used 200 ml filtered water." style="width:100%; height:auto; padding:10px 12px; resize:vertical;">{{ form.notes.value|default_if_none:'' }}</textarea>
+            {% for error in form.notes.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('log-activity').open=false;">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm">Save Activity</button>
+          </div>
+        </form>
+      </details>
+      {% endif %}
+
       <!-- Timeline -->
-      <div style="margin-top:20px;">
-
-        <!-- Today -->
-        <div style="margin-bottom:24px;">
-          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
-            <div class="t-label">Today — Sunday, Nov 8, 2026</div>
+      <div style="margin-top:20px;" data-section="timeline">
+        {% if page %}
+        <!-- One plant chosen: its full road map -->
+        {% if page.object_list %}
+        <div class="card" data-plant-timeline="{{ plant_id }}">
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
+            {% include "care/_plant_heading.html" with plant=page.object_list.0.plant %}
+            <span class="t-small text-muted" style="flex:none;">{{ page.paginator.count }} entr{{ page.paginator.count|pluralize:"y,ies" }}</span>
+            <a href="{% url 'care_history' %}{% if group_query %}?{{ group_query }}{% endif %}" class="btn btn-secondary btn-sm" style="flex:none;">&larr; All Plants</a>
+            <a href="{% url 'plant_view' page.object_list.0.plant.pk %}" class="btn btn-secondary btn-sm" style="flex:none;">View Plant</a>
           </div>
-
-          <div style="display:flex; flex-direction:column; gap:0;">
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#214E34; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Snake Plant</div>
-                    <div class="t-small text-muted">Dracaena trifasciata • Bedroom</div>
-                  </div>
-                  <div class="t-small text-muted">2 hours ago</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Watered</span>
-                </div>
-                <div class="t-small text-secondary">Soil was dry to touch. Used 200ml filtered water at room temperature.</div>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--success); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--success); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#4F8A52; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Monstera Deliciosa</div>
-                    <div class="t-small text-muted">Monstera deliciosa • Living Room</div>
-                  </div>
-                  <div class="t-small text-muted">5 hours ago</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="var(--success)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Health Updated</span>
-                  <span class="badge badge-success"><span class="badge-dot"></span>Healthy</span>
-                </div>
-                <div class="t-small text-secondary">New aerial root forming. Leaf fenestration improving with better light exposure.</div>
-              </div>
-            </div>
-
-          </div>
+          {% include "care/_history_days.html" with logs=page.object_list %}
         </div>
-
-        <!-- Yesterday -->
-        <div style="margin-bottom:24px;">
-          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
-            <div class="t-label">Yesterday — Saturday, Nov 7</div>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:0;">
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#5C9A5F; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Peace Lily</div>
-                    <div class="t-small text-muted">Spathiphyllum wallisii • Balcony</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 7, 9:30 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Watered</span>
-                </div>
-                <div class="t-small text-secondary">Regular watering. Plant is drooping slightly — monitoring for recovery.</div>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--secondary); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--secondary); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#3C7A48; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Aloe Vera</div>
-                    <div class="t-small text-muted">Aloe barbadensis • Garden</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 7, 7:00 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--secondary)" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="var(--secondary)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Fertilized</span>
-                </div>
-                <div class="t-small text-secondary">Applied diluted succulent fertilizer (half strength). Next feeding in 4 weeks.</div>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#2F6B3C; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Pothos</div>
-                    <div class="t-small text-muted">Epipremnum aureum • Kitchen</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 7, 6:15 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Watered</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
+        {% endif %}
+        {% else %}
+        <!-- All plants: one collapsible road map per plant -->
+        {% if groups|length > 1 %}
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:10px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.plant-group').forEach(function(d){d.open=true;})">Expand All</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.querySelectorAll('.plant-group').forEach(function(d){d.open=false;})">Collapse All</button>
         </div>
-
-        <!-- Nov 5 -->
-        <div style="margin-bottom:24px;">
-          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
-            <div class="t-label">Nov 5, 2026 — Thursday</div>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:0;">
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--primary); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--primary); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Fiddle Leaf Fig</div>
-                    <div class="t-small text-muted">Ficus lyrata • Living Room</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 5, 2:45 PM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/></svg>
-                  <span class="t-body" style="font-weight:600;">Pruned</span>
-                </div>
-                <div class="t-small text-secondary">Removed 2 lower leaves with brown spots. Cleaned remaining leaves with damp cloth. Improved air circulation around plant.</div>
+        {% endif %}
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          {% for group in groups %}
+          <details class="card plant-group" data-plant-group="{{ group.plant.pk }}" style="padding:0;"{% if groups|length == 1 %} open{% endif %}>
+            <summary style="display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:pointer; list-style:none;">
+              {% include "care/_plant_heading.html" with plant=group.plant %}
+              <div style="text-align:right; flex:none;">
+                <div class="t-small" style="font-weight:600;">{{ group.total }} entr{{ group.total|pluralize:"y,ies" }}</div>
+                <div class="t-small text-muted">Last: {{ group.last|timesince }} ago</div>
+              </div>
+              <svg class="group-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex:none;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </summary>
+            <div style="padding:4px 20px 16px;">
+              {% include "care/_history_days.html" with logs=group.logs %}
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--border); padding-top:12px;">
+                <span class="t-small text-muted">{% if group.more %}Showing the latest {{ group.logs|length }} of {{ group.total }}{% else %}All {{ group.total }} entr{{ group.total|pluralize:"y,ies" }} shown{% endif %}</span>
+                <a href="?{% if group_query %}{{ group_query }}&amp;{% endif %}plant={{ group.plant.pk }}" class="btn btn-secondary btn-sm">{% if group.more %}View Full History{% else %}Open Timeline{% endif %}</a>
               </div>
             </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#6AA66B; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Spider Plant</div>
-                    <div class="t-small text-muted">Chlorophytum comosum • Office</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 5, 10:00 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Watered</span>
-                </div>
-                <div class="t-small text-secondary">Bottom watered for 15 minutes. Plant absorbed approximately 300ml.</div>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--secondary); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--secondary); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#4F8A52; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Monstera Deliciosa</div>
-                    <div class="t-small text-muted">Monstera deliciosa • Living Room</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 5, 9:30 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="var(--secondary)" stroke-width="1.6"/><circle cx="12" cy="12" r="8" stroke="var(--secondary)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Fertilized</span>
-                </div>
-                <div class="t-small text-secondary">Applied balanced liquid fertilizer (10-10-10) at quarter strength. Watered before and after application.</div>
-              </div>
-            </div>
-
-          </div>
+          </details>
+          {% endfor %}
         </div>
+        {% endif %}
 
-        <!-- Nov 3 -->
-        <div style="margin-bottom:24px;">
-          <div style="background:var(--pale-sage); border-radius:8px; padding:10px 16px; margin-bottom:12px;">
-            <div class="t-label">Nov 3, 2026 — Tuesday</div>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:0;">
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--info); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--info); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#8CA88D; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Rubber Plant</div>
-                    <div class="t-small text-muted">Ficus elastica • Office</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 3, 11:15 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="var(--info)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Watered</span>
-                </div>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--primary); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--primary); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#8CA88D; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Rubber Plant</div>
-                    <div class="t-small text-muted">Ficus elastica • Office</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 3, 11:00 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12c0 4.4 3.6 8 8 8s8-3.6 8-8-3.6-8-8-8" stroke="var(--primary)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Leaf Care</span>
-                </div>
-                <div class="t-small text-secondary">Wiped leaves with damp microfiber cloth to remove dust. Improves photosynthesis and appearance.</div>
-              </div>
-            </div>
-
-            <div style="display:flex; gap:16px; padding:16px; border-left:3px solid var(--warning); margin-left:12px; position:relative;">
-              <div style="position:absolute; left:-8px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--warning); border:2px solid var(--bg);"></div>
-              <div style="width:52px; height:52px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
-              <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
-                  <div>
-                    <div class="t-label">Boston Fern</div>
-                    <div class="t-small text-muted">Nephrolepis exaltata • Bathroom</div>
-                  </div>
-                  <div class="t-small text-muted">Nov 3, 8:30 AM</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="var(--warning)" stroke-width="1.6"/></svg>
-                  <span class="t-body" style="font-weight:600;">Health Updated</span>
-                  <span class="badge badge-warning"><span class="badge-dot"></span>Needs Attention</span>
-                </div>
-                <div class="t-small text-secondary">Fronds showing dryness at tips. Increased misting schedule to twice daily.</div>
-              </div>
-            </div>
-
-          </div>
+        {% if is_empty %}
+        <div class="card" style="text-align:center; padding:48px 24px;" data-empty="timeline">
+          {% if not plants %}
+          <h4 class="t-h4">No plants yet</h4>
+          <p class="t-body text-secondary" style="margin:8px 0 16px;">Add a plant to start building its care history.</p>
+          <a href="{% url 'plant_add' %}" class="btn btn-primary btn-sm">Add a Plant</a>
+          {% elif is_filtered %}
+          <h4 class="t-h4">Nothing matches these filters</h4>
+          <p class="t-body text-secondary" style="margin:8px 0 16px;">Try a longer time period or another plant or activity.</p>
+          <a href="{% url 'care_history' %}" class="btn btn-secondary btn-sm">Clear Filters</a>
+          {% else %}
+          <h4 class="t-h4">No care activity yet</h4>
+          <p class="t-body text-secondary" style="margin:8px 0 16px;">Completed tasks from your care and watering schedules will appear here, or log an activity yourself.</p>
+          <a href="{% url 'care_schedule' %}" class="btn btn-secondary btn-sm">Open Care Schedule</a>
+          {% endif %}
         </div>
+        {% endif %}
 
-        <!-- Load more -->
-        <div style="text-align:center; padding:20px 0;">
-          <button class="btn btn-secondary">Load Earlier History</button>
+        {% if page.has_other_pages %}
+        <div style="display:flex; align-items:center; justify-content:center; gap:12px; padding:20px 0;">
+          {% if page.has_previous %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page.previous_page_number }}" class="btn btn-secondary btn-sm">Newer</a>{% endif %}
+          <span class="t-small text-muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+          {% if page.has_next %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page.next_page_number }}" class="btn btn-secondary btn-sm">Load Earlier History</a>{% endif %}
         </div>
-
+        {% endif %}
       </div>
 
     </div>
