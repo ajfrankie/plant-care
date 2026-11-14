@@ -69,6 +69,3 @@ def register(request):
 def settings(request):
     return render(request, "accounts/settings.html")
 
-
-def notifications(request):
-    return render(request, "accounts/notifications.html")

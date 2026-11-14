@@ -104,19 +104,6 @@
     });
   }
 
-  // Global function for marking all notifications as read (called from app-header)
-  window.markAllAsRead = function() {
-    var badge = document.getElementById('notificationBadge');
-    if (badge) {
-      badge.style.display = 'none';
-    }
-    var notificationItems = document.querySelectorAll('.notification-item');
-    notificationItems.forEach(function(item) {
-      item.style.opacity = '0.6';
-    });
-    alert('All notifications marked as read!');
-  };
-
   function init() {
     initPasswordToggles();
     initMarkWatered();

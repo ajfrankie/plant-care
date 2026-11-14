@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, health, history, library, plants, public, species, watering
+from .controllers import accounts, care, dashboard, health, history, library, notifications, plants, public, species, watering
 
 urlpatterns = [
     # Public site
@@ -15,7 +15,13 @@ urlpatterns = [
     path("logout/", accounts.logout, name="logout"),
     path("register/", accounts.register, name="register"),
     path("settings/", accounts.settings, name="settings"),
-    path("notifications/", accounts.notifications, name="notifications"),
+    path("notifications/", notifications.index, name="notifications"),
+    path("notifications/read-all/", notifications.read_all, name="notifications_read_all"),
+    path("notifications/clear/", notifications.clear_all, name="notifications_clear"),
+    path("notifications/<int:pk>/open/", notifications.open_notification, name="notification_open"),
+    path("notifications/<int:pk>/read/", notifications.toggle_read, name="notification_toggle_read"),
+    path("notifications/<int:pk>/complete/", notifications.complete, name="notification_complete"),
+    path("notifications/<int:pk>/dismiss/", notifications.dismiss, name="notification_dismiss"),
 
     # App
     path("dashboard/", dashboard.index, name="dashboard"),
