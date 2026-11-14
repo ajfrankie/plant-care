@@ -1,4 +1,4 @@
-"""Care schedules and history."""
+"""Care schedules."""
 import calendar
 import copy
 from datetime import date, timedelta
@@ -255,7 +255,3 @@ def task_delete(request, pk):
     task.delete()
     messages.success(request, f"{task.get_kind_display()} for {task.plant.name} was removed.")
     return _back(request)
-
-
-def history(request):
-    return render(request, "care/history.html")
