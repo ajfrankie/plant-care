@@ -5,9 +5,10 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from . import notify
 from .forms import LoginForm
 from .models import (
-    CareLog, CareTask, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder,
+    CareLog, CareTask, HealthCase, HealthCheck, Notification, Plant, PlantSpecies, User, WaterReminder,
 )
 from .urls import urlpatterns
 
@@ -301,6 +302,8 @@ class PageRenderingTests(TestCase):
             "water_reminder_water", "water_reminder_toggle", "water_reminder_delete",
             "health_check_new", "health_case_update", "health_case_issue", "health_case_reanalyse",
             "health_case_resolve", "health_case_frequency", "health_case_delete",
+            "notifications_read_all", "notifications_clear", "notification_open",
+            "notification_toggle_read", "notification_complete", "notification_dismiss",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -1730,3 +1733,201 @@ class HealthAITests(TestCase):
         with mock.patch.dict(os.environ, env, clear=True):
             with self.assertRaisesMessage(health_ai.AnalysisError, "no Anthropic API key"):
                 health_ai.analyse(_png(), plant=self.plant)
+
+
+class NotificationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "notify@example.com", "Notify Tester", "mossy-Fern-42!", is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "other-notify@example.com", "Other", "mossy-Fern-42!", is_active=True
+        )
+        cls.plant = Plant.objects.create(
+            created_user=cls.user, name="Snake Plant", planting_date=date(2026, 1, 1)
+        )
+        cls.fern = Plant.objects.create(
+            created_user=cls.user, name="Fern", planting_date=date(2026, 1, 1)
+        )
+        cls.theirs = Plant.objects.create(
+            created_user=cls.other, name="Cactus", planting_date=date(2026, 1, 1)
+        )
+        cls.url = reverse("notifications")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+
+    def task(self, days_from_today, plant=None, kind="water", **extra):
+        return CareTask.objects.create(
+            plant=plant or self.plant, kind=kind,
+            due_date=self.today + timedelta(days=days_from_today), **extra,
+        )
+
+    def mine(self):
+        return Notification.objects.filter(recipient=self.user)
+
+    def test_sync_creates_due_overdue_and_upcoming_reminders_once(self):
+        today_task = self.task(0)
+        late = self.task(-3, plant=self.fern, kind="fertilize")
+        soon = self.task(1, kind="prune")
+        self.task(5)  # too far ahead
+        self.task(0, plant=self.theirs)
+        self.assertEqual(notify.sync(self.user), 3)
+        self.assertEqual(notify.sync(self.user), 0)  # nothing new the second time
+        by_task = {n.task_id: n for n in self.mine()}
+        self.assertEqual(set(by_task), {today_task.pk, late.pk, soon.pk})
+        self.assertEqual(by_task[today_task.pk].title, "Snake Plant needs watering")
+        self.assertEqual(by_task[late.pk].kind, "overdue")
+        self.assertIn("3 days ago", by_task[late.pk].message)
+        self.assertTrue(by_task[soon.pk].title.startswith("Upcoming:"))
+        self.assertFalse(Notification.objects.filter(recipient=self.other).exists())
+
+    def test_reminder_is_replaced_when_task_falls_due(self):
+        task = self.task(1)
+        notify.sync(self.user)
+        CareTask.objects.filter(pk=task.pk).update(due_date=self.today)
+        notify.sync(self.user)
+        self.assertEqual([n.key for n in self.mine()], [f"task:{task.pk}:today"])
+
+    def test_water_reminder_notifications_skip_plants_with_a_watering_task(self):
+        WaterReminder.objects.create(plant=self.plant, next_due_date=self.today)
+        fern_reminder = WaterReminder.objects.create(plant=self.fern, next_due_date=self.today - timedelta(days=2))
+        WaterReminder.objects.create(plant=self.fern, next_due_date=self.today, is_active=False)
+        self.task(0)  # the Snake Plant is already covered by the care schedule
+        notify.sync(self.user)
+        water = self.mine().filter(water_reminder__isnull=False).get()
+        self.assertEqual((water.water_reminder, water.kind), (fern_reminder, "overdue"))
+        self.assertEqual(self.mine().count(), 2)
+
+    def test_health_alert_for_new_open_case(self):
+        case = HealthCase.objects.create(
+            plant=self.plant, title="Root rot", severity="severe", next_check_date=self.today,
+        )
+        HealthCase.objects.create(
+            plant=self.fern, title="Old issue", next_check_date=self.today, status="resolved",
+        )
+        notify.sync(self.user)
+        alert = self.mine().get()
+        self.assertEqual((alert.kind, alert.health_case), ("health", case))
+        self.assertIn("Root rot", alert.title)
+        self.assertEqual(alert.target_url, reverse("health_case", args=[case.pk]))
+
+    def test_page_lists_groups_and_filters(self):
+        self.task(0)
+        self.task(-2, plant=self.fern)
+        old = Notification.objects.create(
+            recipient=self.user, kind="completed", title="Old news", is_read=True,
+        )
+        Notification.objects.filter(pk=old.pk).update(created_at=timezone.now() - timedelta(days=20))
+        Notification.objects.create(recipient=self.other, title="Not yours")
+        response = self.client.get(self.url)
+        html = response.content.decode()
+        self.assertEqual([name for name, _ in response.context["sections"]], ["Today", "Older"])
+        self.assertIn("Snake Plant needs watering", html)
+        self.assertIn("Old news", html)
+        self.assertNotIn("Not yours", html)
+        counts = {key: count for key, _, count in response.context["filters"]}
+        self.assertEqual(counts, {"all": 3, "unread": 2, "reminders": 2, "health": 0, "completed": 1})
+
+        response = self.client.get(self.url, {"show": "unread"})
+        self.assertEqual(sum(len(items) for _, items in response.context["sections"]), 2)
+        response = self.client.get(self.url, {"show": "completed"})
+        self.assertEqual([n.title for _, items in response.context["sections"] for n in items], ["Old news"])
+        self.assertEqual(self.client.get(self.url, {"show": "bogus"}).context["show"], "all")
+
+    def test_header_bell_shows_unread_count_and_latest(self):
+        self.task(0)
+        html = self.client.get(reverse("dashboard")).content.decode()
+        self.assertIn('data-unread="1"', html)
+        self.assertIn("Snake Plant needs watering", html)
+        self.mine().update(is_read=True)
+        html = self.client.get(reverse("dashboard")).content.decode()
+        self.assertNotIn("data-unread", html)
+
+    def test_open_marks_read_and_goes_to_plant(self):
+        self.task(0)
+        notify.sync(self.user)
+        n = self.mine().get()
+        response = self.client.get(reverse("notification_open", args=[n.pk]))
+        self.assertRedirects(response, reverse("plant_view", args=[self.plant.pk]))
+        n.refresh_from_db()
+        self.assertTrue(n.is_read)
+
+    def test_mark_complete_does_the_task(self):
+        task = self.task(0, kind="fertilize", repeat_every_days=14)
+        notify.sync(self.user)
+        n = self.mine().get()
+        response = self.client.post(reverse("notification_complete", args=[n.pk]), {"next": self.url})
+        self.assertRedirects(response, self.url)
+        task.refresh_from_db()
+        self.assertIsNotNone(task.completed_at)
+        n.refresh_from_db()
+        self.assertTrue(n.is_read)
+        self.assertFalse(n.can_complete)
+        done = self.mine().get(kind="completed")
+        self.assertTrue(done.is_read)
+        self.assertIn("Next one is due", done.message)
+        # Doing it again changes nothing.
+        self.client.post(reverse("notification_complete", args=[n.pk]))
+        self.assertEqual(CareTask.objects.filter(completed_at__isnull=True).count(), 1)
+
+    def test_mark_complete_waters_from_reminder(self):
+        reminder = WaterReminder.objects.create(plant=self.plant, next_due_date=self.today, frequency_days=5)
+        notify.sync(self.user)
+        n = self.mine().get()
+        self.client.post(reverse("notification_complete", args=[n.pk]))
+        reminder.refresh_from_db()
+        self.assertEqual(reminder.next_due_date, self.today + timedelta(days=5))
+        self.assertTrue(self.mine().filter(kind="completed", title="Plant watered").exists())
+        self.assertEqual(self.mine().filter(is_read=False).count(), 0)
+
+    def test_completing_task_elsewhere_settles_its_reminder(self):
+        task = self.task(0)
+        notify.sync(self.user)
+        self.client.post(reverse("care_task_complete", args=[task.pk]))
+        reminder = self.mine().get(task=task)
+        self.assertTrue(reminder.is_read)
+
+    def test_read_toggle_read_all_dismiss_and_clear(self):
+        self.task(0)
+        self.task(0, plant=self.fern)
+        notify.sync(self.user)
+        first, second = self.mine()
+        self.client.post(reverse("notification_toggle_read", args=[first.pk]))
+        first.refresh_from_db()
+        self.assertTrue(first.is_read)
+        self.client.post(reverse("notification_toggle_read", args=[first.pk]))
+        first.refresh_from_db()
+        self.assertFalse(first.is_read)
+
+        self.client.post(reverse("notifications_read_all"))
+        self.assertFalse(self.mine().filter(is_read=False).exists())
+
+        self.client.post(reverse("notification_dismiss", args=[first.pk]))
+        self.assertNotIn(first.title, self.client.get(self.url).content.decode())
+        # A cleared reminder is not created again.
+        self.assertEqual(notify.sync(self.user), 0)
+
+        self.client.post(reverse("notifications_clear"))
+        self.assertFalse(self.mine().filter(is_dismissed=False).exists())
+        self.assertIn("No notifications", self.client.get(self.url).content.decode())
+
+    def test_cannot_touch_other_users_notifications(self):
+        theirs = Notification.objects.create(recipient=self.other, title="Private")
+        for name in ("notification_toggle_read", "notification_complete", "notification_dismiss"):
+            with self.subTest(name=name):
+                self.assertEqual(self.client.post(reverse(name, args=[theirs.pk])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("notification_open", args=[theirs.pk])).status_code, 404)
+        self.client.post(reverse("notifications_clear"))
+        theirs.refresh_from_db()
+        self.assertFalse(theirs.is_read or theirs.is_dismissed)
+
+    def test_actions_require_post(self):
+        n = Notification.objects.create(recipient=self.user, title="Hi")
+        for name, args in (("notification_toggle_read", [n.pk]), ("notification_complete", [n.pk]),
+                           ("notification_dismiss", [n.pk]), ("notifications_read_all", None),
+                           ("notifications_clear", None)):
+            with self.subTest(name=name):
+                self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 405)

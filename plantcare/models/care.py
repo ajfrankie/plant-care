@@ -74,16 +74,20 @@ class CareTask(models.Model):
                     reminder.last_watered_at = now
                     reminder.next_due_date = today + timedelta(days=reminder.frequency_days)
                     reminder.save(update_fields=["last_watered_at", "next_due_date", "updated_at"])
-        if not self.repeat_every_days:
-            return None
-        return CareTask.objects.create(
-            plant=self.plant,
-            kind=self.kind,
-            due_date=timezone.localdate(now) + timedelta(days=self.repeat_every_days),
-            repeat_every_days=self.repeat_every_days,
-            notes=self.notes,
-            auto_generated=self.auto_generated,
-        )
+        next_task = None
+        if self.repeat_every_days:
+            next_task = CareTask.objects.create(
+                plant=self.plant,
+                kind=self.kind,
+                due_date=timezone.localdate(now) + timedelta(days=self.repeat_every_days),
+                repeat_every_days=self.repeat_every_days,
+                notes=self.notes,
+                auto_generated=self.auto_generated,
+            )
+        if log:  # otherwise the caller records it (e.g. a water reminder)
+            from .. import notify
+            notify.task_completed(self, next_task)
+        return next_task
 
 
 class CareLog(models.Model):

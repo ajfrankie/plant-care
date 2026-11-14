@@ -69,3 +69,6 @@ class WaterReminder(models.Model):
         )
         for task in due_tasks:
             task.complete(log=False)  # already logged above
+
+        from .. import notify
+        notify.plant_watered(self)
