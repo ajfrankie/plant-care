@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import CareLog, CareTask, Notification, Plant, PlantSpecies, User, WaterReminder
+from .models import CareLog, CareTask, HealthCase, HealthCheck, Notification, Plant, PlantSpecies, User, WaterReminder
 
 
 @admin.register(User)
@@ -70,3 +70,18 @@ class WaterReminderAdmin(admin.ModelAdmin):
     list_display = ("plant", "frequency_days", "next_due_date", "reminder_time", "is_active", "last_watered_at")
     list_filter = ("is_active", "method")
     search_fields = ("plant__name",)
+
+
+class HealthCheckInline(admin.TabularInline):
+    model = HealthCheck
+    extra = 0
+    fields = ("created_at", "image", "progress", "analysis_status")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(HealthCase)
+class HealthCaseAdmin(admin.ModelAdmin):
+    list_display = ("plant", "title", "severity", "status", "source", "next_check_date")
+    list_filter = ("status", "severity", "source")
+    search_fields = ("plant__name", "title")
+    inlines = [HealthCheckInline]

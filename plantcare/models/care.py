@@ -14,12 +14,14 @@ class CareTask(models.Model):
         WATER = "water", "Watering"
         FERTILIZE = "fertilize", "Fertilizing"
         PRUNE = "prune", "Pruning/Maintenance"
+        HEALTH = "health", "Health Check"
 
     # The care-history activity recorded when a task of each kind is completed.
     LOG_ACTIVITY = {
         Kind.WATER: "watering",
         Kind.FERTILIZE: "fertilizing",
         Kind.PRUNE: "maintenance",
+        Kind.HEALTH: "health",
     }
 
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name="tasks")

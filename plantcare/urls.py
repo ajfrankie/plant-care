@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, library, plants, public, species, watering
+from .controllers import accounts, care, dashboard, health, library, plants, public, species, watering
 
 urlpatterns = [
     # Public site
@@ -26,7 +26,15 @@ urlpatterns = [
     path("my-plants/<int:pk>/edit/", plants.edit, name="plant_edit"),
     path("my-plants/<int:pk>/care-plan/", plants.replan, name="plant_replan"),
     path("my-plants/details/", plants.details, name="plant_details"),
-    path("plant-health/", plants.health, name="plant_health"),
+    path("plant-health/", health.index, name="plant_health"),
+    path("plant-health/check/", health.new_check, name="health_check_new"),
+    path("plant-health/<int:pk>/", health.case_detail, name="health_case"),
+    path("plant-health/<int:pk>/update/", health.case_update, name="health_case_update"),
+    path("plant-health/<int:pk>/issue/", health.case_set_issue, name="health_case_issue"),
+    path("plant-health/<int:pk>/reanalyse/", health.case_reanalyse, name="health_case_reanalyse"),
+    path("plant-health/<int:pk>/resolve/", health.case_resolve, name="health_case_resolve"),
+    path("plant-health/<int:pk>/frequency/", health.case_frequency, name="health_case_frequency"),
+    path("plant-health/<int:pk>/delete/", health.case_delete, name="health_case_delete"),
 
     path("library/", library.index, name="library"),
     path("library/create/", library.create, name="library_create"),

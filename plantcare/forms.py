@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 
 from django.utils import timezone
 
-from .models import CareTask, Plant, PlantSpecies, User, WaterReminder
+from . import health_library
+from .models import CareTask, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder
 from .models.choices import SpecialFeature
 
 
@@ -160,6 +161,76 @@ class WaterReminderForm(forms.ModelForm):
         if due < timezone.localdate() and not unchanged:
             raise ValidationError("Next watering cannot be in the past.")
         return due
+
+    def clean_notes(self):
+        return self.cleaned_data["notes"].strip()
+
+
+MAX_HEALTH_IMAGE_SIZE = 8 * 1024 * 1024  # 8 MB
+
+
+def _check_photo(image):
+    if image and image.size > MAX_HEALTH_IMAGE_SIZE:
+        raise ValidationError("Photo must be 8 MB or smaller.")
+    return image
+
+
+class HealthCheckForm(forms.Form):
+    """New health check: a photo plus either a known issue or a request to find it."""
+
+    FIND, KNOWN = "find", "known"
+
+    plant = forms.ModelChoiceField(queryset=Plant.objects.none(), empty_label="Select a plant...")
+    image = forms.ImageField(label="Photo of the plant or a leaf")
+    notes = forms.CharField(
+        label="What have you noticed?", required=False, max_length=500, widget=forms.Textarea
+    )
+    issue_key = forms.ChoiceField(label="Known issue", required=False)
+    other_issue = forms.CharField(label="Other issue", required=False, max_length=120)
+    severity = forms.ChoiceField(choices=HealthCase.Severity.choices, initial=HealthCase.Severity.MODERATE)
+    check_every_days = forms.IntegerField(
+        label="Photo update every (days)", min_value=1, max_value=60, initial=7
+    )
+    action = forms.ChoiceField(choices=[(FIND, "Find the issue"), (KNOWN, "I know the issue")])
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["plant"].queryset = Plant.objects.filter(created_user=user).order_by("name")
+        self.fields["issue_key"].choices = [("", "Select an issue...")] + health_library.CHOICES
+
+    def clean_image(self):
+        return _check_photo(self.cleaned_data["image"])
+
+    def clean_other_issue(self):
+        return self.cleaned_data["other_issue"].strip()
+
+    def clean_notes(self):
+        return self.cleaned_data["notes"].strip()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("action") == self.KNOWN and not (
+            cleaned_data.get("issue_key") or cleaned_data.get("other_issue")
+        ):
+            self.add_error("issue_key", "Choose the issue, or type it under \"Other issue\".")
+        return cleaned_data
+
+
+class HealthUpdateForm(forms.Form):
+    """A follow-up photo for a health case being tracked."""
+
+    image = forms.ImageField(label="New photo")
+    progress = forms.ChoiceField(
+        label="How does it look?", required=False,
+        choices=[("", "Let the photo analysis decide")] + [
+            c for c in HealthCheck.Progress.choices if c[0] != HealthCheck.Progress.FIRST
+        ],
+    )
+    notes = forms.CharField(label="Notes", required=False, max_length=500, widget=forms.Textarea)
+    analyse = forms.BooleanField(label="Analyse this photo", required=False, initial=True)
+
+    def clean_image(self):
+        return _check_photo(self.cleaned_data["image"])
 
     def clean_notes(self):
         return self.cleaned_data["notes"].strip()

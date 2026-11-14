@@ -2,6 +2,18 @@
 
 {% block title %}Plant Care — Plant Health{% endblock %}
 
+{% block head_extra %}
+<style>
+  .choice { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border:1px solid var(--border); border-radius:10px; cursor:pointer; flex:1; min-width:220px; }
+  .choice:has(input:checked) { border-color: var(--primary); background: var(--pale-sage); }
+  .photo-drop { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; border:2px dashed var(--border); border-radius:12px; min-height:180px; padding:16px; text-align:center; cursor:pointer; background:var(--bg-secondary); position:relative; overflow:hidden; }
+  .photo-drop img { max-width:100%; max-height:260px; border-radius:8px; }
+  .photo-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .case-card { display:flex; gap:14px; text-decoration:none; color:inherit; }
+  .case-card:hover .t-label { text-decoration: underline; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="app-shell">
 
@@ -10,366 +22,263 @@
 
   <div class="main-area">
     <!-- Header (shared) -->
-    {% include "partials/app_header.html" with title="Plant Health" subtitle="Monitor and track your plant collection health" %}
+    {% include "partials/app_header.html" with title="Plant Health" subtitle="Spot problems early and treat them organically" %}
 
     <div style="padding:28px 32px;">
+
+      {% for message in messages %}
+      <div role="status" style="background:var(--{% if message.tags == 'error' %}error{% else %}success{% endif %}-bg); border:1px solid var(--{% if message.tags == 'error' %}error{% else %}success{% endif %}); border-radius:var(--radius-card); color:var(--{% if message.tags == 'error' %}error{% else %}success{% endif %}); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ message }}</div>
+      {% endfor %}
 
       <!-- Health overview stats -->
       <div class="grid-4" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px;">
         <div class="stat-card">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg></div>
-            <div class="value">19</div>
-          </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Healthy Plants</div>
-          <div style="margin-top:6px; font-size:11px; color:var(--success); font-weight:600;">79% of collection</div>
+          <div class="stat-icon" style="background:var(--error-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="#B42318" stroke-width="1.6"/></svg></div>
+          <div class="value" data-stat="open">{{ stats.open }}</div>
+          <div class="t-small text-muted">Problems Being Treated</div>
         </div>
         <div class="stat-card">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#A86712" stroke-width="1.6"/><path d="M12 8v4M12 16v.5" stroke="#A86712" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-            <div class="value">3</div>
-          </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Need Attention</div>
-          <div style="margin-top:6px; font-size:11px; color:var(--warning); font-weight:600;">13% of collection</div>
+          <div class="stat-icon" style="background:var(--warning-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="#A86712" stroke-width="1.6"/><circle cx="12" cy="13" r="3.5" stroke="#A86712" stroke-width="1.6"/><path d="M8 6l1.5-2h5L16 6" stroke="#A86712" stroke-width="1.6"/></svg></div>
+          <div class="value" data-stat="due">{{ stats.due }}</div>
+          <div class="t-small text-muted">Photo Updates Due</div>
         </div>
         <div class="stat-card">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--error-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-7-10.5A5 5 0 0 1 12 6a5 5 0 0 1 7 4.5C19 16.5 12 21 12 21Z" stroke="#B42318" stroke-width="1.6"/></svg></div>
-            <div class="value">2</div>
-          </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Critical Care</div>
-          <div style="margin-top:6px; font-size:11px; color:var(--error); font-weight:600;">8% of collection</div>
+          <div class="stat-icon" style="background:var(--success-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+          <div class="value" data-stat="resolved">{{ stats.resolved }}</div>
+          <div class="t-small text-muted">Resolved</div>
         </div>
         <div class="stat-card">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="stat-icon" style="background:var(--info-bg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 13l3 3 7-7" stroke="#2563A6" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="#2563A6" stroke-width="1.6"/></svg></div>
-            <div class="value">8</div>
-          </div>
-          <div class="t-small text-muted" style="margin-top:4px;">Health Checks This Week</div>
+          <div class="stat-icon" style="background:var(--pale-sage);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" stroke="#214E34" stroke-width="1.6"/></svg></div>
+          <div class="value" data-stat="healthy">{{ stats.healthy }}</div>
+          <div class="t-small text-muted">Plants With No Problems</div>
         </div>
       </div>
 
-      <!-- Health chart overview -->
-      <div class="card" style="margin-top:24px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-          <h3 class="t-h4">Collection Health Overview</h3>
-          <select class="select" style="width:140px; height:38px;">
-            <option>Last 30 Days</option>
-            <option>Last 60 Days</option>
-            <option>Last 90 Days</option>
-            <option>All Time</option>
-          </select>
-        </div>
-        <div style="display:flex; align-items:flex-end; gap:12px; height:160px; padding:20px 0;">
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:140px;">
-              <div style="width:100%; background:var(--success); border-radius:6px 6px 0 0; height:92%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px;">19</div>
-            </div>
-            <div class="t-small text-muted">Healthy</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:140px;">
-              <div style="width:100%; background:var(--warning); border-radius:6px 6px 0 0; height:45%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px;">3</div>
-            </div>
-            <div class="t-small text-muted">Needs Attention</div>
-          </div>
-          <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
-            <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:140px;">
-              <div style="width:100%; background:var(--error); border-radius:6px 6px 0 0; height:28%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px;">2</div>
-            </div>
-            <div class="t-small text-muted">Critical</div>
-          </div>
+      {% if due_cases %}
+      <!-- Photo updates due -->
+      <div style="background:var(--warning-bg); border:1px solid var(--warning); border-radius:var(--radius-card); padding:14px 18px; margin-top:24px;">
+        <div class="t-label" style="color:var(--warning); margin-bottom:8px;">📷 Time for a photo update</div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          {% for case in due_cases %}
+          <a href="{% url 'health_case' case.pk %}#update" class="btn btn-secondary btn-sm">{{ case.plant.name }} — {{ case.title }}{% if case.next_check_date < today %} (overdue){% endif %}</a>
+          {% endfor %}
         </div>
       </div>
+      {% endif %}
 
-      <!-- Filter controls -->
+      <!-- New health check -->
+      <details id="new-check" class="card" style="margin-top:24px;"{% if show_form or not stats.open %} open{% endif %}>
+        <summary class="t-h4" style="cursor:pointer;">📷 New Health Check</summary>
+        {% if plants %}
+        <form method="post" action="{% url 'health_check_new' %}" enctype="multipart/form-data" style="margin-top:16px;" id="check-form" novalidate>
+          {% csrf_token %}
+          {% for error in form.non_field_errors %}<p class="hint error">{{ error }}</p>{% endfor %}
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; align-items:start;">
+            <div>
+              <label class="t-label" for="id_image" style="display:block; margin-bottom:6px;">Photo of the plant or a leaf *</label>
+              <label class="photo-drop{% if form.image.errors %} input error{% endif %}" for="id_image">
+                <img id="photo-preview" alt="" hidden>
+                <span id="photo-prompt" class="t-small text-muted">Tap to take or choose a photo<br>Close-ups of affected leaves work best</span>
+                <input type="file" id="id_image" name="image" accept="image/*" capture="environment" required>
+              </label>
+              {% for error in form.image.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div>
+                <label class="t-label" for="id_plant" style="display:block; margin-bottom:6px;">Plant *</label>
+                <select id="id_plant" name="plant" class="select{% if form.plant.errors %} input error{% endif %}" required style="width:100%;">
+                  <option value="">Select a plant...</option>
+                  {% for plant in plants %}
+                  <option value="{{ plant.pk }}"{% if plant.pk|stringformat:"s" == form.plant.value|stringformat:"s" %} selected{% endif %}>{{ plant.name }}{% if plant.plant_species %} ({{ plant.plant_species.common_name }}){% endif %}</option>
+                  {% endfor %}
+                </select>
+                {% for error in form.plant.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+              </div>
+              <div>
+                <label class="t-label" for="id_notes" style="display:block; margin-bottom:6px;">What have you noticed?</label>
+                <textarea id="id_notes" name="notes" class="input" rows="3" maxlength="500" placeholder="e.g., Yellow spots on the lower leaves, sticky residue" style="width:100%; resize:vertical;">{{ form.notes.value|default_if_none:'' }}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="t-label" style="margin-top:20px; margin-bottom:8px;">Do you know what the problem is?</div>
+          <div style="display:flex; flex-wrap:wrap; gap:12px;">
+            <label class="choice">
+              <input type="radio" name="action" value="find"{% if form.action.value != "known" %} checked{% endif %} style="margin-top:3px; accent-color:var(--primary);">
+              <span><strong class="t-label">Find it from the photo</strong><br><span class="t-small text-muted">We'll look for pests, diseases and care problems and suggest organic treatments.</span></span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="action" value="known"{% if form.action.value == "known" %} checked{% endif %} style="margin-top:3px; accent-color:var(--primary);">
+              <span><strong class="t-label">I know the issue</strong><br><span class="t-small text-muted">Pick it from the list and get the organic treatment plan.</span></span>
+            </label>
+          </div>
+
+          <div id="known-fields" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:16px;">
+            <div>
+              <label class="t-label" for="id_issue_key" style="display:block; margin-bottom:6px;">Issue</label>
+              <select id="id_issue_key" name="issue_key" class="select{% if form.issue_key.errors %} input error{% endif %}" style="width:100%;">
+                {% for value, label in form.fields.issue_key.choices %}
+                <option value="{{ value }}"{% if value == form.issue_key.value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% for error in form.issue_key.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <div>
+              <label class="t-label" for="id_other_issue" style="display:block; margin-bottom:6px;">Or type another issue</label>
+              <input type="text" id="id_other_issue" name="other_issue" class="input" maxlength="120" value="{{ form.other_issue.value|default_if_none:'' }}" placeholder="e.g., Leaf miner" style="width:100%;">
+            </div>
+            <div>
+              <label class="t-label" for="id_severity" style="display:block; margin-bottom:6px;">How bad is it?</label>
+              <select id="id_severity" name="severity" class="select" style="width:100%;">
+                {% for value, label in form.fields.severity.choices %}
+                <option value="{{ value }}"{% if value == form.severity.value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-top:20px;">
+            <div>
+              <label class="t-label" for="id_check_every_days" style="display:block; margin-bottom:6px;">Photo update every</label>
+              <select id="id_check_every_days" name="check_every_days" class="select" style="width:180px;">
+                <option value="3"{% if form.check_every_days.value|stringformat:"s" == "3" %} selected{% endif %}>Every 3 days</option>
+                <option value="7"{% if form.check_every_days.value|stringformat:"s" == "7" %} selected{% endif %}>Every week</option>
+                <option value="14"{% if form.check_every_days.value|stringformat:"s" == "14" %} selected{% endif %}>Every 2 weeks</option>
+                <option value="30"{% if form.check_every_days.value|stringformat:"s" == "30" %} selected{% endif %}>Every month</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span id="busy" class="t-small text-muted" hidden>Analysing the photo… this can take up to a minute.</span>
+              <button type="submit" class="btn btn-primary" id="submit-check">Find the Issue</button>
+            </div>
+          </div>
+        </form>
+        {% else %}
+        <p class="t-small text-secondary" style="margin-top:12px;">Add a plant first. <a href="{% url 'plant_add' %}">Add a plant</a></p>
+        {% endif %}
+      </details>
+
+      <!-- Health cases -->
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:32px;">
-        <h3 class="t-h3">Plant Health Status</h3>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <select class="select" style="width:160px; height:38px;">
-            <option>All Plants</option>
-            <option>Healthy</option>
-            <option>Needs Attention</option>
-            <option>Critical Care</option>
-            <option>Recently Updated</option>
+        <h3 class="t-h3">Health Cases</h3>
+        <form method="get">
+          <select name="status" class="select" style="width:170px; height:38px;" onchange="this.form.submit()" aria-label="Show">
+            {% for value, label in status_choices %}
+            <option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
-          <select class="select" style="width:140px; height:38px;">
-            <option>All Locations</option>
-            <option>Living Room</option>
-            <option>Bedroom</option>
-            <option>Kitchen</option>
-            <option>Office</option>
-            <option>Garden</option>
-          </select>
-          <select class="select" style="width:140px; height:38px;">
-            <option>Sort: Health Status</option>
-            <option>Sort: Plant Name</option>
-            <option>Sort: Last Updated</option>
-            <option>Sort: Location</option>
-          </select>
-        </div>
+          <noscript><button type="submit" class="btn btn-secondary btn-sm">Show</button></noscript>
+        </form>
       </div>
 
-      <!-- Critical care section -->
-      <div style="margin-top:20px;">
-        <div style="background:var(--error-bg); border:1px solid var(--error); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#B42318" stroke-width="1.6"/><path d="M12 8v4M12 16v.5" stroke="#B42318" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <div class="t-label" style="color:var(--error);">Critical Care Needed (2 plants)</div>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:16px;">
-
-          <div class="card" style="border-left:4px solid var(--error);">
-            <div style="display:flex; gap:14px; margin-bottom:14px;">
-              <div style="width:80px; height:80px; border-radius:8px; background:#5C9A5F; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                  <div>
-                    <div class="t-label">Peace Lily</div>
-                    <div class="t-small text-muted" style="font-style:italic;">Spathiphyllum wallisii</div>
-                  </div>
-                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
-                  </button>
-                </div>
-                <div class="t-small text-muted" style="margin-top:4px;">📍 Balcony</div>
-                <span class="badge badge-error" style="margin-top:8px;"><span class="badge-dot"></span>Yellowing Leaves</span>
+      {% if cases %}
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(330px, 1fr)); gap:16px; margin-top:16px;">
+        {% for case in cases %}
+        {% with latest=case.checks.all.0 %}
+        <div class="card" style="border-left:4px solid var(--{% if not case.is_open %}success{% elif case.severity == 'severe' %}error{% elif case.status == 'improving' %}info{% else %}warning{% endif %});" data-case="{{ case.pk }}">
+          <a href="{% url 'health_case' case.pk %}" class="case-card">
+            {% if latest %}<img src="{{ latest.image.url }}" alt="" loading="lazy" style="width:84px; height:84px; border-radius:8px; object-fit:cover; flex:none;">{% endif %}
+            <div style="flex:1; min-width:0;">
+              <div class="t-label">{{ case.title }}</div>
+              <div class="t-small text-muted">{{ case.plant.name }}{% if case.plant.plant_species %} · <em>{{ case.plant.plant_species.scientific_name }}</em>{% endif %}</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+                {% if case.is_open %}
+                <span class="badge badge-{% if case.severity == 'severe' %}error{% elif case.severity == 'moderate' %}warning{% else %}info{% endif %}"><span class="badge-dot"></span>{{ case.get_severity_display }}</span>
+                <span class="badge badge-{% if case.status == 'improving' %}success{% else %}neutral{% endif %}">{{ case.get_status_display }}</span>
+                {% else %}
+                <span class="badge badge-success"><span class="badge-dot"></span>Resolved {{ case.resolved_at|date:"M j" }}</span>
+                {% endif %}
+              </div>
+              <div class="t-small text-muted" style="margin-top:8px;">
+                {{ case.checks.all|length }} photo{{ case.checks.all|length|pluralize }}
+                {% if case.is_open %} · Next update {% if case.next_check_date <= today %}<strong style="color:var(--warning);">due now</strong>{% else %}{{ case.next_check_date|date:"M j" }}{% endif %}{% endif %}
               </div>
             </div>
-            <div style="background:var(--pale-sage); border-radius:8px; padding:12px; margin-bottom:12px;">
-              <div class="t-small" style="font-weight:600; margin-bottom:6px;">⚠️ Issues Detected:</div>
-              <ul style="margin:0; padding-left:18px;">
-                <li class="t-small text-secondary">Lower leaves turning yellow</li>
-                <li class="t-small text-secondary">Drooping stems</li>
-                <li class="t-small text-secondary">Overdue for watering (2 days)</li>
-              </ul>
-            </div>
-            <div style="margin-bottom:12px;">
-              <div class="t-small" style="font-weight:600; margin-bottom:6px;">💡 Recommended Actions:</div>
-              <div class="t-small text-secondary" style="line-height:1.6;">Water immediately. Check for root rot. Remove yellowed leaves. Consider moving to higher humidity area.</div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <button class="btn btn-primary btn-sm">Update Health</button>
-              <a href="{% url 'plant_details' %}" class="btn btn-secondary btn-sm">View Details</a>
-            </div>
-          </div>
-
-          <div class="card" style="border-left:4px solid var(--error);">
-            <div style="display:flex; gap:14px; margin-bottom:14px;">
-              <div style="width:80px; height:80px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                  <div>
-                    <div class="t-label">Fiddle Leaf Fig</div>
-                    <div class="t-small text-muted" style="font-style:italic;">Ficus lyrata</div>
-                  </div>
-                  <button class="btn-icon" style="width:28px; height:28px; border:none;" aria-label="More options">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
-                  </button>
-                </div>
-                <div class="t-small text-muted" style="margin-top:4px;">📍 Living Room</div>
-                <span class="badge badge-error" style="margin-top:8px;"><span class="badge-dot"></span>Brown Spots</span>
-              </div>
-            </div>
-            <div style="background:var(--pale-sage); border-radius:8px; padding:12px; margin-bottom:12px;">
-              <div class="t-small" style="font-weight:600; margin-bottom:6px;">⚠️ Issues Detected:</div>
-              <ul style="margin:0; padding-left:18px;">
-                <li class="t-small text-secondary">Brown spots on leaves</li>
-                <li class="t-small text-secondary">Possible fungal infection</li>
-                <li class="t-small text-secondary">Low light exposure</li>
-              </ul>
-            </div>
-            <div style="margin-bottom:12px;">
-              <div class="t-small" style="font-weight:600; margin-bottom:6px;">💡 Recommended Actions:</div>
-              <div class="t-small text-secondary" style="line-height:1.6;">Remove affected leaves. Improve air circulation. Move to brighter location. Apply organic fungicide if needed.</div>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <button class="btn btn-primary btn-sm">Update Health</button>
-              <a href="{% url 'plant_details' %}" class="btn btn-secondary btn-sm">View Details</a>
-            </div>
-          </div>
-
+          </a>
         </div>
+        {% endwith %}
+        {% endfor %}
       </div>
-
-      <!-- Needs attention section -->
-      <div style="margin-top:32px;">
-        <div style="background:var(--warning-bg); border:1px solid var(--warning); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#A86712" stroke-width="1.6"/><path d="M12 8v4M12 16v.5" stroke="#A86712" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <div class="t-label" style="color:var(--warning);">Needs Attention (3 plants)</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div style="display:flex; flex-direction:column; gap:0;">
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--warning); margin-left:-20px; padding-left:16px;">
-              <div style="width:52px; height:52px; border-radius:8px; background:#6AA66B; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Spider Plant</div>
-                <div class="t-small text-muted">Chlorophytum comosum • Office</div>
-                <div style="margin-top:6px;">
-                  <span class="badge badge-warning"><span class="badge-dot"></span>Browning Tips</span>
-                </div>
-              </div>
-              <div style="min-width:200px;">
-                <div class="t-small" style="color:var(--text-muted);">Last updated: 3 days ago</div>
-                <div class="t-small" style="margin-top:2px;">💡 Increase humidity, check water quality</div>
-              </div>
-              <button class="btn btn-secondary btn-sm" style="flex:none;">Update Status</button>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-bottom:1px solid var(--border); border-left:4px solid var(--warning); margin-left:-20px; padding-left:16px;">
-              <div style="width:52px; height:52px; border-radius:8px; background:#8CA88D; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Rubber Plant</div>
-                <div class="t-small text-muted">Ficus elastica • Office</div>
-                <div style="margin-top:6px;">
-                  <span class="badge badge-warning"><span class="badge-dot"></span>Slow Growth</span>
-                </div>
-              </div>
-              <div style="min-width:200px;">
-                <div class="t-small" style="color:var(--text-muted);">Last updated: 1 week ago</div>
-                <div class="t-small" style="margin-top:2px;">💡 Consider fertilizing, check light levels</div>
-              </div>
-              <button class="btn btn-secondary btn-sm" style="flex:none;">Update Status</button>
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px; padding:16px; border-left:4px solid var(--warning); margin-left:-20px; padding-left:16px;">
-              <div style="width:52px; height:52px; border-radius:8px; background:#5A8A6B; flex:none;"></div>
-              <div style="flex:1; min-width:0;">
-                <div class="t-label">Boston Fern</div>
-                <div class="t-small text-muted">Nephrolepis exaltata • Bathroom</div>
-                <div style="margin-top:6px;">
-                  <span class="badge badge-warning"><span class="badge-dot"></span>Dry Fronds</span>
-                </div>
-              </div>
-              <div style="min-width:200px;">
-                <div class="t-small" style="color:var(--text-muted);">Last updated: 2 days ago</div>
-                <div class="t-small" style="margin-top:2px;">💡 Mist daily, increase watering frequency</div>
-              </div>
-              <button class="btn btn-secondary btn-sm" style="flex:none;">Update Status</button>
-            </div>
-
-          </div>
-        </div>
+      {% else %}
+      <div class="card" style="text-align:center; padding:36px 24px; margin-top:16px;">
+        <p class="t-body text-secondary">{% if status == "resolved" %}No resolved cases yet.{% elif status == "all" %}No health checks yet.{% else %}No problems being treated — your plants are doing well! 🌿{% endif %}</p>
       </div>
+      {% endif %}
 
-      <!-- Healthy plants -->
-      <div style="margin-top:32px;">
-        <div style="background:var(--success-bg); border:1px solid var(--success); border-radius:var(--radius-card); padding:16px 20px; margin-bottom:16px;">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12l4.5 4.5L19 7" stroke="#287A4B" stroke-width="2.2" stroke-linecap="round"/></svg>
-              <div class="t-label" style="color:var(--success);">Healthy Plants (19 plants)</div>
-            </div>
-            <button class="btn-tertiary" style="color:var(--success);">View All →</button>
+      {% if healthy_checks %}
+      <!-- Recent healthy checks -->
+      <h3 class="t-h3" style="margin-top:32px;">Recent Healthy Checks</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px; margin-top:16px;">
+        {% for check in healthy_checks %}
+        <div class="card" style="border-left:4px solid var(--success); display:flex; gap:12px; align-items:center;">
+          <img src="{{ check.image.url }}" alt="" loading="lazy" style="width:56px; height:56px; border-radius:8px; object-fit:cover; flex:none;">
+          <div style="min-width:0;">
+            <div class="t-label">{{ check.plant.name }}</div>
+            <div class="t-small text-muted">Looked healthy · {{ check.created_at|date:"M j" }}</div>
           </div>
         </div>
-
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px;">
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#4F8A52; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Monstera Deliciosa</div>
-              <div class="t-small text-muted">Living Room</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#214E34; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Snake Plant</div>
-              <div class="t-small text-muted">Bedroom</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#3C7A48; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Aloe Vera</div>
-              <div class="t-small text-muted">Garden</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#2F6B3C; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Pothos</div>
-              <div class="t-small text-muted">Kitchen</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#4A7A55; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">ZZ Plant</div>
-              <div class="t-small text-muted">Bedroom</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#6A9A6D; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Jade Plant</div>
-              <div class="t-small text-muted">Windowsill</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#3D6F4A; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Philodendron</div>
-              <div class="t-small text-muted">Kitchen</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-          <div class="plant-card" style="border-left:4px solid var(--success);">
-            <div class="plant-photo" style="background:#3D7A48; height:120px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-            <div style="padding:10px 12px;">
-              <div class="t-label" style="font-size:13px;">Bird of Paradise</div>
-              <div class="t-small text-muted">Living Room</div>
-              <span class="badge badge-success" style="margin-top:6px; font-size:10px; padding:3px 8px;"><span class="badge-dot" style="width:5px; height:5px;"></span>Healthy</span>
-            </div>
-          </div>
-
-        </div>
-
-        <div style="text-align:center; margin-top:18px;">
-          <button class="btn btn-secondary btn-sm">View All Healthy Plants (19) →</button>
-        </div>
+        {% endfor %}
       </div>
+      {% endif %}
 
-      <!-- Health tips -->
-      <div class="card" style="margin-top:32px; background:linear-gradient(135deg, #EEF4EB 0%, #DCE8D8 100%); border:1px solid var(--soft-sage);">
-        <div style="display:flex; gap:14px;">
-          <div style="width:48px; height:48px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.6"/><path d="M12 8v5M12 16h.01" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <!-- Plant overview -->
+      {% if plants %}
+      <h3 class="t-h3" style="margin-top:32px;">All Plants</h3>
+      <div class="card" style="margin-top:16px; padding-top:4px; padding-bottom:4px;">
+        {% for plant in plants %}
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:12px 0;{% if not forloop.last %} border-bottom:1px solid var(--border);{% endif %}">
+          {% include "care/_plant_thumb.html" with plant=plant size=44 %}
+          <div style="flex:1; min-width:160px;">
+            <a href="{% url 'plant_view' plant.pk %}" class="t-label" style="color:inherit; text-decoration:none;">{{ plant.name }}</a>
+            <div class="t-small text-muted">{% if plant.open_cases %}{{ plant.open_cases }} problem{{ plant.open_cases|pluralize }} being treated{% else %}No known problems{% endif %}</div>
           </div>
-          <div style="flex:1;">
-            <div class="t-h4" style="margin-bottom:8px;">💡 Health Maintenance Tips</div>
-            <ul style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px;">
-              <li class="t-body text-secondary">Check plants weekly for early signs of pests or disease</li>
-              <li class="t-body text-secondary">Rotate plants quarterly for even growth and light exposure</li>
-              <li class="t-body text-secondary">Update health status after major care activities or environmental changes</li>
-              <li class="t-body text-secondary">Keep notes on seasonal patterns to optimize care year-round</li>
-            </ul>
-          </div>
+          <span class="badge badge-{% if plant.status == 'healthy' %}success{% elif plant.status == 'critical' %}error{% else %}warning{% endif %}"><span class="badge-dot"></span>{{ plant.get_status_display }}</span>
+          <a href="?new=1&amp;plant={{ plant.pk }}#new-check" class="btn btn-secondary btn-sm">Check Health</a>
         </div>
+        {% endfor %}
       </div>
+      {% endif %}
 
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById("check-form");
+  if (!form) return;
+  var file = document.getElementById("id_image");
+  var preview = document.getElementById("photo-preview");
+  var prompt = document.getElementById("photo-prompt");
+  var known = document.getElementById("known-fields");
+  var submit = document.getElementById("submit-check");
+
+  file.addEventListener("change", function () {
+    if (!file.files.length) return;
+    preview.src = URL.createObjectURL(file.files[0]);
+    preview.hidden = false;
+    prompt.hidden = true;
+  });
+
+  function syncAction() {
+    var isKnown = form.querySelector('input[name="action"]:checked').value === "known";
+    known.style.display = isKnown ? "grid" : "none";
+    submit.textContent = isKnown ? "Start Treatment Plan" : "Find the Issue";
+  }
+  form.querySelectorAll('input[name="action"]').forEach(function (r) { r.addEventListener("change", syncAction); });
+  syncAction();
+
+  form.addEventListener("submit", function () {
+    submit.disabled = true;
+    if (form.querySelector('input[name="action"]:checked').value === "find") {
+      document.getElementById("busy").hidden = false;
+      submit.textContent = "Analysing…";
+    }
+  });
+})();
+</script>
 {% endblock %}

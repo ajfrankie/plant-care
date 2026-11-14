@@ -1,3 +1,4 @@
 {
-    "html.autoClosingTags": false
+    "html.autoClosingTags": false,
+    "python.terminal.useEnvFile": true
 }
