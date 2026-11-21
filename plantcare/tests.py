@@ -220,7 +220,9 @@ class AccessTests(TestCase):
         for pattern in private:
             name = pattern.name
             with self.subTest(page=name):
-                url = reverse(name, args=[1] if "<int:pk>" in str(pattern.pattern) else None)
+                route = str(pattern.pattern)
+                args = [1] if "<int:pk>" in route else [uuid.uuid4()] if "<uuid:pk>" in route else None
+                url = reverse(name, args=args)
                 self.assertRedirects(
                     self.client.get(url), f"{reverse('login')}?next={url}"
                 )
@@ -305,6 +307,8 @@ class PageRenderingTests(TestCase):
             "notifications_read_all", "notifications_clear", "notification_open",
             "notification_toggle_read", "notification_complete", "notification_dismiss",
             "care_log_add", "care_log_delete", "settings_delete_account",
+            # Admin only (AdminDashboardTests).
+            "admin_dashboard", "admin_user_toggle",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -2428,3 +2432,121 @@ class SettingsTests(TestCase):
         self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
         self.assertFalse(Plant.objects.filter(pk=self.plant.pk).exists())
         self.assertEqual(self.client.get(self.url).status_code, 302)  # signed out
+
+
+class UserDashboardTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "dash@example.com", "Dana Dash", "mossy-Fern-42!", is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "dash-other@example.com", "Other", "mossy-Fern-42!", is_active=True
+        )
+        cls.url = reverse("dashboard")
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+
+    def plant(self, name, user=None, **extra):
+        return Plant.objects.create(
+            created_user=user or self.user, name=name, planting_date=date(2026, 1, 1), **extra
+        )
+
+    def test_new_user_sees_welcome(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, "Add Your First Plant")
+        self.assertEqual(response.context["stats"]["total"], 0)
+
+    def test_stats_and_lists_use_only_own_data(self):
+        fern = self.plant("Fern")
+        ivy = self.plant("Ivy", status="attention")
+        theirs = self.plant("Cactus", user=self.other)
+        CareTask.objects.create(plant=fern, kind="fertilize", due_date=self.today - timedelta(days=2))
+        CareTask.objects.create(plant=ivy, kind="water", due_date=self.today)
+        CareTask.objects.create(plant=ivy, kind="prune", due_date=self.today + timedelta(days=3))
+        CareTask.objects.create(plant=theirs, kind="water", due_date=self.today)
+        WaterReminder.objects.create(plant=fern, next_due_date=self.today)
+        WaterReminder.objects.create(plant=ivy, next_due_date=self.today + timedelta(days=2))
+        WaterReminder.objects.create(plant=theirs, next_due_date=self.today)
+        HealthCase.objects.create(plant=ivy, title="Leaf spot", next_check_date=self.today)
+
+        response = self.client.get(self.url)
+        stats = response.context["stats"]
+        self.assertEqual(stats["total"], 2)
+        self.assertEqual(stats["healthy"], 1)
+        self.assertEqual(stats["thirsty"], 2)  # fern (reminder) + ivy (task)
+        self.assertEqual(stats["tasks_today"], 2)
+        self.assertEqual(stats["overdue"], 1)
+        self.assertEqual([r.plant.name for r in response.context["upcoming_water"]], ["Fern", "Ivy"])
+        self.assertEqual([c.title for c in response.context["open_cases"]], ["Leaf spot"])
+        self.assertNotContains(response, "Cactus")
+        self.assertContains(response, reverse("plant_view", args=[fern.pk]))
+
+    def test_done_button_returns_to_dashboard(self):
+        task = CareTask.objects.create(plant=self.plant("Fern"), kind="prune", due_date=self.today)
+        response = self.client.post(
+            reverse("care_task_complete", args=[task.pk]), {"next": self.url}
+        )
+        self.assertRedirects(response, self.url)
+        self.assertEqual(self.client.get(self.url).context["stats"]["tasks_today"], 0)
+
+    def test_regular_user_has_no_admin_link(self):
+        self.assertNotContains(self.client.get(self.url), 'data-nav="admin-dashboard"')
+
+
+class AdminDashboardTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_superuser("boss@example.com", "Boss Admin", "mossy-Fern-42!")
+        cls.member = User.objects.create_user(
+            "member@example.com", "Mia Member", "mossy-Fern-42!", is_active=True
+        )
+        cls.pending = User.objects.create_user("new@example.com", "Neo Newbie", "mossy-Fern-42!")
+        Plant.objects.create(
+            created_user=cls.member, name="Fern", planting_date=date(2026, 1, 1), status="critical"
+        )
+        cls.url = reverse("admin_dashboard")
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_admin_sees_site_overview(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        stats = response.context["stats"]
+        self.assertEqual(stats["users"]["total"], 3)
+        self.assertEqual(stats["users"]["pending"], 1)
+        self.assertEqual(stats["plants"]["critical"], 1)
+        self.assertEqual(response.context["pending"], [self.pending])
+        self.assertContains(response, 'class="side-link active" data-nav="admin-dashboard"')
+
+    def test_regular_user_is_refused(self):
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+        response = self.client.post(reverse("admin_user_toggle", args=[self.pending.pk]))
+        self.assertEqual(response.status_code, 403)
+        self.pending.refresh_from_db()
+        self.assertFalse(self.pending.is_active)
+
+    def test_activate_and_deactivate_user(self):
+        toggle = reverse("admin_user_toggle", args=[self.pending.pk])
+        self.assertRedirects(self.client.post(toggle), self.url)
+        self.pending.refresh_from_db()
+        self.assertTrue(self.pending.is_active)
+        self.client.post(toggle)
+        self.pending.refresh_from_db()
+        self.assertFalse(self.pending.is_active)
+
+    def test_admin_cannot_deactivate_self(self):
+        self.client.post(reverse("admin_user_toggle", args=[self.admin.pk]))
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+
+    def test_admin_lands_on_admin_dashboard_after_login(self):
+        self.client.logout()
+        response = self.client.post(
+            reverse("login"), {"email": "boss@example.com", "password": "mossy-Fern-42!"}
+        )
+        self.assertRedirects(response, self.url)

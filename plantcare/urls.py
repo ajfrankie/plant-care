@@ -27,6 +27,8 @@ urlpatterns = [
 
     # App
     path("dashboard/", dashboard.index, name="dashboard"),
+    path("admin-dashboard/", dashboard.admin_index, name="admin_dashboard"),
+    path("admin-dashboard/users/<uuid:pk>/toggle/", dashboard.admin_toggle_user, name="admin_user_toggle"),
 
     path("my-plants/", plants.index, name="my_plants"),
     path("my-plants/add/", plants.add, name="plant_add"),
