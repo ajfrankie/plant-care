@@ -4,7 +4,28 @@
 
 {% block head_extra %}
 <style>
-  .treatment { padding:14px 16px; border-radius:10px; background:var(--bg-secondary); border-left:3px solid var(--primary); }
+  /* Treatment roadmap: numbered stops joined by a line, ending at the goal. */
+  .roadmap { list-style:none; margin:0; padding:0; }
+  .roadmap li { position:relative; display:flex; gap:14px; padding-bottom:18px; }
+  .roadmap li:last-child { padding-bottom:0; }
+  .roadmap li:not(:last-child)::before { content:""; position:absolute; left:15px; top:32px; bottom:0; width:2px; background:var(--border); }
+  .roadmap .stop { flex:none; width:32px; height:32px; border-radius:50%; background:var(--primary); color:#fff; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
+  .roadmap .goal .stop { background:var(--pale-sage); color:var(--primary); border:2px solid var(--primary); }
+  .roadmap .step-body { flex:1; min-width:0; padding-top:5px; }
+  .roadmap .step-title { font-weight:600; font-size:15px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; }
+  .roadmap .when { font-size:12px; font-weight:600; color:var(--primary); background:var(--pale-sage); border-radius:999px; padding:2px 10px; }
+  .roadmap details { margin-top:4px; }
+  .roadmap summary { cursor:pointer; font-size:13px; color:var(--text-muted); width:max-content; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .roadmap details p { margin:6px 0 0; }
+  /* Photo with the problem areas boxed */
+  .spot-photo { position:relative; display:inline-block; max-width:100%; line-height:0; border-radius:10px; overflow:hidden; }
+  .spot-photo img { max-width:100%; max-height:360px; width:auto; height:auto; display:block; }
+  .spot-box { position:absolute; border:3px solid #f5b400; border-radius:6px; box-shadow:0 0 0 2px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.25); background:rgba(245,180,0,.12); }
+  .spot-box span { position:absolute; top:-3px; left:-3px; min-width:22px; height:22px; padding:0 6px; border-radius:6px 0 6px 0; background:#f5b400; color:#1a1a1a; font:700 12px/22px system-ui, sans-serif; text-align:center; }
+  .spot-legend { list-style:none; margin:10px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:6px 14px; }
+  .spot-legend li { display:flex; align-items:center; gap:6px; font-size:13px; }
+  .spot-legend b { min-width:20px; height:20px; border-radius:5px; background:#f5b400; color:#1a1a1a; font-size:12px; display:inline-flex; align-items:center; justify-content:center; }
   .photo-drop { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; border:2px dashed var(--border); border-radius:12px; min-height:140px; padding:12px; text-align:center; cursor:pointer; background:var(--bg-secondary); position:relative; overflow:hidden; }
   .photo-drop img { max-width:100%; max-height:200px; border-radius:8px; }
   .photo-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
@@ -72,6 +93,21 @@
             <p class="t-body"><strong>Typical signs:</strong> {{ entry.symptoms }}</p>
             {% endif %}
 
+            {% if highlights and analysed %}
+            <div style="margin-top:14px;" data-highlights>
+              <div class="t-label" style="margin-bottom:8px;">📍 Where we found it</div>
+              <div class="spot-photo">
+                <img src="{{ analysed.image.url }}" alt="Photo of {{ case.plant.name }} with the problem areas marked">
+                {% for box in highlights %}
+                <div class="spot-box" style="top:{{ box.top|stringformat:'.1f' }}%; left:{{ box.left|stringformat:'.1f' }}%; width:{{ box.width|stringformat:'.1f' }}%; height:{{ box.height|stringformat:'.1f' }}%;" title="{{ box.label }}"><span>{{ forloop.counter }}</span></div>
+                {% endfor %}
+              </div>
+              <ul class="spot-legend">
+                {% for box in highlights %}<li><b>{{ forloop.counter }}</b>{{ box.label|default:case.title }}</li>{% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
             {% if latest.analysis_status == "failed" %}
             <p class="hint error" style="margin-top:10px;">{{ latest.analysis_error }}</p>
             {% endif %}
@@ -121,25 +157,38 @@
 
           <!-- Organic treatment plan -->
           <div class="card">
-            <h3 class="t-h4" style="margin-bottom:4px;">🌿 Organic Treatment Plan</h3>
-            <p class="t-small text-muted" style="margin-bottom:14px;">Test any spray on one leaf first and apply in the evening, out of direct sun.</p>
+            <h3 class="t-h4" style="margin-bottom:4px;">🌿 Organic Treatment Roadmap</h3>
+            <p class="t-small text-muted" style="margin-bottom:16px;">Go step by step. Test sprays on one leaf first, in the evening.</p>
             {% if treatments %}
-            <div style="display:flex; flex-direction:column; gap:12px;" data-treatments>
+            <ol class="roadmap" data-treatments>
               {% for t in treatments %}
-              <div class="treatment">
-                <div class="t-label">{{ forloop.counter }}. {{ t.name }}{% if t.suggested %} <span class="badge badge-info" style="margin-left:6px;">From photo analysis</span>{% endif %}</div>
-                <div class="t-body text-secondary" style="margin-top:4px;">{{ t.how }}</div>
-              </div>
+              <li>
+                <div class="stop" aria-hidden="true">{{ forloop.counter }}</div>
+                <div class="step-body">
+                  <div class="step-title">
+                    <span><span class="sr-only">Step {{ forloop.counter }}: </span>{{ t.step|default:t.name }}</span>
+                    {% if t.when %}<span class="when">{{ t.when }}</span>{% endif %}
+                    {% if t.suggested %}<span class="badge badge-info">From photo</span>{% endif %}
+                  </div>
+                  <details>
+                    <summary>How to do it</summary>
+                    <p class="t-small text-secondary">{{ t.how }}</p>
+                  </details>
+                </div>
+              </li>
               {% endfor %}
-            </div>
+              {% if prevention %}
+              <li class="goal">
+                <div class="stop" aria-hidden="true">🛡️</div>
+                <div class="step-body">
+                  <div class="step-title">Keep it from coming back</div>
+                  <p class="t-small text-secondary" style="margin:4px 0 0;">{{ prevention }}</p>
+                </div>
+              </li>
+              {% endif %}
+            </ol>
             {% else %}
             <p class="t-body text-secondary">Choose or identify the issue to see its organic treatments.</p>
-            {% endif %}
-            {% if prevention %}
-            <div style="margin-top:16px; padding:12px 14px; border-radius:10px; background:var(--pale-sage);">
-              <div class="t-label">🛡️ Prevent it coming back</div>
-              <div class="t-small text-secondary" style="margin-top:4px;">{{ prevention }}</div>
-            </div>
             {% endif %}
           </div>
 
