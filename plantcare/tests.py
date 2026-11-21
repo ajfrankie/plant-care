@@ -1499,9 +1499,46 @@ class PlantHealthTests(TestCase):
         self.plant.refresh_from_db()
         self.assertEqual(self.plant.status, "attention")
         page = self.client.get(response.url)
-        self.assertContains(page, "Neem Oil")
-        self.assertContains(page, "Mix 1–2 tablespoons per gallon of water")
-        self.assertContains(page, "Insecticidal Soap")
+        self.assertContains(page, "Spray with neem oil")
+        self.assertContains(page, "Mix 1–2 tablespoons of cold-pressed neem oil")
+        self.assertContains(page, "Spray with soapy water")
+        self.assertContains(page, "Every 5–7 days for 3 weeks")
+
+    def test_library_steps_are_short_and_organic(self):
+        from . import health_library
+        for key, issue in health_library.ISSUES.items():
+            for t in issue["treatments"]:
+                with self.subTest(issue=key, step=t["name"]):
+                    self.assertLessEqual(len(t["step"].split()), 5)
+                    self.assertTrue(t["when"])
+                    self.assertTrue(health_library.is_organic(t))
+
+    def test_plan_drops_copper_and_highlights_problem_areas(self):
+        result = {
+            "is_plant": True, "overall": "moderate", "progress": "first",
+            "summary": "Brown spots with yellow halos.",
+            "issues": [{
+                "key": "leaf_spot", "name": "Fungal Leaf Spot", "confidence": "high",
+                "evidence": "Brown spots on two leaves.",
+                "organic_treatments": [
+                    {"name": "Copper Fungicide Spray", "step": "Spray copper fungicide",
+                     "when": "Every 7 days", "how": "Apply copper-based fungicide."},
+                    {"name": "Chamomile Tea Spray", "step": "Spray cooled chamomile tea",
+                     "when": "Every 5 days", "how": "Brew strong tea, cool and spray."},
+                ],
+                "prevention": "Keep leaves dry.",
+                "areas": [{"label": "Brown spots", "ymin": 100, "xmin": 200, "ymax": 400, "xmax": 600},
+                          {"label": "Too small", "ymin": 5, "xmin": 5, "ymax": 6, "xmax": 6}],
+            }],
+        }
+        self.analyse_returns(result)
+        page = self.client.get(self.post_check().url)
+        self.assertNotContains(page, "opper")
+        self.assertContains(page, "Spray cooled chamomile tea")
+        self.assertEqual(page.context["highlights"],
+                         [{"label": "Brown spots", "top": 10.0, "left": 20.0, "height": 30.0, "width": 40.0}])
+        self.assertContains(page, "top:10.0%; left:20.0%; width:40.0%; height:30.0%;")
+        self.assertContains(page, "Where we found it")
 
     def test_known_issue_can_be_typed(self):
         self.post_check(action="known", other_issue="Leaf miner")
@@ -1551,7 +1588,7 @@ class PlantHealthTests(TestCase):
                          {"issue_key": "powdery_mildew", "severity": "mild"})
         case.refresh_from_db()
         self.assertEqual((case.title, case.source, case.severity), ("Powdery Mildew", "user", "mild"))
-        self.assertContains(self.client.get(response.url), "Baking Soda Spray")
+        self.assertContains(self.client.get(response.url), "Spray baking soda mix")
 
     def test_photo_update_compares_and_tracks_progress(self):
         self.post_check(action="known", issue_key="aphids")
@@ -1621,9 +1658,12 @@ class PlantHealthTests(TestCase):
             SimpleNamespace(type="text", text=json.dumps({**AI_APHIDS, "progress": "better"}))])
         client = mock.MagicMock()
         client.beta.messages.create.return_value = reply
-        with mock.patch("anthropic.Anthropic", return_value=client):
+        import os
+        ai_env = {"PLANT_HEALTH_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "sk-ant-test"}
+        with mock.patch("anthropic.Anthropic", return_value=client), mock.patch.dict(os.environ, ai_env):
             self.client.post(reverse("health_case_update", args=[case.pk]),
                              {"image": _png("week2.png"), "analyse": "on"})
+        self.assertTrue(client.beta.messages.create.called)
         images = [c.image for c in case.checks.all()]
         self.assertEqual(len(images), 2)
         response = self.client.post(reverse("health_case_delete", args=[case.pk]))
@@ -1693,7 +1733,106 @@ class HealthAITests(TestCase):
         patcher = mock.patch("anthropic.Anthropic", return_value=client)
         patcher.start()
         self.addCleanup(patcher.stop)
+        self.use_env(ANTHROPIC_API_KEY="sk-ant-test")
         return client
+
+    def use_env(self, **values):
+        """Replace the AI keys from the developer's .env with ``values`` for this test."""
+        import os
+        from unittest import mock
+        env = {k: v for k, v in os.environ.items()
+               if not k.startswith(("ANTHROPIC_", "GEMINI_", "GOOGLE_API_KEY", "PLANT_HEALTH_"))}
+        patcher = mock.patch.dict(os.environ, {**env, **values}, clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def fake_gemini(self, *, finish_reason="STOP", text=None, block_reason=None):
+        import json
+        from types import SimpleNamespace
+        from unittest import mock
+        reply = SimpleNamespace(
+            text=text if text is not None else json.dumps(AI_APHIDS),
+            candidates=[SimpleNamespace(finish_reason=SimpleNamespace(name=finish_reason))],
+            prompt_feedback=SimpleNamespace(block_reason=block_reason),
+        )
+        client = mock.MagicMock()
+        client.models.generate_content.return_value = reply
+        patcher = mock.patch("google.genai.Client", return_value=client)
+        factory = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.use_env(GEMINI_API_KEY="AIza-test")
+        return client, factory
+
+    def test_provider_follows_the_configured_key(self):
+        from . import health_ai
+        for env, expected in (
+            ({"GEMINI_API_KEY": "AIza-x"}, "gemini"),
+            ({"GOOGLE_API_KEY": "AIza-x"}, "gemini"),
+            ({"ANTHROPIC_API_KEY": "sk-ant-x"}, "anthropic"),
+            ({"GEMINI_API_KEY": "AIza-x", "PLANT_HEALTH_PROVIDER": "anthropic"}, "anthropic"),
+            ({}, "anthropic"),
+        ):
+            with self.subTest(env=env):
+                self.use_env(**env)
+                self.assertEqual(health_ai.provider(), expected)
+
+    def test_gemini_sends_photo_with_structured_output(self):
+        from . import health_ai
+        client, factory = self.fake_gemini()
+        result = health_ai.analyse(_png(), plant=self.plant, notes="Sticky", previous_image=_png(),
+                                   previous_title="Aphids")
+        self.assertEqual(result["issues"][0]["key"], "aphids")
+        self.assertEqual(factory.call_args.kwargs["api_key"], "AIza-test")
+        kwargs = client.models.generate_content.call_args.kwargs
+        self.assertEqual(kwargs["model"], health_ai.GEMINI_MODEL)
+        config = kwargs["config"]
+        self.assertEqual(config.response_mime_type, "application/json")
+        self.assertEqual(config.response_json_schema, health_ai.SCHEMA)
+        self.assertEqual(config.system_instruction, health_ai.SYSTEM)
+        contents = kwargs["contents"]
+        images = [c for c in contents if not isinstance(c, str)]
+        self.assertEqual(len(images), 2)  # earlier + latest photo
+        self.assertEqual(images[0].inline_data.mime_type, "image/jpeg")
+        self.assertIn("Sticky", contents[-1])
+        self.assertIn("Aphids", contents[-1])
+
+    def test_gemini_blocked_and_bad_replies_raise_readable_errors(self):
+        from . import health_ai
+        for kwargs in ({"block_reason": "SAFETY"}, {"finish_reason": "SAFETY"},
+                       {"finish_reason": "MAX_TOKENS", "text": "{"}, {"text": "{not json"}):
+            with self.subTest(**kwargs):
+                self.fake_gemini(**kwargs)
+                with self.assertRaises(health_ai.AnalysisError):
+                    health_ai.analyse(_png(), plant=self.plant)
+
+    def test_gemini_api_errors_are_readable(self):
+        from google.genai import errors
+        from . import health_ai
+        for code, expected in ((400, "API key is missing or invalid"), (429, "free-tier limit"),
+                               (500, "failed (500)")):
+            with self.subTest(code=code):
+                client, _ = self.fake_gemini()
+                body = {"error": {"code": code, "message": "API key not valid" if code == 400 else "x",
+                                  "status": "X"}}
+                client.models.generate_content.side_effect = errors.APIError(code, body)
+                with self.assertRaisesMessage(health_ai.AnalysisError, expected):
+                    health_ai.analyse(_png(), plant=self.plant)
+
+    def test_gemini_missing_key_is_a_readable_error(self):
+        from . import health_ai
+        self.use_env(PLANT_HEALTH_PROVIDER="gemini")
+        with self.assertRaisesMessage(health_ai.AnalysisError, "no Gemini API key"):
+            health_ai.analyse(_png(), plant=self.plant)
+
+    def test_wrong_key_in_anthropic_variable_is_explained(self):
+        from . import health_ai
+        for key, expected in (("AIzaSyExample", "Rename it to GEMINI_API_KEY"),
+                              ("AQ.Example", "Rename it to GEMINI_API_KEY"),
+                              ("sk-proj-abc", "doesn't hold an Anthropic key")):
+            with self.subTest(key=key):
+                self.use_env(ANTHROPIC_API_KEY=key)
+                with self.assertRaisesMessage(health_ai.AnalysisError, expected):
+                    health_ai.analyse(_png(), plant=self.plant)
 
     def test_sends_photo_with_structured_output(self):
         from . import health_ai
@@ -1727,13 +1866,10 @@ class HealthAITests(TestCase):
             health_ai.analyse(_png(), plant=self.plant)
 
     def test_missing_credentials_is_a_readable_error(self):
-        import os
-        from unittest import mock
         from . import health_ai
-        env = {k: v for k, v in os.environ.items() if not k.startswith("ANTHROPIC_")}
-        with mock.patch.dict(os.environ, env, clear=True):
-            with self.assertRaisesMessage(health_ai.AnalysisError, "no Anthropic API key"):
-                health_ai.analyse(_png(), plant=self.plant)
+        self.use_env()
+        with self.assertRaisesMessage(health_ai.AnalysisError, "no Anthropic API key"):
+            health_ai.analyse(_png(), plant=self.plant)
 
 
 class CareHistoryTests(TestCase):

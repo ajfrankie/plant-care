@@ -161,12 +161,39 @@ def _treatments(case, latest):
         seen.add(item["name"].lower())
     analysis = latest.analysis if latest else {}
     for issue in analysis.get("issues", []):
-        if issue["key"] == case.issue_key or (not case.issue_key and issue["name"] == case.title):
-            for item in issue["organic_treatments"]:
+        if _is_case_issue(issue, case):
+            for item in _organic(issue["organic_treatments"]):
                 if item["name"].lower() not in seen:
                     treatments.append({**item, "suggested": True})
                     seen.add(item["name"].lower())
     return treatments
+
+
+def _is_case_issue(issue, case):
+    return issue["key"] == case.issue_key or (not case.issue_key and issue["name"] == case.title)
+
+
+def _organic(items):
+    """Drop anything non-organic (e.g. copper sprays), including from older saved analyses."""
+    return [item for item in items if health_library.is_organic(item)]
+
+
+def _highlights(case, analysis):
+    """Boxes (in % of the photo) marking where the case's problem shows on the analysed photo."""
+    boxes = []
+    for issue in analysis.get("issues", []):
+        if not _is_case_issue(issue, case):
+            continue
+        for area in issue.get("areas", [])[:3]:
+            try:
+                ymin, xmin, ymax, xmax = (max(0, min(1000, int(area[k]))) for k in ("ymin", "xmin", "ymax", "xmax"))
+            except (KeyError, TypeError, ValueError):
+                continue
+            if ymax - ymin < 10 or xmax - xmin < 10:
+                continue
+            boxes.append({"label": str(area.get("label", ""))[:40], "top": ymin / 10, "left": xmin / 10,
+                          "height": (ymax - ymin) / 10, "width": (xmax - xmin) / 10})
+    return boxes
 
 
 def case_detail(request, pk, form=None):
@@ -181,9 +208,12 @@ def case_detail(request, pk, form=None):
         "checks": checks,
         "latest": latest,
         "analysis": analysis,
-        "other_issues": [i for i in analysis.get("issues", [])
+        "other_issues": [{**i, "organic_treatments": _organic(i["organic_treatments"])}
+                         for i in analysis.get("issues", [])
                          if i["key"] != case.issue_key and i["name"] != case.title],
         "entry": entry,
+        "analysed": analysed,
+        "highlights": _highlights(case, analysis),
         "treatments": _treatments(case, analysed),
         "prevention": entry["prevention"] if entry else next(
             (i["prevention"] for i in analysis.get("issues", []) if i["name"] == case.title), ""),

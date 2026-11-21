@@ -3,70 +3,77 @@
 Used when the user already knows the problem, and to back up what the photo
 analysis finds with tried-and-tested organic remedies. Always test a spray on
 one leaf first and apply in the evening or out of direct sun.
+
+Each treatment is one step of the treatment roadmap: ``step`` is its short
+title (five words at most), ``when`` says when or how often, and ``how`` gives
+the detail. Organic remedies only — see ``is_organic``.
 """
 
 # Reusable treatments ---------------------------------------------------------
 
 NEEM_OIL = {
-    "name": "Neem Oil",
-    "how": "Derived from the neem tree, this disrupts insect hormones and manages "
-           "soft-bodied pests like aphids, whiteflies, thrips, and caterpillars. Mix 1–2 "
-           "tablespoons per gallon of water (plus a few drops of mild liquid soap so it "
-           "mixes) and apply weekly, covering the undersides of leaves.",
+    "name": "Neem Oil", "step": "Spray with neem oil", "when": "Every 7 days",
+    "how": "Mix 1–2 tablespoons of cold-pressed neem oil and a few drops of mild soap in "
+           "1 gallon of water. Spray the tops and undersides of the leaves.",
 }
 INSECTICIDAL_SOAP = {
-    "name": "Insecticidal Soap",
-    "how": "Mix 1 tablespoon of pure castile soap per litre of water (about 5 tablespoons "
-           "per gallon). Spray pests directly until dripping — it only works on contact. "
-           "Repeat every 5–7 days for 3 weeks to catch new hatchlings.",
+    "name": "Insecticidal Soap", "step": "Spray with soapy water", "when": "Every 5–7 days for 3 weeks",
+    "how": "Mix 1 tablespoon of pure castile soap in 1 litre of water. Spray the pests "
+           "directly until dripping — it only works on contact.",
 }
 WATER_BLAST = {
-    "name": "Strong Water Spray",
-    "how": "Knock pests off with a firm spray of lukewarm water, especially under leaves "
-           "and along stems. Repeat every 2–3 days for a week.",
+    "name": "Strong Water Spray", "step": "Hose pests off leaves", "when": "Every 2–3 days for a week",
+    "how": "Spray firmly with lukewarm water under the leaves and along the stems.",
 }
 ALCOHOL_SWAB = {
-    "name": "Rubbing Alcohol Swab",
-    "how": "Dab each pest with a cotton swab dipped in 70% isopropyl alcohol. For larger "
-           "outbreaks spray 1 part alcohol to 3 parts water. Repeat weekly until gone.",
+    "name": "Rubbing Alcohol Swab", "step": "Dab pests with alcohol", "when": "Weekly until gone",
+    "how": "Touch each pest with a cotton swab dipped in rubbing alcohol.",
 }
 STICKY_TRAPS = {
-    "name": "Yellow Sticky Traps",
-    "how": "Place yellow sticky cards just above the soil or among the leaves to catch "
-           "flying adults and track whether numbers are falling. Replace when full.",
+    "name": "Yellow Sticky Traps", "step": "Hang yellow sticky traps", "when": "Replace when full",
+    "how": "Place sticky cards just above the soil to catch flying adults and see if "
+           "numbers are falling.",
 }
 PRUNE_AFFECTED = {
-    "name": "Remove Affected Leaves",
-    "how": "Cut off badly affected leaves with clean scissors (wipe blades with alcohol "
-           "between cuts) and bin them — don't compost diseased material.",
+    "name": "Remove Affected Leaves", "step": "Cut off sick leaves", "when": "Today",
+    "how": "Use clean scissors and bin the leaves — don't compost them.",
 }
 AIRFLOW = {
-    "name": "Improve Airflow & Watering Habits",
-    "how": "Space plants apart, water at soil level in the morning and keep leaves dry so "
-           "fungal spores can't take hold.",
+    "name": "Improve Airflow & Watering Habits", "step": "Keep the leaves dry", "when": "Every watering",
+    "how": "Water the soil, not the leaves, in the morning. Give the plant space so air "
+           "can move around it.",
 }
 BAKING_SODA = {
-    "name": "Baking Soda Spray",
-    "how": "Mix 1 tablespoon of baking soda and ½ teaspoon of liquid soap in 1 gallon of "
-           "water. Spray all leaf surfaces every 7 days; it raises leaf pH so mildew "
-           "can't spread.",
+    "name": "Baking Soda Spray", "step": "Spray baking soda mix", "when": "Every 7 days",
+    "how": "Mix 1 tablespoon of baking soda and ½ teaspoon of mild soap in 1 gallon of "
+           "water. Spray all leaf surfaces.",
 }
 MILK_SPRAY = {
-    "name": "Milk Spray",
-    "how": "Mix 1 part milk with 2 parts water and spray leaves in sunlight once a week. "
-           "Works best as prevention or at the first white spots.",
-}
-COPPER = {
-    "name": "Copper Fungicide (organic-approved)",
-    "how": "Use a copper soap product approved for organic gardening, following the label "
-           "rate. Spray every 7–10 days in wet weather. Use sparingly — copper builds up "
-           "in soil.",
+    "name": "Milk Spray", "step": "Spray diluted milk", "when": "Every 7 days",
+    "how": "Mix 1 part milk with 2 parts water and spray the leaves on a sunny day. "
+           "Works best at the first white spots.",
 }
 COMPOST_TEA = {
-    "name": "Compost Tea",
-    "how": "Steep a cup of mature compost or worm castings in a gallon of water for 24 "
-           "hours, strain, and water the soil every 2 weeks.",
+    "name": "Compost Tea", "step": "Feed with compost tea", "when": "Every 2 weeks",
+    "how": "Soak a cup of compost or worm castings in 1 gallon of water for 24 hours, "
+           "strain, and water the soil with it.",
 }
+ISOLATE = {
+    "name": "Isolate the Plant", "step": "Move away from other plants", "when": "Today",
+    "how": "Keep it apart until no new spots appear so the problem can't spread.",
+}
+
+# Not organic — never shown, even when the photo analysis suggests them.
+NOT_ORGANIC = (
+    "copper", "sulfur", "sulphur", "bordeaux", "mancozeb", "chlorothalonil", "imidacloprid",
+    "permethrin", "bifenthrin", "malathion", "carbaryl", "glyphosate", "synthetic",
+    "chemical fungicide", "chemical pesticide", "systemic",
+)
+
+
+def is_organic(treatment):
+    text = " ".join(str(treatment.get(k, "")) for k in ("name", "step", "how")).lower()
+    return not any(word in text for word in NOT_ORGANIC)
 
 
 ISSUES = {
@@ -84,9 +91,8 @@ ISSUES = {
         "symptoms": "Fine webbing under leaves, tiny pale speckles (stippling), dusty-looking "
                     "or bronzed leaves.",
         "treatments": [WATER_BLAST, INSECTICIDAL_SOAP, NEEM_OIL, {
-            "name": "Raise Humidity",
-            "how": "Mites love dry air. Group plants, use a pebble tray or humidifier, and "
-                   "mist the leaves every other day while treating.",
+            "name": "Raise Humidity", "step": "Raise the humidity", "when": "Mist every other day",
+            "how": "Mites love dry air. Group plants together or use a pebble tray.",
         }],
         "prevention": "Keep humidity up, wipe leaves monthly, and isolate new plants for 2 weeks.",
     },
@@ -102,9 +108,8 @@ ISSUES = {
         "symptoms": "Small brown or tan bumps stuck to stems and leaf veins; sticky leaves; "
                     "yellowing.",
         "treatments": [{
-            "name": "Scrape Off",
-            "how": "Gently scrape scales off with a fingernail or soft toothbrush, then wipe "
-                   "the area clean.",
+            "name": "Scrape Off", "step": "Scrape scales off gently", "when": "Today",
+            "how": "Use a fingernail or soft toothbrush, then wipe the area clean.",
         }, ALCOHOL_SWAB, NEEM_OIL],
         "prevention": "Check stems when watering; scale is easiest to clear when caught early.",
     },
@@ -120,8 +125,8 @@ ISSUES = {
         "symptoms": "Silvery streaks or patches on leaves, black specks of droppings, "
                     "distorted new growth.",
         "treatments": [{
-            "name": "Blue or Yellow Sticky Traps",
-            "how": STICKY_TRAPS["how"],
+            "name": "Blue or Yellow Sticky Traps", "step": "Hang blue sticky traps",
+            "when": "Replace when full", "how": STICKY_TRAPS["how"],
         }, INSECTICIDAL_SOAP, NEEM_OIL],
         "prevention": "Remove plant debris and isolate infested plants straight away.",
     },
@@ -130,16 +135,14 @@ ISSUES = {
         "symptoms": "Small black flies around the soil; larvae in the top layer of soil; "
                     "seedlings wilting.",
         "treatments": [{
-            "name": "Let the Soil Dry Out",
-            "how": "Allow the top 2–3 cm of soil to dry completely between waterings — the "
-                   "larvae need moist soil. Bottom-water while treating.",
+            "name": "Let the Soil Dry Out", "step": "Let the soil dry", "when": "Between waterings",
+            "how": "Let the top 2–3 cm dry completely — the larvae need moist soil.",
         }, STICKY_TRAPS, {
-            "name": "BTI Soil Drench",
-            "how": "Soak Bacillus thuringiensis israelensis (e.g. mosquito bits) in water "
-                   "for 30 minutes and use that water for the plant. Repeat every watering "
-                   "for 3–4 weeks.",
+            "name": "BTI Soil Drench", "step": "Water with BTI soak", "when": "Every watering for 3–4 weeks",
+            "how": "Soak mosquito bits (a natural soil bacterium) in water for 30 minutes and "
+                   "water the plant with it.",
         }, {
-            "name": "Sand Top Layer",
+            "name": "Sand Top Layer", "step": "Top the soil with sand", "when": "Once",
             "how": "Cover the soil with 1 cm of coarse sand so adults can't lay eggs.",
         }],
         "prevention": "Don't overwater and use a free-draining mix.",
@@ -148,12 +151,12 @@ ISSUES = {
         "name": "Caterpillars", "type": "Pest",
         "symptoms": "Holes chewed in leaves, ragged edges, green or black droppings.",
         "treatments": [{
-            "name": "Hand-Pick",
-            "how": "Check leaves at dusk and remove caterpillars by hand.",
+            "name": "Hand-Pick", "step": "Pick caterpillars off", "when": "Each evening",
+            "how": "Check the leaves at dusk and remove caterpillars by hand.",
         }, {
-            "name": "Bt (Bacillus thuringiensis kurstaki)",
-            "how": "A natural soil bacterium that only affects caterpillars. Spray leaves "
-                   "following the label rate every 5–7 days while they're feeding.",
+            "name": "Bt (Bacillus thuringiensis kurstaki)", "step": "Spray Bt on leaves",
+            "when": "Every 5–7 days",
+            "how": "A natural soil bacterium that only affects caterpillars. Use the label rate.",
         }, NEEM_OIL],
         "prevention": "Use fine netting outdoors and check leaf undersides for eggs.",
     },
@@ -168,35 +171,31 @@ ISSUES = {
     "leaf_spot": {
         "name": "Fungal Leaf Spot", "type": "Fungal disease",
         "symptoms": "Brown or black spots, often with a yellow halo, that grow and merge.",
-        "treatments": [PRUNE_AFFECTED, AIRFLOW, COPPER],
+        "treatments": [PRUNE_AFFECTED, AIRFLOW, BAKING_SODA, NEEM_OIL],
         "prevention": "Keep leaves dry and clear fallen leaves from the pot.",
     },
     "bacterial_leaf_spot": {
         "name": "Bacterial Leaf Spot", "type": "Bacterial disease",
         "symptoms": "Water-soaked, translucent spots that turn brown or black; may smell.",
         "treatments": [PRUNE_AFFECTED, {
-            "name": "Stop Overhead Watering",
-            "how": "Water only at the base and keep the plant out of rain until it recovers; "
-                   "bacteria spread in water splashes.",
-        }, COPPER],
+            "name": "Stop Overhead Watering", "step": "Water only at the base", "when": "Every watering",
+            "how": "Keep the plant out of the rain until it recovers — bacteria spread in splashes.",
+        }, ISOLATE],
         "prevention": "Sterilise tools and avoid wetting the foliage.",
     },
     "root_rot": {
         "name": "Root Rot", "type": "Fungal disease",
         "symptoms": "Wilting despite wet soil, yellow lower leaves, mushy brown roots, sour smell.",
         "treatments": [{
-            "name": "Trim & Repot",
-            "how": "Unpot the plant, wash the roots, and cut away every brown, mushy root "
-                   "with sterile scissors. Repot in fresh, free-draining mix in a pot with "
-                   "drainage holes.",
+            "name": "Trim & Repot", "step": "Trim mushy roots, repot", "when": "Today",
+            "how": "Wash the roots, cut away every brown, mushy one with clean scissors, and "
+                   "repot in fresh, free-draining mix.",
         }, {
-            "name": "Cinnamon on Cut Roots",
-            "how": "Dust the trimmed roots with ground cinnamon, a gentle natural antifungal, "
-                   "before repotting.",
+            "name": "Cinnamon on Cut Roots", "step": "Dust roots with cinnamon", "when": "When repotting",
+            "how": "Ground cinnamon is a gentle natural antifungal.",
         }, {
-            "name": "Water Less",
-            "how": "Wait until the top half of the soil is dry before watering again. Don't "
-                   "fertilise until new growth appears.",
+            "name": "Water Less", "step": "Water much less", "when": "Until new growth",
+            "how": "Wait until the top half of the soil is dry. Don't feed until new leaves appear.",
         }],
         "prevention": "Use pots with drainage holes and check the soil before every watering.",
     },
@@ -209,7 +208,7 @@ ISSUES = {
     "rust": {
         "name": "Rust", "type": "Fungal disease",
         "symptoms": "Orange, rusty or brown powdery pustules, mostly under the leaves.",
-        "treatments": [PRUNE_AFFECTED, NEEM_OIL, COPPER],
+        "treatments": [PRUNE_AFFECTED, NEEM_OIL, BAKING_SODA],
         "prevention": "Water at soil level and give plants room to breathe.",
     },
 
@@ -218,13 +217,11 @@ ISSUES = {
         "name": "Overwatering", "type": "Care problem",
         "symptoms": "Yellow, soft or drooping leaves with soggy soil; mould on the soil surface.",
         "treatments": [{
-            "name": "Let It Dry",
-            "how": "Skip watering until the top 3–5 cm of soil is dry. Empty saucers and "
-                   "make sure the pot drains.",
+            "name": "Let It Dry", "step": "Let the soil dry", "when": "Until top 3–5 cm is dry",
+            "how": "Skip watering, empty the saucer and make sure the pot drains.",
         }, {
-            "name": "Check the Roots",
-            "how": "If leaves keep yellowing, unpot and look for mushy roots — treat as root "
-                   "rot if you find them.",
+            "name": "Check the Roots", "step": "Check roots for rot", "when": "If leaves keep yellowing",
+            "how": "Unpot and look for mushy roots — treat as root rot if you find them.",
         }],
         "prevention": "Water by checking the soil, not by the calendar alone.",
     },
@@ -232,12 +229,11 @@ ISSUES = {
         "name": "Underwatering", "type": "Care problem",
         "symptoms": "Crispy brown edges, drooping leaves, dry soil pulling away from the pot.",
         "treatments": [{
-            "name": "Soak & Drain",
-            "how": "Stand the pot in a bowl of water for 20–30 minutes until the soil is "
-                   "evenly moist, then let it drain fully.",
+            "name": "Soak & Drain", "step": "Soak pot, then drain", "when": "Today",
+            "how": "Stand the pot in water for 20–30 minutes, then let it drain fully.",
         }, {
-            "name": "Water More Regularly",
-            "how": "Shorten the watering interval and check the soil every few days.",
+            "name": "Water More Regularly", "step": "Water more often", "when": "Check every few days",
+            "how": "Shorten the watering interval and feel the soil before each watering.",
         }],
         "prevention": "Mulch outdoor plants and group indoor plants to slow drying.",
     },
@@ -245,10 +241,9 @@ ISSUES = {
         "name": "Sunburn / Leaf Scorch", "type": "Care problem",
         "symptoms": "Bleached, white or brown crispy patches on the leaves facing the light.",
         "treatments": [{
-            "name": "Move to Gentler Light",
-            "how": "Shift the plant to bright, indirect light. Acclimatise it to stronger sun "
-                   "gradually over 1–2 weeks. Scorched patches won't recover — trim them if "
-                   "unsightly.",
+            "name": "Move to Gentler Light", "step": "Move to softer light", "when": "Today",
+            "how": "Bright, indirect light, then build up to stronger sun over 1–2 weeks. "
+                   "Scorched patches won't recover — trim them if you like.",
         }],
         "prevention": "Introduce plants to direct sun slowly and use a sheer curtain in summer.",
     },
@@ -257,13 +252,11 @@ ISSUES = {
         "symptoms": "Pale or yellow older leaves (nitrogen), yellow between green veins on new "
                     "leaves (iron/magnesium), slow growth.",
         "treatments": [COMPOST_TEA, {
-            "name": "Worm Castings",
-            "how": "Top-dress the soil with 1–2 cm of worm castings and water in. Repeat "
-                   "every 2 months in the growing season.",
+            "name": "Worm Castings", "step": "Add worm castings on top", "when": "Every 2 months",
+            "how": "Spread 1–2 cm of worm castings on the soil and water in.",
         }, {
-            "name": "Seaweed / Fish Emulsion",
-            "how": "Feed with liquid seaweed or fish emulsion at the label rate (typically "
-                   "about 1 tablespoon per gallon) every 2–4 weeks while growing.",
+            "name": "Seaweed / Fish Emulsion", "step": "Feed liquid seaweed", "when": "Every 2–4 weeks",
+            "how": "Use liquid seaweed or fish emulsion, about 1 tablespoon per gallon of water.",
         }],
         "prevention": "Repot every 1–2 years in fresh mix and feed during spring and summer.",
     },
