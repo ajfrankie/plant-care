@@ -1,7 +1,12 @@
 import uuid
+from datetime import time
+
+from django.conf import settings
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
+
+from .watering import WaterReminder
 
 
 class UserManager(BaseUserManager):
@@ -39,6 +44,19 @@ class User(AbstractBaseUser):
         max_length=20, choices=Role, default=Role.USER, db_default=Role.USER
     )
     is_active = models.BooleanField(default=False, db_default=False)
+
+    # Settings page: profile photo and preferences.
+    avatar = models.ImageField(upload_to="avatars/%Y/%m/", blank=True)
+    timezone = models.CharField(max_length=64, default=settings.TIME_ZONE)
+    notify_care_tasks = models.BooleanField(
+        "Fertilizing and pruning reminders", default=True
+    )
+    notify_watering = models.BooleanField("Watering reminders", default=True)
+    notify_health = models.BooleanField("Plant health alerts", default=True)
+    default_reminder_time = models.TimeField(default=time(9, 0))
+    default_watering_method = models.CharField(
+        max_length=20, choices=WaterReminder.Method, default=WaterReminder.Method.TOP
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

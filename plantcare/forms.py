@@ -380,3 +380,96 @@ class RegisterForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+# ---------- Settings page ----------
+
+def timezone_choices():
+    """Every named timezone (Area/City), sorted, plus UTC."""
+    import zoneinfo
+    names = sorted(
+        name for name in zoneinfo.available_timezones()
+        if "/" in name and not name.startswith(("Etc/", "SystemV/", "US/", "posix/", "right/"))
+    )
+    return [("UTC", "UTC")] + [(name, name.replace("_", " ")) for name in names]
+
+
+class ProfileForm(forms.ModelForm):
+    MAX_AVATAR_SIZE = 2 * 1024 * 1024  # 2 MB
+
+    remove_avatar = forms.BooleanField(required=False)
+
+    class Meta:
+        model = User
+        fields = ["full_name", "email", "timezone", "avatar"]
+        labels = {"full_name": "Full Name", "email": "Email Address", "avatar": "Profile Photo"}
+        widgets = {"timezone": forms.Select}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["timezone"].widget.choices = timezone_choices()
+
+    def clean_full_name(self):
+        name = " ".join(self.cleaned_data["full_name"].split())
+        if not name:
+            raise ValidationError("Please enter your name.")
+        return name
+
+    def clean_email(self):
+        return self.cleaned_data["email"].lower()
+
+    def clean_timezone(self):
+        value = self.cleaned_data["timezone"]
+        if value not in dict(timezone_choices()):
+            raise ValidationError("Please choose a timezone from the list.")
+        return value
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get("avatar")
+        if avatar and getattr(avatar, "size", 0) > self.MAX_AVATAR_SIZE:
+            raise ValidationError("Photo must be 2 MB or smaller.")
+        return avatar
+
+    def save(self, commit=True):
+        old = User.objects.get(pk=self.instance.pk).avatar if self.instance.pk else None
+        user = super().save(commit=False)
+        uploaded = "avatar" in self.files
+        if self.cleaned_data.get("remove_avatar") and not uploaded:
+            user.avatar = ""
+        if commit:
+            user.save()
+            # Delete the previous photo file once it has been replaced or removed.
+            if old and old.name != user.avatar.name:
+                old.storage.delete(old.name)
+        return user
+
+
+class NotificationPreferencesForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["notify_watering", "notify_care_tasks", "notify_health"]
+
+
+class CarePreferencesForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["default_reminder_time", "default_watering_method"]
+        labels = {
+            "default_reminder_time": "Default Reminder Time",
+            "default_watering_method": "Preferred Watering Method",
+        }
+        widgets = {"default_reminder_time": forms.TimeInput(attrs={"type": "time"}, format="%H:%M")}
+
+
+class DeleteAccountForm(forms.Form):
+    password = forms.CharField(strip=False, widget=forms.PasswordInput)
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        if not self.user.check_password(password):
+            raise ValidationError("Incorrect password.")
+        return password

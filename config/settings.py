@@ -67,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # Every page needs a signed-in user unless its view is marked @login_not_required.
     'django.contrib.auth.middleware.LoginRequiredMiddleware',
+    'plantcare.middleware.UserTimezoneMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
