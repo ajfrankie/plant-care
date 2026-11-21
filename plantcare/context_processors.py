@@ -36,3 +36,15 @@ def notifications(request):
     if user is None or not user.is_authenticated:
         return {}
     return {"header_notifications": HeaderNotifications(request)}
+
+
+def admin_counts(request):
+    """Open contact-form inquiries, for the admin sidebar badge (queried only when shown)."""
+    user = getattr(request, "user", None)
+    if user is None or not user.is_authenticated or not user.is_staff:
+        return {}
+    from django.utils.functional import SimpleLazyObject
+    from .models import ContactMessage
+    return {"open_inquiries": SimpleLazyObject(
+        lambda: ContactMessage.objects.filter(is_handled=False).count()
+    )}

@@ -1,11 +1,12 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, health, history, library, notifications, plants, public, species, watering
+from .controllers import accounts, care, dashboard, health, history, inquiries, library, notifications, plants, public, species, watering
 
 urlpatterns = [
     # Public site
     path("", public.home, name="home"),
     path("explore/", public.explore, name="explore"),
+    path("explore/<int:pk>/", public.species_detail, name="explore_species"),
     path("care-guides/", public.care_guides, name="care_guides"),
     path("about/", public.about, name="about"),
     path("style-guide/", public.style_guide, name="style_guide"),
@@ -29,6 +30,9 @@ urlpatterns = [
     path("dashboard/", dashboard.index, name="dashboard"),
     path("admin-dashboard/", dashboard.admin_index, name="admin_dashboard"),
     path("admin-dashboard/users/<uuid:pk>/toggle/", dashboard.admin_toggle_user, name="admin_user_toggle"),
+    path("inquiries/", inquiries.index, name="inquiries"),
+    path("inquiries/<int:pk>/toggle/", inquiries.toggle, name="inquiry_toggle"),
+    path("inquiries/<int:pk>/delete/", inquiries.delete, name="inquiry_delete"),
 
     path("my-plants/", plants.index, name="my_plants"),
     path("my-plants/add/", plants.add, name="plant_add"),

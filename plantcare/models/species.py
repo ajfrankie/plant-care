@@ -34,6 +34,7 @@ class PlantSpecies(models.Model):
     category = models.CharField(max_length=20, choices=Category)
     origin = models.CharField(max_length=120, blank=True)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="species/%Y/%m/", blank=True)
     difficulty = models.CharField(max_length=20, choices=Difficulty)
 
     light = models.CharField(max_length=20, choices=Light)

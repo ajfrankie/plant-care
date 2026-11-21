@@ -81,7 +81,11 @@
         {% for item in page.object_list %}
         <div class="plant-card">
           {% cycle '#4F8A52' '#214E34' '#5C9A5F' '#3C7A48' '#2F6B3C' '#6BA86E' '#4A7D4F' '#598C5C' as photo_bg silent %}
+          {% if item.image %}
+          <div class="plant-photo" style="background:{{ photo_bg }}; overflow:hidden;"><img src="{{ item.image.url }}" alt="{{ item.common_name }}" loading="lazy" style="width:100%; height:100%; object-fit:cover;"></div>
+          {% else %}
           <div class="plant-photo" style="background:{{ photo_bg }};"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
+          {% endif %}
           <div style="padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
             <div>
               <div class="t-label">{{ item.common_name }}</div>

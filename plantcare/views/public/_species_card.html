@@ -1,0 +1,19 @@
+{% comment %}One Plant Library card. Expects: species, bg (a CSS color).{% endcomment %}
+<a href="{% url 'explore_species' species.pk %}" class="species-card">
+  <div class="species-photo" style="background:linear-gradient(135deg, {{ bg }}, #214E34);">
+    {% if species.image %}<img src="{{ species.image.url }}" alt="" loading="lazy">{% else %}<span class="initial" aria-hidden="true">{{ species.common_name|first|upper }}</span>{% endif %}
+    <span class="badge {% if species.difficulty == 'very_easy' or species.difficulty == 'easy' %}badge-success{% elif species.difficulty == 'moderate' %}badge-warning{% else %}badge-error{% endif %}"><span class="badge-dot"></span>{{ species.get_difficulty_display }}</span>
+  </div>
+  <div class="species-body">
+    <div>
+      <div class="t-h4">{{ species.common_name }}</div>
+      <div class="t-small text-muted" style="font-style:italic;">{{ species.scientific_name }}</div>
+    </div>
+    {% if species.description %}<p class="t-small text-secondary line-clamp-2" style="line-height:1.5;">{{ species.description }}</p>{% endif %}
+    <div class="species-facts">
+      <span class="fact" title="Light">{% include "partials/icon.html" with name="sun" size=14 %} {{ species.get_light_display }}</span>
+      <span class="fact" title="Watering">{% include "partials/icon.html" with name="water" size=14 %} {{ species.get_watering_display }}</span>
+      {% if 'pet_friendly' in species.special_features %}<span class="fact">{% include "partials/icon.html" with name="paw" size=14 %} Pet friendly</span>{% endif %}
+    </div>
+  </div>
+</a>

@@ -85,6 +85,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'plantcare.context_processors.notifications',
+                'plantcare.context_processors.admin_counts',
             ],
         },
     },

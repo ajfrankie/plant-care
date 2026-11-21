@@ -69,7 +69,7 @@
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
           <form method="post" action="{% url 'health_case_resolve' case.pk %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-sm {% if case.is_open %}btn-primary{% else %}btn-secondary{% endif %}">{% if case.is_open %}✓ Mark as Resolved{% else %}Reopen Case{% endif %}</button>
+            <button type="submit" class="btn btn-sm {% if case.is_open %}btn-primary{% else %}btn-secondary{% endif %}">{% if case.is_open %}{% include "partials/icon.html" with name="check" size=14 %} Mark as Resolved{% else %}Reopen Case{% endif %}</button>
           </form>
           <form method="post" action="{% url 'health_case_delete' case.pk %}" onsubmit="return confirm('Delete this health case and all its photos?');">
             {% csrf_token %}
@@ -83,7 +83,7 @@
 
           <!-- Diagnosis -->
           <div class="card">
-            <h3 class="t-h4" style="margin-bottom:12px;">🔎 Diagnosis</h3>
+            <h3 class="t-h4" style="margin-bottom:12px;">{% include "partials/icon.html" with name="search" size=14 %} Diagnosis</h3>
             {% if analysis.summary %}
             <p class="t-body">{{ analysis.summary }}</p>
             {% for issue in analysis.issues %}{% if issue.name == case.title or issue.key == case.issue_key %}
@@ -95,7 +95,7 @@
 
             {% if highlights and analysed %}
             <div style="margin-top:14px;" data-highlights>
-              <div class="t-label" style="margin-bottom:8px;">📍 Where we found it</div>
+              <div class="t-label" style="margin-bottom:8px;">{% include "partials/icon.html" with name="pin" size=14 %} Where we found it</div>
               <div class="spot-photo">
                 <img src="{{ analysed.image.url }}" alt="Photo of {{ case.plant.name }} with the problem areas marked">
                 {% for box in highlights %}
@@ -157,7 +157,7 @@
 
           <!-- Organic treatment plan -->
           <div class="card">
-            <h3 class="t-h4" style="margin-bottom:4px;">🌿 Organic Treatment Roadmap</h3>
+            <h3 class="t-h4" style="margin-bottom:4px;">{% include "partials/icon.html" with name="leaf" size=14 %} Organic Treatment Roadmap</h3>
             <p class="t-small text-muted" style="margin-bottom:16px;">Go step by step. Test sprays on one leaf first, in the evening.</p>
             {% if treatments %}
             <ol class="roadmap" data-treatments>
@@ -179,7 +179,7 @@
               {% endfor %}
               {% if prevention %}
               <li class="goal">
-                <div class="stop" aria-hidden="true">🛡️</div>
+                <div class="stop" aria-hidden="true">{% include "partials/icon.html" with name="shield" size=16 %}</div>
                 <div class="step-body">
                   <div class="step-title">Keep it from coming back</div>
                   <p class="t-small text-secondary" style="margin:4px 0 0;">{{ prevention }}</p>
@@ -210,7 +210,7 @@
 
           <!-- Progress timeline -->
           <div class="card">
-            <h3 class="t-h4" style="margin-bottom:14px;">📈 Progress ({{ checks|length }} photo{{ checks|length|pluralize }})</h3>
+            <h3 class="t-h4" style="margin-bottom:14px;">{% include "partials/icon.html" with name="trend" size=14 %} Progress ({{ checks|length }} photo{{ checks|length|pluralize }})</h3>
             <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px;">
               {% for check in checks %}
               <figure style="margin:0;" data-check="{{ check.pk }}">
@@ -231,7 +231,7 @@
         <div style="display:flex; flex-direction:column; gap:24px;">
           {% if case.is_open %}
           <div class="card" id="update">
-            <h3 class="t-h4">📷 Photo Update</h3>
+            <h3 class="t-h4">{% include "partials/icon.html" with name="camera" size=14 %} Photo Update</h3>
             <p class="t-small {% if case.next_check_date <= today %}text-warning{% else %}text-muted{% endif %}" style="margin:4px 0 14px;{% if case.next_check_date <= today %} color:var(--warning); font-weight:600;{% endif %}">
               {% if case.next_check_date < today %}Overdue since {{ case.next_check_date|date:"M j" }}{% elif case.next_check_date == today %}Due today{% else %}Next update {{ case.next_check_date|date:"D, M j" }}{% endif %}
             </p>

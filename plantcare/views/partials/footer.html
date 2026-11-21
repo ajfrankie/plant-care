@@ -1,5 +1,5 @@
-<footer style="background:var(--primary); color:#fff;">
-  <div class="container section" style="display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:32px; padding-top:56px; padding-bottom:32px;">
+<footer class="site-footer">
+  <div class="container site-footer-grid">
     <div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#DCE8D8"/></svg>
@@ -8,28 +8,32 @@
       <p class="t-body" style="color:#C9D8C6; max-width:260px;">A calmer way to keep every plant in your life watered, healthy, and growing.</p>
     </div>
     <div>
-      <div class="t-small" style="color:#9FC19F; text-transform:uppercase; margin-bottom:16px;">Product</div>
-      <a style="display:block; padding:6px 0; color:#CFE0CC;" href="{% url 'home' %}">Home</a>
-      <a style="display:block; padding:6px 0; color:#CFE0CC;" href="{% url 'home' %}#library">Plant Library</a>
-      <a style="display:block; padding:6px 0; color:#CFE0CC;" href="{% url 'home' %}#guides">Care Guides</a>
+      <div class="site-footer-head">Explore</div>
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'explore' %}">Plant Library</a>
+      <a href="{% url 'care_guides' %}">Care Guides</a>
+      <a href="{% url 'care_guides' %}?topic=problems">Plant Problems A–Z</a>
     </div>
     <div>
-      <div class="t-small" style="color:#9FC19F; text-transform:uppercase; margin-bottom:16px;">Company</div>
-      <a style="display:block; padding:6px 0; color:#CFE0CC;" href="{% url 'home' %}#about">About</a>
-      <a style="display:block; padding:6px 0; color:#CFE0CC;" href="#contact">Contact</a>
-      <a style="display:block; padding:6px 0; color:#CFE0CC;" href="#faq">FAQ</a>
+      <div class="site-footer-head">Company</div>
+      <a href="{% url 'about' %}">About</a>
+      <a href="{% url 'about' %}#contact">Contact</a>
+      <a href="{% url 'home' %}#faq">FAQ</a>
     </div>
     <div>
-      <div class="t-small" style="color:#9FC19F; text-transform:uppercase; margin-bottom:16px;">Contact</div>
-      <p style="padding:6px 0; color:#CFE0CC;">hello@plantcare.app</p>
-      <p style="padding:6px 0; color:#CFE0CC;">+94 11 234 5678</p>
+      <div class="site-footer-head">Your Account</div>
+      {% if user.is_authenticated %}
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'my_plants' %}">My Plants</a>
+      <a href="{% url 'settings' %}">Settings</a>
+      {% else %}
+      <a href="{% url 'login' %}">Sign In</a>
+      <a href="{% url 'register' %}">Create Account</a>
+      {% endif %}
     </div>
   </div>
-  <div style="border-top:1px solid rgba(255,255,255,0.15); padding:20px 32px; display:flex; justify-content:space-between; font-size:13px; color:#9FC19F;">
-    <span>© 2026 Plant Care. All rights reserved.</span>
-    <div style="display:flex; gap:20px;">
-      <a href="#privacy" style="color:#9FC19F;">Privacy Policy</a>
-      <a href="#terms" style="color:#9FC19F;">Terms of Service</a>
-    </div>
+  <div class="site-footer-bottom">
+    <span>© {% now "Y" %} Plant Care. All rights reserved.</span>
+    <a href="mailto:hello@plantcare.app">hello@plantcare.app</a>
   </div>
 </footer>

@@ -83,7 +83,7 @@
                 </div>
                 {% if plant.has_flowers %}
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
-                  <span class="t-small text-muted">🌸 Flowers:</span>
+                  <span class="t-small text-muted">{% include "partials/icon.html" with name="flower" size=14 %} Flowers:</span>
                   {% include "partials/flower_colors.html" with plant=plant %}
                 </div>
                 {% endif %}
@@ -101,35 +101,35 @@
             {% if species %}
             <div class="plant-view-facts">
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">💧 Watering</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="water" size=14 %} Watering</div>
                 <div class="t-body">{{ species.get_watering_display }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">☀️ Light</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="sun" size=14 %} Light</div>
                 <div class="t-body">{{ species.get_light_display }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🌡️ Temperature</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="thermometer" size=14 %} Temperature</div>
                 <div class="t-body">{{ species.temperature_range|default:"—" }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">💨 Humidity</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="wind" size=14 %} Humidity</div>
                 <div class="t-body">{{ species.get_humidity_display|default:"—" }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🌱 Fertilizing</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="sprout" size=14 %} Fertilizing</div>
                 <div class="t-body">{{ species.get_fertilizing_display|default:"—" }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🪴 Soil Type</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="pot" size=14 %} Soil Type</div>
                 <div class="t-body">{{ species.soil_type|join:", "|default:"—" }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">📊 Difficulty</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="chart" size=14 %} Difficulty</div>
                 <div class="t-body">{{ species.get_difficulty_display }}</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🔁 Check Every</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="repeat" size=14 %} Check Every</div>
                 <div class="t-body">{{ plant.check_interval_days }} day{{ plant.check_interval_days|pluralize }}</div>
               </div>
             </div>
@@ -282,7 +282,7 @@
           {% if species.special_features %}
           <!-- Care Tips -->
           <div class="card" style="background:var(--pale-sage); border:none;">
-            <h3 class="t-h4" style="margin-bottom:12px;">💡 Good to Know</h3>
+            <h3 class="t-h4" style="margin-bottom:12px;">{% include "partials/icon.html" with name="bulb" size=14 %} Good to Know</h3>
             <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
               {% if "toxic" in species.special_features %}<li class="t-small">Toxic to pets — keep it out of reach of cats and dogs.</li>{% endif %}
               {% if "pet_friendly" in species.special_features %}<li class="t-small">Safe to keep around pets.</li>{% endif %}

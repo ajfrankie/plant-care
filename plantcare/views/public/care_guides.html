@@ -7,39 +7,24 @@
 {% include "partials/navbar.html" with current="guides" %}
 
 <!-- Hero Section -->
-<section style="background:linear-gradient(135deg, #214E34 0%, #4F8A52 100%); color:#fff; padding:80px 0;">
+<section class="page-hero">
   <div class="container" style="max-width:900px; text-align:center;">
-    <span class="eyebrow" style="color:rgba(255,255,255,0.9);">Expert Advice</span>
-    <h1 class="t-display" style="font-size:48px; line-height:1.1; margin:16px 0 20px;">Plant Care Guides</h1>
-    <p class="t-body-lg" style="color:rgba(255,255,255,0.9); max-width:600px; margin:0 auto;">Learn everything you need to know about keeping your plants healthy and thriving. From watering basics to advanced propagation techniques.</p>
+    <span class="eyebrow">Free Care Guides</span>
+    <h1 class="t-display">Plant Care Guides</h1>
+    <p class="t-body-lg" style="max-width:620px; margin:0 auto;">Everything you need to keep your plants healthy — from watering basics to propagation, plus organic fixes for {{ problems|length }} common problems.</p>
   </div>
 </section>
 
-<!-- Tab Navigation -->
-<section style="background:#fff; border-bottom:1px solid var(--border); position:sticky; top:76px; z-index:10;">
-  <div class="container" style="padding:16px 32px;">
-    <div id="tabNav" style="display:flex; gap:8px; overflow-x:auto; justify-content:center;">
-      <button class="tab-btn active" data-tab="watering" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">💧 Watering</button>
-      <button class="tab-btn" data-tab="light" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">☀️ Light</button>
-      <button class="tab-btn" data-tab="soil" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">🌱 Soil</button>
-      <button class="tab-btn" data-tab="fertilizing" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">🧪 Fertilizing</button>
-      <button class="tab-btn" data-tab="pruning" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">✂️ Pruning</button>
-      <button class="tab-btn" data-tab="propagation" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">🌿 Propagation</button>
-      <button class="tab-btn" data-tab="pests" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">🐛 Pests</button>
-      <button class="tab-btn" data-tab="troubleshooting" style="padding:10px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:14px; white-space:nowrap; transition:all 0.2s;">🔧 Troubleshooting</button>
-    </div>
+<!-- Topic navigation -->
+<nav class="chip-bar" aria-label="Guide topics">
+  <div class="container chip-bar-inner" id="tabNav" role="tablist" style="justify-content:safe center;">
+    {% for key, label, icon in topics %}
+    <a href="?topic={{ key }}" role="tab" class="chip tab-btn{% if key == topic %} active{% endif %}" data-tab="{{ key }}" aria-selected="{% if key == topic %}true{% else %}false{% endif %}">{% include "partials/icon.html" with name=icon size=16 %} {{ label }}</a>
+    {% endfor %}
   </div>
-</section>
+</nav>
 
 <style>
-.tab-btn.active {
-  background: var(--primary) !important;
-  color: #fff !important;
-  border-color: var(--primary) !important;
-}
-.tab-btn:hover:not(.active) {
-  background: #F8F8F2 !important;
-}
 .tab-content {
   display: none;
   animation: fadeIn 0.3s ease-in;
@@ -57,7 +42,7 @@
 <div class="container section" style="max-width:1100px;">
   
   <!-- Watering Guide -->
-  <section id="watering" class="tab-content active" data-tab-content="watering" style="margin-bottom:40px;">
+  <section id="watering" class="tab-content{% if topic == 'watering' %} active{% endif %}" data-tab-content="watering" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#E8F1FA; display:flex; align-items:center; justify-content:center;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#2563A6" stroke-width="2"/></svg>
@@ -72,7 +57,7 @@
       
       <div class="card" style="padding:24px;">
         <div class="t-h4" style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:24px;">💧</span> When to Water
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="water" size=24 %}</span> When to Water
         </div>
         <ul style="margin:0; padding-left:20px; line-height:1.8;">
           <li>Check soil moisture 1-2 inches below surface</li>
@@ -85,7 +70,7 @@
 
       <div class="card" style="padding:24px;">
         <div class="t-h4" style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:24px;">🚿</span> How to Water
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="water" size=24 %}</span> How to Water
         </div>
         <ul style="margin:0; padding-left:20px; line-height:1.8;">
           <li>Water soil directly, not leaves</li>
@@ -98,7 +83,7 @@
 
       <div class="card" style="padding:24px;">
         <div class="t-h4" style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:24px;">📊</span> Water Needs by Type
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="chart" size=24 %}</span> Water Needs by Type
         </div>
         <ul style="margin:0; padding-left:20px; line-height:1.8;">
           <li><strong>High:</strong> Ferns, Peace Lily (weekly)</li>
@@ -122,7 +107,7 @@
   </section>
 
   <!-- Light Requirements -->
-  <section id="light" class="tab-content" data-tab-content="light" style="margin-bottom:40px;">
+  <section id="light" class="tab-content{% if topic == 'light' %} active{% endif %}" data-tab-content="light" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#FBF0E0; display:flex; align-items:center; justify-content:center;">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="#A86712" stroke-width="2"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#A86712" stroke-width="2" stroke-linecap="round"/></svg>
@@ -137,7 +122,7 @@
       
       <div class="card" style="padding:24px; display:flex; gap:20px;">
         <div style="flex:none; width:48px; height:48px; border-radius:12px; background:#FBF0E0; display:flex; align-items:center; justify-content:center;">
-          <span style="font-size:24px;">☀️</span>
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="sun" size=24 %}</span>
         </div>
         <div style="flex:1;">
           <div class="t-h4" style="margin-bottom:8px;">Bright Direct Light</div>
@@ -148,7 +133,7 @@
 
       <div class="card" style="padding:24px; display:flex; gap:20px;">
         <div style="flex:none; width:48px; height:48px; border-radius:12px; background:#FBF0E0; display:flex; align-items:center; justify-content:center;">
-          <span style="font-size:24px;">🌤️</span>
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="partsun" size=24 %}</span>
         </div>
         <div style="flex:1;">
           <div class="t-h4" style="margin-bottom:8px;">Bright Indirect Light</div>
@@ -159,7 +144,7 @@
 
       <div class="card" style="padding:24px; display:flex; gap:20px;">
         <div style="flex:none; width:48px; height:48px; border-radius:12px; background:#FBF0E0; display:flex; align-items:center; justify-content:center;">
-          <span style="font-size:24px;">⛅</span>
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="cloud" size=24 %}</span>
         </div>
         <div style="flex:1;">
           <div class="t-h4" style="margin-bottom:8px;">Medium Light</div>
@@ -170,7 +155,7 @@
 
       <div class="card" style="padding:24px; display:flex; gap:20px;">
         <div style="flex:none; width:48px; height:48px; border-radius:12px; background:#FBF0E0; display:flex; align-items:center; justify-content:center;">
-          <span style="font-size:24px;">🌙</span>
+          <span style="font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="moon" size=24 %}</span>
         </div>
         <div style="flex:1;">
           <div class="t-h4" style="margin-bottom:8px;">Low Light</div>
@@ -193,10 +178,10 @@
   </section>
 
   <!-- Soil & Potting -->
-  <section id="soil" class="tab-content" data-tab-content="soil" style="margin-bottom:40px;">
+  <section id="soil" class="tab-content{% if topic == 'soil' %} active{% endif %}" data-tab-content="soil" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#E7F5EC; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:32px;">🌱</span>
+        <span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="sprout" size=32 %}</span>
       </div>
       <div>
         <h2 class="t-h1">Soil & Potting</h2>
@@ -253,10 +238,10 @@
   </section>
 
   <!-- Fertilizing -->
-  <section id="fertilizing" class="tab-content" data-tab-content="fertilizing" style="margin-bottom:40px;">
+  <section id="fertilizing" class="tab-content{% if topic == 'fertilizing' %} active{% endif %}" data-tab-content="fertilizing" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#E7F5EC; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:32px;">🧪</span>
+        <span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="flask" size=32 %}</span>
       </div>
       <div>
         <h2 class="t-h1">Fertilizing Guide</h2>
@@ -299,10 +284,10 @@
   </section>
 
   <!-- Pruning & Maintenance -->
-  <section id="pruning" class="tab-content" data-tab-content="pruning" style="margin-bottom:40px;">
+  <section id="pruning" class="tab-content{% if topic == 'pruning' %} active{% endif %}" data-tab-content="pruning" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#E8F1FA; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:32px;">✂️</span>
+        <span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="scissors" size=32 %}</span>
       </div>
       <div>
         <h2 class="t-h1">Pruning & Maintenance</h2>
@@ -314,7 +299,7 @@
       <div class="t-h3" style="margin-bottom:20px;">When & What to Prune</div>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
         <div>
-          <div class="t-label" style="margin-bottom:8px;">✓ Always Remove</div>
+          <div class="t-label" style="margin-bottom:8px;">{% include "partials/icon.html" with name="check" size=14 %} Always Remove</div>
           <ul style="margin:0; padding-left:20px; line-height:1.8;">
             <li>Dead, brown, or yellow leaves</li>
             <li>Diseased or pest-damaged parts</li>
@@ -332,7 +317,7 @@
           </ul>
         </div>
         <div>
-          <div class="t-label" style="margin-bottom:8px;">🔪 Tools Needed</div>
+          <div class="t-label" style="margin-bottom:8px;">{% include "partials/icon.html" with name="scissors" size=14 %} Tools Needed</div>
           <ul style="margin:0; padding-left:20px; line-height:1.8;">
             <li>Clean, sharp scissors or pruners</li>
             <li>Rubbing alcohol for sterilizing</li>
@@ -366,10 +351,10 @@
   </section>
 
   <!-- Propagation -->
-  <section id="propagation" class="tab-content" data-tab-content="propagation" style="margin-bottom:40px;">
+  <section id="propagation" class="tab-content{% if topic == 'propagation' %} active{% endif %}" data-tab-content="propagation" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#E7F5EC; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:32px;">🌿</span>
+        <span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="leaf" size=32 %}</span>
       </div>
       <div>
         <h2 class="t-h1">Plant Propagation</h2>
@@ -381,7 +366,7 @@
       
       <div class="card" style="padding:28px;">
         <div style="display:flex; align-items:flex-start; gap:20px;">
-          <div style="flex:none; width:56px; height:56px; border-radius:12px; background:#E8F1FA; display:flex; align-items:center; justify-content:center; font-size:28px;">💧</div>
+          <div style="flex:none; width:56px; height:56px; border-radius:12px; background:#E8F1FA; display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="water" size=28 %}</div>
           <div style="flex:1;">
             <div class="t-h3" style="margin-bottom:10px;">Water Propagation</div>
             <p class="t-body text-secondary" style="margin-bottom:16px;">The easiest method for beginners. Watch roots grow in clear water.</p>
@@ -409,7 +394,7 @@
 
       <div class="card" style="padding:28px;">
         <div style="display:flex; align-items:flex-start; gap:20px;">
-          <div style="flex:none; width:56px; height:56px; border-radius:12px; background:#E7F5EC; display:flex; align-items:center; justify-content:center; font-size:28px;">🌱</div>
+          <div style="flex:none; width:56px; height:56px; border-radius:12px; background:#E7F5EC; display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="sprout" size=28 %}</div>
           <div style="flex:1;">
             <div class="t-h3" style="margin-bottom:10px;">Soil Propagation</div>
             <p class="t-body text-secondary" style="margin-bottom:16px;">Plant cuttings directly in soil. Higher success rate for some plants.</p>
@@ -437,7 +422,7 @@
 
       <div class="card" style="padding:28px;">
         <div style="display:flex; align-items:flex-start; gap:20px;">
-          <div style="flex:none; width:56px; height:56px; border-radius:12px; background:#FBF0E0; display:flex; align-items:center; justify-content:center; font-size:28px;">👶</div>
+          <div style="flex:none; width:56px; height:56px; border-radius:12px; background:#FBF0E0; display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="sprout" size=28 %}</div>
           <div style="flex:1;">
             <div class="t-h3" style="margin-bottom:10px;">Division & Offsets</div>
             <p class="t-body text-secondary" style="margin-bottom:16px;">Split mature plants or separate baby plants (pups) from parent.</p>
@@ -477,10 +462,10 @@
   </section>
 
   <!-- Pests & Diseases -->
-  <section id="pests" class="tab-content" data-tab-content="pests" style="margin-bottom:40px;">
+  <section id="pests" class="tab-content{% if topic == 'pests' %} active{% endif %}" data-tab-content="pests" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#FBEAE8; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:32px;">🐛</span>
+        <span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="bug" size=32 %}</span>
       </div>
       <div>
         <h2 class="t-h1">Common Pests & Diseases</h2>
@@ -493,7 +478,7 @@
       <div class="card" style="padding:24px;">
         <div style="display:flex; gap:20px;">
           <div style="flex:none;">
-            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px;">🕷️</div>
+            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="bug" size=24 %}</div>
           </div>
           <div style="flex:1;">
             <div class="t-h4" style="margin-bottom:8px;">Spider Mites</div>
@@ -514,7 +499,7 @@
       <div class="card" style="padding:24px;">
         <div style="display:flex; gap:20px;">
           <div style="flex:none;">
-            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px;">🦟</div>
+            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="bug" size=24 %}</div>
           </div>
           <div style="flex:1;">
             <div class="t-h4" style="margin-bottom:8px;">Fungus Gnats</div>
@@ -535,7 +520,7 @@
       <div class="card" style="padding:24px;">
         <div style="display:flex; gap:20px;">
           <div style="flex:none;">
-            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px;">🐚</div>
+            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="bug" size=24 %}</div>
           </div>
           <div style="flex:1;">
             <div class="t-h4" style="margin-bottom:8px;">Scale Insects</div>
@@ -556,7 +541,7 @@
       <div class="card" style="padding:24px;">
         <div style="display:flex; gap:20px;">
           <div style="flex:none;">
-            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px;">🦗</div>
+            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="bug" size=24 %}</div>
           </div>
           <div style="flex:1;">
             <div class="t-h4" style="margin-bottom:8px;">Mealybugs</div>
@@ -577,7 +562,7 @@
       <div class="card" style="padding:24px;">
         <div style="display:flex; gap:20px;">
           <div style="flex:none;">
-            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px;">🍄</div>
+            <div style="width:48px; height:48px; border-radius:12px; background:#FBEAE8; display:flex; align-items:center; justify-content:center; font-size:24px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="fungus" size=24 %}</div>
           </div>
           <div style="flex:1;">
             <div class="t-h4" style="margin-bottom:8px;">Root Rot</div>
@@ -608,11 +593,53 @@
     </div>
   </section>
 
+  <!-- Problems A-Z (from the health library) -->
+  <section id="problems" class="tab-content{% if topic == 'problems' %} active{% endif %}" data-tab-content="problems" style="margin-bottom:40px;">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">
+      <div style="width:64px; height:64px; border-radius:16px; background:#FBEAE8; display:flex; align-items:center; justify-content:center;"><span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="health" size=32 %}</span></div>
+      <div>
+        <h2 class="t-h1">Plant Problems A–Z</h2>
+        <p class="t-body text-secondary">Symptoms, organic treatments and prevention for the most common pests, diseases and care issues.</p>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:20px 0;">
+      <button type="button" class="chip active" data-problem-filter="">All <span class="count">{{ problems|length }}</span></button>
+      {% for type in problem_types %}<button type="button" class="chip" data-problem-filter="{{ type }}">{{ type }}</button>{% endfor %}
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      {% for issue in problems %}
+      <details class="problem-card" data-problem-type="{{ issue.type }}" id="problem-{{ issue.key }}">
+        <summary>
+          <span class="badge {% if issue.type == 'Pest' %}badge-warning{% elif 'disease' in issue.type|lower %}badge-error{% else %}badge-info{% endif %}">{{ issue.type }}</span>
+          <span class="t-h4">{{ issue.name }}</span>
+        </summary>
+        <div class="problem-body">
+          <div class="t-label" style="margin-top:16px;">Symptoms</div>
+          <p class="t-body text-secondary" style="margin-top:4px;">{{ issue.symptoms }}</p>
+          {% if issue.treatments %}
+          <div class="t-label" style="margin-top:16px;">Organic treatment</div>
+          <ol style="margin:8px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:10px;">
+            {% for step in issue.treatments %}
+            <li class="t-body"><strong>{{ step.step }}</strong>{% if step.when %} <span class="text-muted">({{ step.when }})</span>{% endif %}<br><span class="text-secondary">{{ step.how }}</span></li>
+            {% endfor %}
+          </ol>
+          {% endif %}
+          {% if issue.prevention %}
+          <div style="margin-top:16px; padding:12px 14px; background:var(--success-bg); border-radius:8px;">
+            <span class="t-label" style="color:var(--success);">Prevention:</span> <span class="t-body">{{ issue.prevention }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+
   <!-- Troubleshooting -->
-  <section id="troubleshooting" class="tab-content" data-tab-content="troubleshooting" style="margin-bottom:40px;">
+  <section id="troubleshooting" class="tab-content{% if topic == 'troubleshooting' %} active{% endif %}" data-tab-content="troubleshooting" style="margin-bottom:40px;">
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
       <div style="width:64px; height:64px; border-radius:16px; background:#E8F1FA; display:flex; align-items:center; justify-content:center;">
-        <span style="font-size:32px;">🔧</span>
+        <span style="font-size:32px; color:var(--primary); display:flex;">{% include "partials/icon.html" with name="tool" size=32 %}</span>
       </div>
       <div>
         <h2 class="t-h1">Troubleshooting Guide</h2>
@@ -730,8 +757,12 @@
   <div class="container section" style="text-align:center; padding:80px 32px;">
     <h2 class="t-h1" style="margin-bottom:16px;">Ready to Put Your Knowledge to Use?</h2>
     <p class="t-body-lg text-secondary" style="margin-bottom:32px; max-width:600px; margin-left:auto; margin-right:auto;">Create a free account to track your plants, set care reminders, and access personalized care recommendations based on these guides.</p>
-    <div style="display:flex; gap:16px; justify-content:center;">
+    <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+      {% if user.is_authenticated %}
+      <a href="{% url 'plant_health' %}" class="btn btn-primary">Check My Plants' Health</a>
+      {% else %}
       <a href="{% url 'register' %}" class="btn btn-primary">Start Your Plant Journey</a>
+      {% endif %}
       <a href="{% url 'explore' %}" class="btn btn-secondary">Browse Plant Library</a>
     </div>
   </div>
@@ -743,38 +774,52 @@
 
 {% block scripts %}
 <script>
-// Tab switching functionality
-(function() {
-  var tabButtons = document.querySelectorAll('.tab-btn');
-  var tabContents = document.querySelectorAll('.tab-content');
-  
-  tabButtons.forEach(function(button) {
-    button.addEventListener('click', function() {
-      var targetTab = this.getAttribute('data-tab');
-      
-      // Remove active class from all buttons and contents
-      tabButtons.forEach(function(btn) {
-        btn.classList.remove('active');
-      });
-      tabContents.forEach(function(content) {
-        content.classList.remove('active');
-      });
-      
-      // Add active class to clicked button
-      this.classList.add('active');
-      
-      // Show corresponding content
-      var targetContent = document.querySelector('[data-tab-content="' + targetTab + '"]');
-      if (targetContent) {
-        targetContent.classList.add('active');
-        // Smooth scroll to top of content
-        window.scrollTo({
-          top: targetContent.offsetTop - 160,
-          behavior: 'smooth'
-        });
-      }
+(function () {
+  var tabs = document.querySelectorAll('.tab-btn');
+  var contents = document.querySelectorAll('.tab-content');
+
+  function show(topic, scroll) {
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('data-tab') === topic;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', String(on));
+    });
+    contents.forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-tab-content') === topic); });
+    var url = new URL(window.location);
+    url.searchParams.set('topic', topic);
+    url.hash = '';
+    history.replaceState(null, '', url);
+    if (scroll) {
+      var nav = document.getElementById('tabNav');
+      window.scrollTo({ top: nav.parentElement.offsetTop - 76, behavior: 'smooth' });
+    }
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function (event) {
+      event.preventDefault();
+      show(tab.getAttribute('data-tab'), true);
+      tab.scrollIntoView({ block: 'nearest', inline: 'center' });
     });
   });
+
+  // Problems A-Z: filter by type.
+  var filters = document.querySelectorAll('[data-problem-filter]');
+  filters.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var type = btn.getAttribute('data-problem-filter');
+      filters.forEach(function (b) { b.classList.toggle('active', b === btn); });
+      document.querySelectorAll('[data-problem-type]').forEach(function (card) {
+        card.style.display = !type || card.getAttribute('data-problem-type') === type ? '' : 'none';
+      });
+    });
+  });
+
+  // Open a linked problem, e.g. ?topic=problems#problem-aphids
+  if (location.hash.indexOf('#problem-') === 0) {
+    var target = document.querySelector(location.hash);
+    if (target) { target.open = true; target.scrollIntoView(); }
+  }
 })();
 </script>
 {% endblock %}

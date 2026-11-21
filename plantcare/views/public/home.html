@@ -1,4 +1,5 @@
 {% extends "layouts/base.html" %}
+{% load static %}
 
 {% block title %}Plant Care — Grow Better. Live Greener.{% endblock %}
 
@@ -7,24 +8,24 @@
 {% include "partials/navbar.html" with current="home" %}
 
 <!-- Hero -->
-<section class="container" style="display:flex; align-items:center; gap:64px; padding:88px 32px;">
+<section class="container hero-row" style="display:flex; align-items:center; gap:64px; padding:88px 32px;">
   <div style="flex:1 1 480px; display:flex; flex-direction:column; align-items:flex-start; gap:22px;">
     <span class="eyebrow">Plant Care Platform</span>
     <h1 class="t-display" style="font-size:52px; line-height:1.08;">Grow Better.<br>Live Greener.</h1>
     <p class="t-body-lg text-secondary" style="max-width:460px;">Keep every houseplant and garden bed on track — personalized watering schedules, organic care guidance, and health history for your whole collection, in one calm dashboard.</p>
-    <div style="display:flex; gap:14px; margin-top:8px;">
-      <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
-      <a href="#library" class="btn btn-secondary">Explore Plant Library</a>
+    <div style="display:flex; gap:14px; margin-top:8px; flex-wrap:wrap;">
+      {% if user.is_authenticated %}
+      <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to My Dashboard</a>
+      {% else %}
+      <a href="{% url 'register' %}" class="btn btn-primary">Get Started — It's Free</a>
+      {% endif %}
+      <a href="{% url 'explore' %}" class="btn btn-secondary">Explore Plant Library</a>
     </div>
   </div>
   <div style="flex:1 1 420px;">
-    <div class="card-shadow" style="position:relative; aspect-ratio:4/3.1; border-radius:24px; background:linear-gradient(155deg,#DCE8D8 0%,#EEF4EB 60%); overflow:hidden;">
-      <svg width="100%" height="100%" viewBox="0 0 420 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-        <path d="M0 320 C40 180 110 140 180 150 C250 160 270 100 340 90 C390 83 410 120 420 160 L420 320 Z" fill="#4F8A52" opacity="0.55"/>
-        <path d="M-20 320 C60 220 150 210 210 240 C280 275 330 230 420 250 L420 320 Z" fill="#214E34" opacity="0.5"/>
-        <ellipse cx="300" cy="90" rx="46" ry="30" fill="#DCE8D8"/>
-      </svg>
-      <div style="position:absolute; left:24px; bottom:24px; background:#fff; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 20px rgba(38,51,42,0.14);">
+    <div class="card-shadow" style="position:relative; aspect-ratio:4/3.1; border-radius:24px; background:#DCE8D8; overflow:hidden;">
+      <img class="hero-photo" src="{% static 'img/hero-plants.jpg' %}" alt="Hands holding fresh potting soil above a pot, surrounded by houseplants and an orange watering can" width="1080" height="1080" fetchpriority="high">
+      <div class="hero-float" style="position:absolute; left:24px; bottom:24px; background:#fff; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 20px rgba(38,51,42,0.14);">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#287A4B" stroke-width="1.8"/></svg>
         <div>
           <div class="t-label">Monstera Deliciosa</div>
@@ -69,34 +70,36 @@
 
 <!-- Popular plants -->
 <section class="container section" id="library">
-  <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:28px;">
-    <h2 class="t-h1">Popular plants in the library</h2>
-    <a href="#library" class="nav-link" style="font-weight:600; color:var(--primary);">Browse all &rarr;</a>
+  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:28px;">
+    <div>
+      <span class="eyebrow">Plant Library</span>
+      <h2 class="t-h1" style="margin-top:8px;">Popular plants in the library</h2>
+    </div>
+    <a href="{% url 'explore' %}" class="btn btn-secondary btn-sm">Browse all {{ stats.species }} species &rarr;</a>
   </div>
-  <div style="display:flex; gap:20px; overflow-x:auto; padding-bottom:8px;">
-    <div class="plant-card" style="width:220px; flex:none;">
-      <div class="plant-photo" style="background:#4F8A52;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-      <div style="padding:14px 16px;"><div class="t-label">Monstera Deliciosa</div><div class="t-small text-secondary" style="font-style:italic;">Monstera deliciosa</div></div>
-    </div>
-    <div class="plant-card" style="width:220px; flex:none;">
-      <div class="plant-photo" style="background:#214E34;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-      <div style="padding:14px 16px;"><div class="t-label">Snake Plant</div><div class="t-small text-secondary" style="font-style:italic;">Dracaena trifasciata</div></div>
-    </div>
-    <div class="plant-card" style="width:220px; flex:none;">
-      <div class="plant-photo" style="background:#5C9A5F;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-      <div style="padding:14px 16px;"><div class="t-label">Peace Lily</div><div class="t-small text-secondary" style="font-style:italic;">Spathiphyllum wallisii</div></div>
-    </div>
-    <div class="plant-card" style="width:220px; flex:none;">
-      <div class="plant-photo" style="background:#3C7A48;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-      <div style="padding:14px 16px;"><div class="t-label">Aloe Vera</div><div class="t-small text-secondary" style="font-style:italic;">Aloe barbadensis</div></div>
-    </div>
-    <div class="plant-card" style="width:220px; flex:none;">
-      <div class="plant-photo" style="background:#6AA66B;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-      <div style="padding:14px 16px;"><div class="t-label">Spider Plant</div><div class="t-small text-secondary" style="font-style:italic;">Chlorophytum comosum</div></div>
-    </div>
-    <div class="plant-card" style="width:220px; flex:none;">
-      <div class="plant-photo" style="background:#2F6B3C;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="#fff" stroke-width="1.6"/></svg></div>
-      <div style="padding:14px 16px;"><div class="t-label">Pothos</div><div class="t-small text-secondary" style="font-style:italic;">Epipremnum aureum</div></div>
+  {% if popular %}
+  <div class="species-grid">
+    {% for species in popular %}
+    {% cycle '#4F8A52' '#5C9A5F' '#3C7A48' '#6BA86E' as bg silent %}
+    {% include "public/_species_card.html" with species=species bg=bg %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="t-h4">The library is growing</div>
+    <p class="t-body text-secondary" style="margin-top:6px;">Plant species will appear here as soon as they're added.</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Live numbers -->
+<section style="background:#fff; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+  <div class="container" style="padding-top:40px; padding-bottom:40px;">
+    <div class="stat-band">
+      <div><div class="num">{{ stats.species }}</div><div class="t-body text-secondary">Species in the library</div></div>
+      <div><div class="num">{{ stats.plants }}</div><div class="t-body text-secondary">Plants being cared for</div></div>
+      <div><div class="num">{{ stats.care_logs }}</div><div class="t-body text-secondary">Care activities logged</div></div>
+      <div><div class="num">{{ stats.problems }}</div><div class="t-body text-secondary">Plant problems covered</div></div>
     </div>
   </div>
 </section>
@@ -112,7 +115,7 @@
       <div style="display:flex; flex-direction:column; align-items:flex-start; gap:12px;">
         <div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">1</div>
         <h3 class="t-h4">Add your plants</h3>
-        <p class="t-body text-secondary">Snap a photo and tell us where each plant lives, indoors or out.</p>
+        <p class="t-body text-secondary">Add a name, a photo and the species for each plant you own.</p>
       </div>
       <div style="display:flex; flex-direction:column; align-items:flex-start; gap:12px;">
         <div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">2</div>
@@ -154,11 +157,25 @@
   </div>
 </section>
 
+<!-- Care guides teaser -->
+<section style="background:var(--pale-sage);">
+  <div class="container section" style="text-align:center;">
+    <span class="eyebrow">Free care guides</span>
+    <h2 class="t-h1" style="margin-top:10px;">Learn the basics, fix the problems</h2>
+    <p class="t-body-lg text-secondary" style="max-width:560px; margin:12px auto 28px;">Practical, organic-first guides for every part of plant care — no account needed.</p>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; max-width:820px; margin:0 auto;">
+      {% for key, label, icon in guide_topics %}
+      <a href="{% url 'care_guides' %}?topic={{ key }}" class="chip">{% include "partials/icon.html" with name=icon size=16 %} {{ label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 <!-- FAQ -->
-<section style="background:#fff; border-top:1px solid var(--border);">
+<section id="faq" style="background:#fff; border-top:1px solid var(--border);">
   <div class="container section" style="max-width:720px; margin:0 auto;">
     <h2 class="t-h1" style="text-align:center; margin-bottom:8px;">Frequently asked questions</h2>
-    <p class="text-secondary" style="text-align:center; margin-bottom:24px;">Can't find your answer? <a href="#about" style="color:var(--primary); font-weight:600;">Contact us</a>.</p>
+    <p class="text-secondary" style="text-align:center; margin-bottom:24px;">Can't find your answer? <a href="{% url 'about' %}#contact" style="color:var(--primary); font-weight:600;">Contact us</a>.</p>
 
     <div data-faq-item data-open="false" style="border-bottom:1px solid var(--border);">
       <button data-faq-trigger aria-expanded="false" style="width:100%; text-align:left; background:none; border:none; font-family:inherit; font-size:16px; font-weight:600; color:var(--text); padding:20px 0;">
@@ -173,7 +190,7 @@
         Does it work for outdoor gardens as well as houseplants? <span style="float:right; color:var(--text-muted);">+</span>
       </button>
       <div class="faq-answer" style="display:none; padding-bottom:20px; margin-top:-8px;">
-        <p class="t-body text-secondary" style="line-height:1.7;">Both. Every plant profile lets you mark it indoor or outdoor and sets watering guidance accordingly.</p>
+        <p class="t-body text-secondary" style="line-height:1.7;">Both. The library covers indoor, outdoor, tropical and desert plants, and each plant gets its own care schedule based on its species.</p>
       </div>
     </div>
     <div data-faq-item data-open="false" style="border-bottom:1px solid var(--border);">
@@ -181,7 +198,7 @@
         How are watering schedules calculated? <span style="float:right; color:var(--text-muted);">+</span>
       </button>
       <div class="faq-answer" style="display:none; padding-bottom:20px; margin-top:-8px;">
-        <p class="t-body text-secondary" style="line-height:1.7;">Each species in the library has a baseline watering frequency, which you can fine-tune per plant based on light, pot size and season.</p>
+        <p class="t-body text-secondary" style="line-height:1.7;">Each species in the library has a baseline watering frequency. We adjust it for the plant's light and humidity needs, and you can change any reminder yourself.</p>
       </div>
     </div>
     <div data-faq-item data-open="false" style="border-bottom:1px solid var(--border);">
@@ -194,6 +211,20 @@
     </div>
   </div>
 </section>
+
+<!-- Call to action -->
+{% if not user.is_authenticated %}
+<section style="background:var(--primary); color:#fff;">
+  <div class="container section" style="text-align:center;">
+    <h2 class="t-h1">Ready to grow better?</h2>
+    <p class="t-body-lg" style="color:#C9D8C6; max-width:520px; margin:12px auto 28px;">Create a free account, add your first plant, and get a care plan in under a minute.</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="{% url 'register' %}" class="btn" style="background:#fff; color:var(--primary);">Create Free Account</a>
+      <a href="{% url 'login' %}" class="btn" style="border-color:rgba(255,255,255,0.5); color:#fff;">Sign In</a>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- Footer (shared) -->
 {% include "partials/footer.html" %}

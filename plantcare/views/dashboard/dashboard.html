@@ -144,7 +144,7 @@
             </div>
             {% empty %}
             <div class="dash-empty">
-              <div class="dash-empty-icon">🌱</div>
+              <div class="dash-empty-icon">{% include "partials/icon.html" with name="sprout" size=26 %}</div>
               <div class="t-label">All caught up</div>
               <div class="t-small text-muted">Nothing is due today.</div>
             </div>
@@ -192,7 +192,7 @@
             </div>
             {% empty %}
             <div class="dash-empty">
-              <div class="dash-empty-icon">💧</div>
+              <div class="dash-empty-icon">{% include "partials/icon.html" with name="water" size=26 %}</div>
               <div class="t-label">No watering this week</div>
               <a href="{% url 'watering_schedule' %}" class="t-small" style="color:var(--primary); font-weight:600;">Set up reminders</a>
             </div>
@@ -224,7 +224,7 @@
             </a>
             {% empty %}
             <div class="dash-empty">
-              <div class="dash-empty-icon">💚</div>
+              <div class="dash-empty-icon">{% include "partials/icon.html" with name="heart" size=26 %}</div>
               <div class="t-label">No open health issues</div>
               <a href="{% url 'health_check_new' %}" class="t-small" style="color:var(--primary); font-weight:600;">Run a health check</a>
             </div>
@@ -256,7 +256,7 @@
             </div>
             {% empty %}
             <div class="dash-empty">
-              <div class="dash-empty-icon">📝</div>
+              <div class="dash-empty-icon">{% include "partials/icon.html" with name="note" size=26 %}</div>
               <div class="t-label">No care logged yet</div>
               <div class="t-small text-muted">Completed tasks show up here.</div>
             </div>

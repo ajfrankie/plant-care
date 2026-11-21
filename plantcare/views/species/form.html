@@ -5,6 +5,10 @@
 {% block head_extra %}
 <style>
   .species-form-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .species-photo-drop { border:2px dashed var(--border); border-radius:12px; padding:28px 24px; text-align:center; background:var(--bg-secondary); }
+  .species-photo-drop.error { border-color:var(--error); }
+  .species-photo-drop img { display:block; max-width:100%; max-height:280px; border-radius:8px; margin:0 auto 12px; object-fit:cover; }
+  .species-photo-drop img[hidden], .species-photo-drop [hidden] { display:none; }
   @media (max-width: 640px) {
     .species-form-pair { grid-template-columns:1fr; }
   }
@@ -37,7 +41,7 @@
         <div role="alert" style="background:var(--error-bg); border:1px solid var(--error); border-radius:var(--radius-card); color:var(--error); font-size:14px; padding:12px 16px; margin-bottom:20px;">{{ error }}</div>
         {% endfor %}
 
-        <form method="post" id="speciesForm" novalidate>
+        <form method="post" id="speciesForm" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
 
           <!-- Basic Information -->
@@ -55,6 +59,29 @@
               </div>
               {% include "species/_field.html" with field=form.description placeholder="Add a description of this plant species..." %}
             </div>
+          </div>
+
+          <!-- Species Photo -->
+          <div style="margin-bottom:32px;">
+            <h3 class="t-h3" style="margin-bottom:20px;">Species Photo</h3>
+            <div class="species-photo-drop{% if form.image.errors %} error{% endif %}">
+              <img id="speciesPhotoPreview" alt="Species photo preview"{% if species.image %} src="{{ species.image.url }}" data-current="{{ species.image.url }}"{% else %} hidden{% endif %}>
+              <div id="speciesPhotoPlaceholder"{% if species.image %} hidden{% endif %}>
+                <div class="text-muted" style="display:flex; justify-content:center; margin-bottom:10px;">{% include "partials/icon.html" with name="camera" size=40 %}</div>
+                <div class="t-body" style="margin-bottom:4px;">Upload a photo of this species</div>
+                <div class="t-small text-muted" style="margin-bottom:12px;">PNG, JPG or WEBP up to 5 MB (optional). Shown in the Plant Library.</div>
+              </div>
+              <div id="speciesPhotoName" class="t-small text-muted" style="margin-bottom:12px;"></div>
+              <input type="file" id="speciesPhoto" name="image" accept="image/*" hidden>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('speciesPhoto').click();">{% if species.image %}Change Photo{% else %}Choose File{% endif %}</button>
+              {% if species.image %}
+              <label class="checkbox-row" style="justify-content:center; margin-top:12px;">
+                <input type="checkbox" id="speciesPhotoClear" name="image-clear"> Remove current photo
+              </label>
+              {% endif %}
+            </div>
+            {% for error in form.image.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            {% if form.errors and not form.image.errors %}<span class="hint">If you chose a photo, please select it again before saving.</span>{% endif %}
           </div>
 
           <!-- Care Requirements -->
@@ -123,4 +150,50 @@
 
 {% block scripts %}
 {% include "partials/list_field_assets.html" %}
+<script>
+(function () {
+  var input = document.getElementById('speciesPhoto');
+  var preview = document.getElementById('speciesPhotoPreview');
+  var placeholder = document.getElementById('speciesPhotoPlaceholder');
+  var name = document.getElementById('speciesPhotoName');
+  var clear = document.getElementById('speciesPhotoClear');
+  var current = preview.getAttribute('data-current');
+
+  function show(src) {
+    if (src) {
+      preview.src = src;
+      preview.hidden = false;
+      placeholder.hidden = true;
+    } else {
+      preview.removeAttribute('src');
+      preview.hidden = true;
+      placeholder.hidden = false;
+    }
+  }
+
+  input.addEventListener('change', function () {
+    var file = this.files[0];
+    if (file) {
+      if (clear) clear.checked = false;  // a new photo replaces the old one
+      show(URL.createObjectURL(file));
+      name.textContent = file.name;
+    } else {
+      show(clear && clear.checked ? null : current);
+      name.textContent = '';
+    }
+  });
+
+  if (clear) {
+    clear.addEventListener('change', function () {
+      if (this.checked) {
+        input.value = '';
+        name.textContent = '';
+        show(null);
+      } else {
+        show(current);
+      }
+    });
+  }
+})();
+</script>
 {% endblock %}

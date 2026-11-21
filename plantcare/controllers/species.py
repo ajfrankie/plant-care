@@ -76,7 +76,7 @@ def index(request):
 
 
 def add(request):
-    form = SpeciesForm(request.POST or None)
+    form = SpeciesForm(request.POST or None, request.FILES or None)
 
     if request.method == "POST" and form.is_valid():
         species = form.save()
@@ -92,6 +92,7 @@ def edit(request, pk):
     # when validation fails.
     form = SpeciesForm(
         request.POST or None,
+        request.FILES or None,
         instance=PlantSpecies.objects.get(pk=species.pk),
     )
 

@@ -23,7 +23,7 @@ def _greeting(user):
     else:
         part = "evening"
     name = f", {user.first_name}" if user.first_name else ""
-    return f"Good {part}{name} 🌿"
+    return f"Good {part}{name}"
 
 
 # ---------- User dashboard ----------

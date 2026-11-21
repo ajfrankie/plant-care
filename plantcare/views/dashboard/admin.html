@@ -62,7 +62,7 @@
               </form>
             </div>
             {% empty %}
-            <div class="t-body text-muted" style="padding:20px 0; text-align:center;">No accounts waiting. ✓</div>
+            <div class="t-body text-muted" style="padding:20px 0; text-align:center;">No accounts waiting.</div>
             {% endfor %}
             {% if stats.users.pending > pending|length %}
             <a href="{% url 'admin:plantcare_user_changelist' %}?is_active__exact=0" class="t-small" style="padding-top:12px; color:var(--primary); font-weight:600;">See all {{ stats.users.pending }} pending &rarr;</a>
@@ -80,7 +80,8 @@
           <div class="dash-row"><span class="t-body" style="flex:1;">Plants added this week</span><span class="t-label">{{ stats.plants.new }}</span></div>
           <div class="dash-row"><span class="t-body" style="flex:1;">Care entries logged this week</span><span class="t-label">{{ stats.logs_week }}</span></div>
           <div class="dash-row"><span class="t-body" style="flex:1;">Overdue care tasks</span><span class="t-label"{% if stats.overdue_tasks %} style="color:var(--error);"{% endif %}>{{ stats.overdue_tasks }}</span></div>
-          <div class="dash-row" style="border-bottom:none;"><span class="t-body" style="flex:1;">Admins</span><span class="t-label">{{ stats.users.admins }}</span></div>
+          <div class="dash-row"><span class="t-body" style="flex:1;">Admins</span><span class="t-label">{{ stats.users.admins }}</span></div>
+          <a href="{% url 'inquiries' %}" class="dash-row" style="border-bottom:none; color:inherit;"><span class="t-body" style="flex:1;">Open inquiries</span><span class="t-label"{% if open_inquiries %} style="color:var(--warning);"{% endif %}>{{ open_inquiries|default:0 }} &rarr;</span></a>
         </div>
       </div>
 
