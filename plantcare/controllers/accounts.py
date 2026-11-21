@@ -34,12 +34,17 @@ def _safe_next(request):
     return ""
 
 
+def _home(user):
+    """Where a user lands after signing in: admins get the admin dashboard."""
+    return "admin_dashboard" if user.is_staff else django_settings.LOGIN_REDIRECT_URL
+
+
 @login_not_required
 def login(request):
     next_url = _safe_next(request)
 
     if request.user.is_authenticated:
-        return redirect(next_url or django_settings.LOGIN_REDIRECT_URL)
+        return redirect(next_url or _home(request.user))
 
     form = LoginForm(request.POST if request.method == "POST" else None)
 
@@ -47,7 +52,7 @@ def login(request):
         auth_login(request, form.user)
         if not form.cleaned_data["remember"]:
             request.session.set_expiry(0)  # ends when the browser closes
-        return redirect(next_url or django_settings.LOGIN_REDIRECT_URL)
+        return redirect(next_url or _home(form.user))
 
     return render(request, "accounts/login.html", {"form": form, "next": next_url})
 
