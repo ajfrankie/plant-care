@@ -156,7 +156,7 @@
                 <div style="margin-bottom:12px;">{% include "care/_reminder_meta.html" %}</div>
                 <form method="post" action="{% url 'water_reminder_water' r.pk %}">
                   {% csrf_token %}<input type="hidden" name="next" value="{{ next_url }}">
-                  <button type="submit" class="btn btn-primary btn-sm btn-block">✓ Mark as Watered</button>
+                  <button type="submit" class="btn btn-primary btn-sm btn-block">{% include "partials/icon.html" with name="check" size=14 %} Mark as Watered</button>
                 </form>
               </div>
             </div>
@@ -164,7 +164,7 @@
           {% endfor %}
         </div>
         {% else %}
-        <p class="t-body text-secondary">All caught up — nothing needs water today. 🌿</p>
+        <p class="t-body text-secondary">All caught up — nothing needs water today.</p>
         {% endif %}
       </section>
       {% endif %}

@@ -332,7 +332,7 @@ def case_resolve(request, pk):
     case = get_object_or_404(_user_cases(request), pk=pk)
     if case.is_open:
         case.resolve()
-        messages.success(request, f"{case.title} on {case.plant.name} marked as resolved. 🌿")
+        messages.success(request, f"{case.title} on {case.plant.name} marked as resolved.")
     else:
         case.reopen()
         messages.success(request, f"{case.title} on {case.plant.name} reopened.")

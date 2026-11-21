@@ -1,0 +1,86 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ species.common_name }} — Plant Care Library{% endblock %}
+
+{% block content %}
+<!-- Header (shared) -->
+{% include "partials/navbar.html" with current="library" %}
+
+<section class="page-hero" style="padding:48px 0 44px;">
+  <div class="container">
+    <a href="{% url 'explore' %}" class="t-small" style="color:rgba(255,255,255,0.85); font-weight:600;">&larr; Plant Library</a>
+    <div style="display:flex; align-items:center; gap:24px; margin-top:18px; flex-wrap:wrap;">
+      {% if species.image %}
+      <img src="{{ species.image.url }}" alt="{{ species.common_name }}" style="width:132px; height:132px; border-radius:20px; object-fit:cover; flex:none; border:3px solid rgba(255,255,255,0.35); box-shadow:0 10px 24px rgba(0,0,0,0.18);">
+      {% else %}
+      <div style="width:96px; height:96px; border-radius:20px; background:rgba(255,255,255,0.16); display:flex; align-items:center; justify-content:center; font-size:44px; font-weight:700; flex:none;" aria-hidden="true">{{ species.common_name|first|upper }}</div>
+      {% endif %}
+      <div style="min-width:0;">
+        <h1 class="t-display" style="margin:0 0 6px;">{{ species.common_name }}</h1>
+        <p class="t-body-lg" style="font-style:italic;">{{ species.scientific_name }}{% if species.family %} &middot; {{ species.family }}{% endif %}</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+          <span class="badge" style="background:rgba(255,255,255,0.18); color:#fff;">{{ species.get_category_display }}</span>
+          <span class="badge" style="background:rgba(255,255,255,0.18); color:#fff;">{{ species.get_difficulty_display }} care</span>
+          {% for label in species.special_feature_labels %}<span class="badge" style="background:rgba(255,255,255,0.18); color:#fff;">{{ label }}</span>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container section" style="max-width:1000px;">
+  {% if species.description %}
+  <div class="card" style="padding:28px; margin-bottom:32px;">
+    <h2 class="t-h3" style="margin-bottom:10px;">About this plant</h2>
+    <p class="t-body-lg text-secondary" style="line-height:1.75;">{{ species.description|linebreaksbr }}</p>
+  </div>
+  {% endif %}
+
+  <h2 class="t-h3" style="margin-bottom:14px;">Care at a glance</h2>
+  <div class="care-facts">
+    <div class="care-fact"><div class="label">{% include "partials/icon.html" with name="sun" size=14 %} Light</div><div class="value">{{ species.get_light_display }}</div></div>
+    <div class="care-fact"><div class="label">{% include "partials/icon.html" with name="water" size=14 %} Watering</div><div class="value">{{ species.get_watering_display }}</div></div>
+    {% if species.fertilizing %}<div class="care-fact"><div class="label">{% include "partials/icon.html" with name="flask" size=14 %} Fertilizing</div><div class="value">{{ species.get_fertilizing_display }}</div></div>{% endif %}
+    {% if species.humidity %}<div class="care-fact"><div class="label">{% include "partials/icon.html" with name="wind" size=14 %} Humidity</div><div class="value">{{ species.get_humidity_display }}</div></div>{% endif %}
+    {% if species.temperature_range %}<div class="care-fact"><div class="label">{% include "partials/icon.html" with name="thermometer" size=14 %} Temperature</div><div class="value">{{ species.temperature_range }}</div></div>{% endif %}
+    {% if species.soil_type %}<div class="care-fact"><div class="label">{% include "partials/icon.html" with name="sprout" size=14 %} Soil</div><div class="value">{{ species.soil_type|join:", " }}</div></div>{% endif %}
+  </div>
+
+  {% if species.growth_rate or species.mature_height or species.mature_width or species.foliage_color or species.flower_color or species.origin %}
+  <h2 class="t-h3" style="margin:32px 0 14px;">Growth &amp; appearance</h2>
+  <div class="care-facts">
+    {% if species.origin %}<div class="care-fact"><div class="label">Origin</div><div class="value">{{ species.origin }}</div></div>{% endif %}
+    {% if species.growth_rate %}<div class="care-fact"><div class="label">Growth rate</div><div class="value">{{ species.get_growth_rate_display }}</div></div>{% endif %}
+    {% if species.mature_height %}<div class="care-fact"><div class="label">Mature height</div><div class="value">{{ species.mature_height }}</div></div>{% endif %}
+    {% if species.mature_width %}<div class="care-fact"><div class="label">Mature width</div><div class="value">{{ species.mature_width }}</div></div>{% endif %}
+    {% if species.foliage_color %}<div class="care-fact"><div class="label">Foliage</div><div class="value">{{ species.foliage_color }}</div></div>{% endif %}
+    {% if species.flower_color %}<div class="care-fact"><div class="label">Flowers</div><div class="value">{{ species.flower_color|join:", " }}</div></div>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card" style="margin-top:32px; padding:24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; background:var(--pale-sage); border-color:#CFDCCB;">
+    <div>
+      <div class="t-h4">Growing a {{ species.common_name }}?</div>
+      <div class="t-body text-secondary">{% if species.plant_count %}{{ species.plant_count }} plant{{ species.plant_count|pluralize }} of this species {{ species.plant_count|pluralize:"is,are" }} tracked on Plant Care. {% endif %}Get a care schedule built from these needs.</div>
+    </div>
+    {% if user.is_authenticated %}
+    <a href="{% url 'plant_add' %}" class="btn btn-primary">+ Add to My Plants</a>
+    {% else %}
+    <a href="{% url 'register' %}" class="btn btn-primary">Create Free Account</a>
+    {% endif %}
+  </div>
+
+  {% if related %}
+  <h2 class="t-h3" style="margin:48px 0 16px;">More {{ species.get_category_display|lower }}</h2>
+  <div class="species-grid">
+    {% for item in related %}
+    {% cycle '#4F8A52' '#5C9A5F' '#3C7A48' '#6BA86E' as bg silent %}
+    {% include "public/_species_card.html" with species=item bg=bg %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<!-- Footer (shared) -->
+{% include "partials/footer.html" %}
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Inquiries{% endblock %}
+
+{% block head_extra %}
+<style>
+  .inq-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .inq-list { display:flex; flex-direction:column; gap:12px; }
+  .inq { background:#fff; border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow-sm); overflow:hidden; }
+  .inq.unhandled { border-left:4px solid #E9B949; }
+  .inq summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:14px; padding:16px 20px; }
+  .inq summary::-webkit-details-marker { display:none; }
+  .inq summary:hover { background:#FBFBF7; }
+  .inq-main { flex:1; min-width:0; }
+  .inq-top { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .inq-subject { font-weight:600; font-size:14px; }
+  .inq-preview { font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px; }
+  .inq-date { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+  .inq-chevron { color:var(--text-muted); transition:transform .2s; flex:none; }
+  .inq[open] .inq-chevron { transform:rotate(180deg); }
+  .inq-body { padding:0 20px 20px; border-top:1px solid var(--border); }
+  .inq-message { white-space:pre-wrap; font-size:14px; line-height:1.7; color:var(--text); background:#FBFBF7; border-radius:10px; padding:14px 16px; margin-top:16px; }
+  .inq-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .inq-actions form { margin:0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="inquiries" %}
+
+  <div class="main-area">
+    {% include "partials/app_header.html" with title="Inquiries" subtitle="Messages sent from the contact form on the About page" %}
+
+    <div style="padding:28px 32px;">
+
+      {% for message in messages %}
+      <div role="status" class="settings-alert {% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</div>
+      {% endfor %}
+
+      <div class="inq-toolbar">
+        <nav style="display:flex; gap:8px; flex-wrap:wrap;" aria-label="Filter inquiries">
+          {% for key, label, count in tabs %}
+          <a href="?show={{ key }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}" class="chip{% if key == show %} active{% endif %}"{% if key == show %} aria-current="page"{% endif %}>{{ label }} <span class="count">{{ count }}</span></a>
+          {% endfor %}
+        </nav>
+        <form method="get" class="search-box" style="width:260px; height:38px;" role="search">
+          <input type="hidden" name="show" value="{{ show }}">
+          {% include "partials/icon.html" with name="search" size=14 %}
+          <input type="search" name="q" value="{{ q }}" placeholder="Search name, email or text..." aria-label="Search inquiries">
+        </form>
+      </div>
+
+      {% if page.object_list %}
+      <div class="inq-list">
+        {% for item in page.object_list %}
+        <details class="inq{% if not item.is_handled %} unhandled{% endif %}"{% if forloop.first and page.number == 1 and not item.is_handled %} open{% endif %}>
+          <summary>
+            <div class="avatar" style="width:38px; height:38px; font-size:13px;{% if item.is_handled %} background:var(--text-muted);{% endif %}">{{ item.name|first|upper }}</div>
+            <div class="inq-main">
+              <div class="inq-top">
+                <span class="inq-subject">{{ item.subject|default:"(No subject)" }}</span>
+                <span class="t-small text-muted">{{ item.name }} &middot; {{ item.email }}</span>
+              </div>
+              <div class="inq-preview">{{ item.message|truncatechars:140 }}</div>
+            </div>
+            {% if item.is_handled %}
+            <span class="badge badge-success"><span class="badge-dot"></span>Handled</span>
+            {% else %}
+            <span class="badge badge-warning"><span class="badge-dot"></span>Open</span>
+            {% endif %}
+            <span class="inq-date" title="{{ item.created_at|date:'M j, Y g:i A' }}">{{ item.created_at|timesince }} ago</span>
+            <svg class="inq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </summary>
+          <div class="inq-body">
+            <div class="inq-message">{{ item.message }}</div>
+            <div class="t-small text-muted" style="margin-top:10px;">Received {{ item.created_at|date:"l, F j, Y \a\t g:i A" }}</div>
+            <div class="inq-actions">
+              <a href="mailto:{{ item.email }}?subject={% if item.subject %}{{ 'Re: '|add:item.subject|urlencode }}{% else %}{{ 'Your Plant Care inquiry'|urlencode }}{% endif %}" class="btn btn-primary btn-sm">{% include "partials/icon.html" with name="note" size=14 %} Reply by Email</a>
+              <form method="post" action="{% url 'inquiry_toggle' item.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-secondary btn-sm">{% if item.is_handled %}Reopen{% else %}{% include "partials/icon.html" with name="check" size=14 %} Mark as Handled{% endif %}</button>
+              </form>
+              <form method="post" action="{% url 'inquiry_delete' item.pk %}" onsubmit="return confirm('Delete this message from {{ item.name|escapejs }}? This cannot be undone.');">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-destructive btn-sm">Delete</button>
+              </form>
+            </div>
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+
+      {% if page.has_other_pages %}
+      <nav class="pager" aria-label="Pages">
+        {% if page.has_previous %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page.previous_page_number }}" class="btn btn-secondary btn-sm">&larr; Newer</a>{% endif %}
+        <span class="t-small text-muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page.next_page_number }}" class="btn btn-secondary btn-sm">Older &rarr;</a>{% endif %}
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <div class="dash-empty-icon" style="margin:0 auto 10px;">{% include "partials/icon.html" with name="check" size=26 %}</div>
+        <div class="t-h4">{% if q %}No messages match &ldquo;{{ q }}&rdquo;{% elif show == 'open' %}No open inquiries{% else %}No messages yet{% endif %}</div>
+        <p class="t-body text-secondary" style="margin-top:6px;">{% if show == 'open' and not q %}You're all caught up. New messages from the contact form will appear here.{% else %}Messages from the About page's contact form appear here.{% endif %}</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

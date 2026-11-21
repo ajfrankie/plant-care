@@ -207,12 +207,17 @@ class LoginTests(TestCase):
 
 
 class AccessTests(TestCase):
-    public_pages = ["home", "explore", "care_guides", "about", "style_guide", "login", "register"]
+    public_pages = ["home", "explore", "explore_species", "care_guides", "about", "style_guide", "login", "register"]
 
     def test_public_pages_open_without_signing_in(self):
+        species = PlantSpecies.objects.create(
+            common_name="Fern", scientific_name="Nephrolepis exaltata",
+            category="indoor", difficulty="easy", light="medium", watering="weekly",
+        )
         for name in self.public_pages:
             with self.subTest(page=name):
-                self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+                args = [species.pk] if name == "explore_species" else None
+                self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 200)
 
     def test_app_pages_send_visitors_to_sign_in(self):
         private = [p for p in urlpatterns if p.name not in self.public_pages + ["logout"]]
@@ -234,7 +239,7 @@ class AccessTests(TestCase):
         self.client.force_login(user)
         html = self.client.get(reverse("dashboard")).content.decode()
         self.assertIn(">JD</div>", html)
-        self.assertIn(", Jane 🌿", html)
+        self.assertIn(", Jane</div>", html)
         self.assertNotIn("Alex", html)
 
 
@@ -296,7 +301,8 @@ class PageRenderingTests(TestCase):
         reminder = WaterReminder.objects.create(plant=plant, next_due_date=date(2026, 1, 1))
         case = HealthCase.objects.create(plant=plant, title="Rust", next_check_date=date(2026, 1, 1))
         args = {"plant_edit": [plant.pk], "plant_view": [plant.pk], "species_edit": [species.pk],
-                "water_reminder_edit": [reminder.pk], "health_case": [case.pk]}
+                "water_reminder_edit": [reminder.pk], "health_case": [case.pk],
+                "explore_species": [species.pk]}
         # The care task and water reminder actions are POST only too.
         post_only = (
             "logout", "login", "care_task_add", "care_task_complete", "care_task_delete",
@@ -308,7 +314,7 @@ class PageRenderingTests(TestCase):
             "notification_toggle_read", "notification_complete", "notification_dismiss",
             "care_log_add", "care_log_delete", "settings_delete_account",
             # Admin only (AdminDashboardTests).
-            "admin_dashboard", "admin_user_toggle",
+            "admin_dashboard", "admin_user_toggle", "inquiries", "inquiry_toggle", "inquiry_delete",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -667,6 +673,38 @@ class SpeciesTests(TestCase):
         species.refresh_from_db()
         self.assertEqual(species.common_name, "Snake Plant")
         self.assertEqual(species.watering, "biweekly")
+
+    def test_photo_upload_shows_everywhere_and_can_be_removed(self):
+        import io, shutil, tempfile
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.test import override_settings
+        from PIL import Image
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        with override_settings(MEDIA_ROOT=media):
+            buf = io.BytesIO()
+            Image.new("RGB", (4, 4), "green").save(buf, "PNG")
+            photo = SimpleUploadedFile("snake.png", buf.getvalue(), content_type="image/png")
+            self.client.post(reverse("species_add"), {**self.data, "image": photo})
+            species = PlantSpecies.objects.get()
+            self.assertTrue(species.image.name.startswith("species/"))
+            url = species.image.url
+            self.assertContains(self.client.get(reverse("species")), url)
+            self.assertContains(self.client.get(reverse("explore")), url)
+            self.assertContains(self.client.get(reverse("explore_species", args=[species.pk])), url)
+            edit = reverse("species_edit", args=[species.pk])
+            self.assertContains(self.client.get(edit), "Remove current photo")
+
+            self.client.post(edit, {**self.data, "image-clear": "on"})
+            species.refresh_from_db()
+            self.assertFalse(species.image)
+
+    def test_photo_must_be_an_image(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        bad = SimpleUploadedFile("x.png", b"not an image", content_type="image/png")
+        response = self.client.post(reverse("species_add"), {**self.data, "image": bad})
+        self.assertIn("image", response.context["form"].errors)
+        self.assertFalse(PlantSpecies.objects.exists())
 
     def test_edit_missing_species_is_404(self):
         self.assertEqual(self.client.get(reverse("species_edit", args=[999])).status_code, 404)
@@ -2550,3 +2588,135 @@ class AdminDashboardTests(TestCase):
             reverse("login"), {"email": "boss@example.com", "password": "mossy-Fern-42!"}
         )
         self.assertRedirects(response, self.url)
+
+
+class PublicPagesTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        def species(name, sci, **extra):
+            data = {"category": "indoor", "difficulty": "easy", "light": "medium", "watering": "weekly"}
+            data.update(extra)
+            return PlantSpecies.objects.create(common_name=name, scientific_name=sci, **data)
+        cls.fern = species("Boston Fern", "Nephrolepis exaltata", description="Feathery fronds.")
+        cls.aloe = species("Aloe Vera", "Aloe barbadensis", category="succulent", difficulty="very_easy")
+        cls.rose = species("Rose", "Rosa rubiginosa", category="outdoor", difficulty="difficult",
+                           special_features="flowering,pet_friendly")
+        cls.user = User.objects.create_user("pub@example.com", "Pub Lic", "mossy-Fern-42!", is_active=True)
+        Plant.objects.create(created_user=cls.user, name="Fernie", planting_date=date(2026, 1, 1),
+                             plant_species=cls.aloe)
+
+    def test_home_shows_library_species_and_live_numbers(self):
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.context["popular"][0], self.aloe)  # most plants first
+        self.assertEqual(response.context["stats"]["species"], 3)
+        self.assertContains(response, reverse("explore_species", args=[self.fern.pk]))
+        self.assertContains(response, "Create Account")
+
+    def test_navbar_offers_dashboard_when_signed_in(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Go to Dashboard")
+        self.assertNotContains(response, 'class="btn btn-primary btn-sm">Create Account</a>')
+
+    def test_library_search_filter_and_sort(self):
+        url = reverse("explore")
+        names = lambda r: [s.common_name for s in r.context["page"].object_list]
+        self.assertEqual(names(self.client.get(url)), ["Aloe Vera", "Boston Fern", "Rose"])
+        self.assertEqual(names(self.client.get(url, {"q": "nephro"})), ["Boston Fern"])
+        self.assertEqual(names(self.client.get(url, {"show": "succulent"})), ["Aloe Vera"])
+        self.assertEqual(names(self.client.get(url, {"show": "pet_friendly"})), ["Rose"])
+        self.assertEqual(names(self.client.get(url, {"show": "easy"})), ["Aloe Vera", "Boston Fern"])
+        self.assertEqual(names(self.client.get(url, {"sort": "easiest"})), ["Aloe Vera", "Boston Fern", "Rose"])
+        self.assertEqual(names(self.client.get(url, {"sort": "popular"}))[0], "Aloe Vera")
+        response = self.client.get(url, {"q": "zzz"})
+        self.assertContains(response, "No plants match your search")
+        filters = [key for key, _, _ in self.client.get(url).context["filters"]]
+        self.assertNotIn("tropical", filters)  # empty filters are hidden
+
+    def test_species_page(self):
+        response = self.client.get(reverse("explore_species", args=[self.rose.pk]))
+        self.assertContains(response, "Rosa rubiginosa")
+        self.assertContains(response, "Pet Friendly")
+        self.assertEqual(self.client.get(reverse("explore_species", args=[999])).status_code, 404)
+
+    def test_care_guides_topics_and_problems(self):
+        from . import health_library
+        response = self.client.get(reverse("care_guides"), {"topic": "problems"})
+        self.assertEqual(response.context["topic"], "problems")
+        self.assertContains(response, 'class="tab-content active" data-tab-content="problems"')
+        self.assertEqual(len(response.context["problems"]), len(health_library.ISSUES))
+        self.assertContains(response, "Spider Mites")
+        self.assertEqual(self.client.get(reverse("care_guides"), {"topic": "nope"}).context["topic"], "watering")
+
+    def test_contact_form_saves_message(self):
+        from .models import ContactMessage
+        url = reverse("about")
+        response = self.client.post(url, {
+            "name": "Sam", "email": "sam@example.com", "subject": "Hi", "message": "Please add orchids.",
+        })
+        self.assertRedirects(response, url + "#contact", fetch_redirect_response=False)
+        self.assertEqual(ContactMessage.objects.get().email, "sam@example.com")
+
+        response = self.client.post(url, {"name": "Sam", "email": "bad", "message": "short"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.context["form"].errors), {"email", "message"})
+
+        self.client.post(url, {"name": "Bot", "email": "b@example.com", "message": "Buy things now!!", "website": "x"})
+        self.assertEqual(ContactMessage.objects.count(), 1)  # honeypot filled: ignored
+
+
+class InquiryTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from .models import ContactMessage
+        cls.admin = User.objects.create_superuser("inbox@example.com", "Ina Admin", "mossy-Fern-42!")
+        cls.member = User.objects.create_user(
+            "inq-member@example.com", "Mo Member", "mossy-Fern-42!", is_active=True
+        )
+        cls.open = ContactMessage.objects.create(
+            name="Sam", email="sam@example.com", subject="Orchids", message="Please add orchids to the library."
+        )
+        cls.done = ContactMessage.objects.create(
+            name="Lee", email="lee@example.com", message="Thanks for the app!", is_handled=True
+        )
+        cls.url = reverse("inquiries")
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_admin_sidebar_shows_inquiries_with_open_count(self):
+        html = self.client.get(reverse("admin_dashboard")).content.decode()
+        self.assertIn('data-nav="inquiries"', html)
+        self.assertIn('<span class="side-badge" aria-label="1 open">1</span>', html)
+
+    def test_members_cannot_see_inquiries(self):
+        self.client.force_login(self.member)
+        self.assertNotIn('data-nav="inquiries"', self.client.get(reverse("dashboard")).content.decode())
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+        self.assertEqual(self.client.post(reverse("inquiry_toggle", args=[self.open.pk])).status_code, 403)
+
+    def test_list_filters_and_search(self):
+        names = lambda r: [m.name for m in r.context["page"].object_list]
+        self.assertEqual(names(self.client.get(self.url)), ["Sam"])  # open by default
+        self.assertEqual(names(self.client.get(self.url, {"show": "handled"})), ["Lee"])
+        self.assertEqual(sorted(names(self.client.get(self.url, {"show": "all"}))), ["Lee", "Sam"])
+        self.assertEqual(names(self.client.get(self.url, {"show": "all", "q": "orchid"})), ["Sam"])
+        self.assertContains(self.client.get(self.url), "mailto:sam@example.com?subject=Re%3A%20Orchids")
+
+    def test_mark_handled_and_delete(self):
+        from .models import ContactMessage
+        response = self.client.post(reverse("inquiry_toggle", args=[self.open.pk]), {"next": self.url})
+        self.assertRedirects(response, self.url)
+        self.open.refresh_from_db()
+        self.assertTrue(self.open.is_handled)
+        self.client.post(reverse("inquiry_delete", args=[self.done.pk]))
+        self.assertFalse(ContactMessage.objects.filter(pk=self.done.pk).exists())
+
+    def test_contact_form_message_reaches_inbox(self):
+        self.client.logout()
+        self.client.post(reverse("about"), {
+            "name": "Kim", "email": "kim@example.com", "message": "How often should I water ferns?",
+        })
+        self.client.force_login(self.admin)
+        response = self.client.get(self.url)
+        self.assertIn("Kim", [m.name for m in response.context["page"].object_list])

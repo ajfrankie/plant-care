@@ -39,7 +39,7 @@
         if (status) {
           status.innerHTML = '<span class="badge-dot"></span>Healthy';
         }
-        btn.textContent = '✓ Watered';
+        btn.textContent = 'Watered';
         btn.disabled = true;
       });
     });
@@ -104,7 +104,104 @@
     });
   }
 
+  // Public site header: menu button on small screens.
+  function initSiteMenu() {
+    document.querySelectorAll('[data-site-menu]').forEach(function (btn) {
+      if (btn.__wired) return;
+      btn.__wired = true;
+      var menu = document.getElementById(btn.getAttribute('aria-controls'));
+      if (!menu) return;
+      btn.addEventListener('click', function () {
+        var open = menu.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+        btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      });
+    });
+  }
+
+  // ---------- Public pages: motion ----------
+  // Elements fade and slide up as they scroll into view. Grid items are
+  // staggered. Skipped entirely when the visitor prefers reduced motion.
+  var REVEAL_SELECTOR = [
+    '[data-reveal]', '.hero-row > *', '.page-hero .container > *',
+    '.section > .eyebrow', '.section > h2', '.section > div > .eyebrow', '.section > div > h2',
+    '.species-card', '.card', '.stat-band > div', '.problem-card', '.empty-state',
+    '.grid-3 > *', '.grid-4 > *', '.two-col > *', '.care-fact', '[data-faq-item]'
+  ].join(',');
+
+  function initScrollReveal() {
+    if (!document.querySelector('.site-header') || !('IntersectionObserver' in window)) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var targets = [];
+    document.querySelectorAll(REVEAL_SELECTOR).forEach(function (el) {
+      if (el.__revealed || el.closest('.site-header, .site-footer, .chip-bar, .tab-content')) return;
+      // Animate the outer element only, not cards nested inside it.
+      for (var i = 0; i < targets.length; i++) if (targets[i].contains(el)) return;
+      targets.push(el);
+    });
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        observer.unobserve(el);
+        el.classList.add('in');
+        countUp(el);
+        // Hand hover effects back to the element once it has arrived.
+        var delay = parseInt(el.style.getPropertyValue('--reveal-delay'), 10) || 0;
+        setTimeout(function () {
+          el.classList.remove('reveal', 'in');
+          el.style.removeProperty('--reveal-delay');
+        }, 900 + delay);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+    targets.forEach(function (el) {
+      el.__revealed = true;
+      // Stagger siblings that animate together (cards in a grid).
+      var index = 0, sib = el.previousElementSibling;
+      while (sib && index < 6) {
+        if (targets.indexOf(sib) !== -1) index++;
+        sib = sib.previousElementSibling;
+      }
+      el.style.setProperty('--reveal-delay', (index * 80) + 'ms');
+      el.classList.add('reveal');
+      observer.observe(el);
+    });
+  }
+
+  // Numbers in a stat band count up from zero when they appear.
+  function countUp(scope) {
+    if (!scope.matches('.stat-band > div')) return;
+    scope.querySelectorAll('.num').forEach(function (num) {
+      var target = parseInt(num.textContent.replace(/[^0-9]/g, ''), 10);
+      if (!target) return;
+      var start = null, duration = 1200;
+      function step(ts) {
+        if (start === null) start = ts;
+        var t = Math.min((ts - start) / duration, 1);
+        num.textContent = Math.round(target * (1 - Math.pow(1 - t, 3))).toLocaleString();
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  // The public header gets a shadow once the page has scrolled.
+  function initHeaderShadow() {
+    var header = document.querySelector('.site-header');
+    if (!header || header.__wired) return;
+    header.__wired = true;
+    var update = function () { header.classList.toggle('scrolled', window.scrollY > 8); };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
   function init() {
+    initScrollReveal();
+    initHeaderShadow();
+    initSiteMenu();
     initPasswordToggles();
     initMarkWatered();
     initFaqAccordions();

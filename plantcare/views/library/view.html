@@ -10,7 +10,7 @@
 
   <div class="main-area">
     <!-- Header (shared) -->
-    {% include "partials/app_header.html" with title="Plant Species Details" subtitle="Monstera Deliciosa 🌿" %}
+    {% include "partials/app_header.html" with title="Plant Species Details" subtitle="Monstera Deliciosa" %}
 
     <div style="padding:28px 32px;">
 
@@ -61,32 +61,32 @@
             <h3 class="t-h3" style="margin-bottom:20px;">Care Requirements</h3>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">💧 Watering</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="water" size=14 %} Watering</div>
                 <div class="t-body">Weekly</div>
                 <div class="t-small text-muted" style="margin-top:4px;">Water when top 2" of soil is dry</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">☀️ Light</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="sun" size=14 %} Light</div>
                 <div class="t-body">Bright Indirect</div>
                 <div class="t-small text-muted" style="margin-top:4px;">Avoid direct sunlight</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🌡️ Temperature</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="thermometer" size=14 %} Temperature</div>
                 <div class="t-body">18-24°C</div>
                 <div class="t-small text-muted" style="margin-top:4px;">Prefers warm conditions</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">💨 Humidity</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="wind" size=14 %} Humidity</div>
                 <div class="t-body">Medium (40-60%)</div>
                 <div class="t-small text-muted" style="margin-top:4px;">Mist leaves occasionally</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🌱 Fertilizing</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="sprout" size=14 %} Fertilizing</div>
                 <div class="t-body">Monthly</div>
                 <div class="t-small text-muted" style="margin-top:4px;">During growing season</div>
               </div>
               <div>
-                <div class="t-small text-muted" style="margin-bottom:6px;">🪴 Soil</div>
+                <div class="t-small text-muted" style="margin-bottom:6px;">{% include "partials/icon.html" with name="pot" size=14 %} Soil</div>
                 <div class="t-body">Well-draining mix</div>
                 <div class="t-small text-muted" style="margin-top:4px;">Rich, peat-based potting soil</div>
               </div>
@@ -118,7 +118,7 @@
 
           <!-- Care Tips -->
           <div class="card" style="background:var(--pale-sage); border:none;">
-            <h3 class="t-h4" style="margin-bottom:12px;">💡 Pro Care Tips</h3>
+            <h3 class="t-h4" style="margin-bottom:12px;">{% include "partials/icon.html" with name="bulb" size=14 %} Pro Care Tips</h3>
             <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
               <li class="t-small">Provide a moss pole or stake for support as the plant grows</li>
               <li class="t-small">Wipe leaves with a damp cloth monthly to remove dust</li>
@@ -151,7 +151,7 @@
               </div>
               <div>
                 <div class="t-small text-muted" style="margin-bottom:4px;">Pet Safety</div>
-                <div class="t-body">⚠️ Toxic to pets</div>
+                <div class="t-body">{% include "partials/icon.html" with name="alert" size=14 %} Toxic to pets</div>
               </div>
             </div>
           </div>
@@ -161,16 +161,16 @@
             <h3 class="t-h4" style="margin-bottom:16px;">Special Features</h3>
             <div style="display:flex; flex-direction:column; gap:10px;">
               <div style="padding:8px 12px; background:var(--success-bg); border-radius:6px;">
-                <div class="t-small" style="font-weight:600; color:var(--success);">✓ Air Purifying</div>
+                <div class="t-small" style="font-weight:600; color:var(--success);">{% include "partials/icon.html" with name="check" size=14 %} Air Purifying</div>
               </div>
               <div style="padding:8px 12px; background:var(--info-bg); border-radius:6px;">
-                <div class="t-small" style="font-weight:600; color:var(--info);">✓ Large Foliage</div>
+                <div class="t-small" style="font-weight:600; color:var(--info);">{% include "partials/icon.html" with name="check" size=14 %} Large Foliage</div>
               </div>
               <div style="padding:8px 12px; background:var(--info-bg); border-radius:6px;">
-                <div class="t-small" style="font-weight:600; color:var(--info);">✓ Statement Plant</div>
+                <div class="t-small" style="font-weight:600; color:var(--info);">{% include "partials/icon.html" with name="check" size=14 %} Statement Plant</div>
               </div>
               <div style="padding:8px 12px; background:var(--error-bg); border-radius:6px;">
-                <div class="t-small" style="font-weight:600; color:var(--error);">⚠ Toxic to Pets</div>
+                <div class="t-small" style="font-weight:600; color:var(--error);">{% include "partials/icon.html" with name="alert" size=14 %} Toxic to Pets</div>
               </div>
             </div>
           </div>
@@ -186,7 +186,7 @@
               <div>
                 <div class="t-small text-muted" style="margin-bottom:4px;">Avg Rating</div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                  <span style="color:#FFB800; font-size:18px;">★★★★★</span>
+                  <span style="color:#FFB800; display:inline-flex; gap:2px;">{% include "partials/icon.html" with name="star" size=16 %}{% include "partials/icon.html" with name="star" size=16 %}{% include "partials/icon.html" with name="star" size=16 %}{% include "partials/icon.html" with name="star" size=16 %}{% include "partials/icon.html" with name="star" size=16 %}</span>
                   <span class="t-body">4.8 / 5.0</span>
                 </div>
               </div>

@@ -1,18 +1,29 @@
-<header style="position:sticky; top:0; z-index:20; background:rgba(248,248,242,0.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--border);">
-  <div class="container" style="display:flex; align-items:center; justify-content:space-between; height:76px;">
-    <a href="{% url 'home' %}" style="display:flex; align-items:center; gap:10px;">
+<header class="site-header">
+  <div class="container site-header-inner">
+    <a href="{% url 'home' %}" class="site-brand" aria-label="Plant Care home">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#4F8A52"/><path d="M4 20c4-2 9-7 11-13" stroke="#EEF4EB" stroke-width="1.4" stroke-linecap="round"/></svg>
-      <span style="font-size:19px; font-weight:700; color:var(--primary);">Plant Care</span>
+      <span>Plant Care</span>
     </a>
-    <nav style="display:flex; align-items:center; gap:36px;" aria-label="Primary">
-      <a class="nav-link{% if current == 'home' %} active{% endif %}" data-nav="home" href="{% url 'home' %}">Home</a>
-      <a class="nav-link{% if current == 'library' %} active{% endif %}" data-nav="library" href="{% url 'explore' %}">Plant Library</a>
-      <a class="nav-link{% if current == 'guides' %} active{% endif %}" data-nav="guides" href="{% url 'care_guides' %}">Plant Care Guides</a>
-      <a class="nav-link{% if current == 'about' %} active{% endif %}" data-nav="about" href="{% url 'about' %}">About</a>
-    </nav>
-    <div style="display:flex; align-items:center; gap:14px;">
-      <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Sign In</a>
-      <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Create Account</a>
+
+    <button type="button" class="site-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu" data-site-menu>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+
+    <div class="site-menu" id="site-menu">
+      <nav class="site-nav" aria-label="Primary">
+        <a class="nav-link{% if current == 'home' %} active{% endif %}" data-nav="home" href="{% url 'home' %}"{% if current == 'home' %} aria-current="page"{% endif %}>Home</a>
+        <a class="nav-link{% if current == 'library' %} active{% endif %}" data-nav="library" href="{% url 'explore' %}"{% if current == 'library' %} aria-current="page"{% endif %}>Plant Library</a>
+        <a class="nav-link{% if current == 'guides' %} active{% endif %}" data-nav="guides" href="{% url 'care_guides' %}"{% if current == 'guides' %} aria-current="page"{% endif %}>Plant Care Guides</a>
+        <a class="nav-link{% if current == 'about' %} active{% endif %}" data-nav="about" href="{% url 'about' %}"{% if current == 'about' %} aria-current="page"{% endif %}>About</a>
+      </nav>
+      <div class="site-actions">
+        {% if user.is_authenticated %}
+        <a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-primary btn-sm">Go to Dashboard &rarr;</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Sign In</a>
+        <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Create Account</a>
+        {% endif %}
+      </div>
     </div>
   </div>
 </header>

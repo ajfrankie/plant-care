@@ -57,7 +57,7 @@
       {% if due_cases %}
       <!-- Photo updates due -->
       <div style="background:var(--warning-bg); border:1px solid var(--warning); border-radius:var(--radius-card); padding:14px 18px; margin-top:24px;">
-        <div class="t-label" style="color:var(--warning); margin-bottom:8px;">📷 Time for a photo update</div>
+        <div class="t-label" style="color:var(--warning); margin-bottom:8px;">{% include "partials/icon.html" with name="camera" size=14 %} Time for a photo update</div>
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
           {% for case in due_cases %}
           <a href="{% url 'health_case' case.pk %}#update" class="btn btn-secondary btn-sm">{{ case.plant.name }} — {{ case.title }}{% if case.next_check_date < today %} (overdue){% endif %}</a>
@@ -68,7 +68,7 @@
 
       <!-- New health check -->
       <details id="new-check" class="card" style="margin-top:24px;"{% if show_form or not stats.open %} open{% endif %}>
-        <summary class="t-h4" style="cursor:pointer;">📷 New Health Check</summary>
+        <summary class="t-h4" style="cursor:pointer;">{% include "partials/icon.html" with name="camera" size=14 %} New Health Check</summary>
         {% if plants %}
         <form method="post" action="{% url 'health_check_new' %}" enctype="multipart/form-data" style="margin-top:16px;" id="check-form" novalidate>
           {% csrf_token %}
@@ -203,7 +203,7 @@
       </div>
       {% else %}
       <div class="card" style="text-align:center; padding:36px 24px; margin-top:16px;">
-        <p class="t-body text-secondary">{% if status == "resolved" %}No resolved cases yet.{% elif status == "all" %}No health checks yet.{% else %}No problems being treated — your plants are doing well! 🌿{% endif %}</p>
+        <p class="t-body text-secondary">{% if status == "resolved" %}No resolved cases yet.{% elif status == "all" %}No health checks yet.{% else %}No problems being treated — your plants are doing well!{% endif %}</p>
       </div>
       {% endif %}
 

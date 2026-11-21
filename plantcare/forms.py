@@ -9,7 +9,7 @@ from django.core.validators import MaxLengthValidator
 from django.utils import timezone
 
 from . import health_library
-from .models import CareLog, CareTask, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder
+from .models import CareLog, CareTask, ContactMessage, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder
 from .models.choices import SpecialFeature
 
 
@@ -278,7 +278,7 @@ class SpeciesForm(forms.ModelForm):
         model = PlantSpecies
         fields = [
             "common_name", "scientific_name", "family", "category", "origin",
-            "description", "difficulty", "light", "watering", "fertilizing",
+            "description", "image", "difficulty", "light", "watering", "fertilizing",
             "temperature_range", "humidity", "soil_type", "growth_rate",
             "mature_height", "mature_width", "foliage_color", "flower_color",
             "special_features",
@@ -306,6 +306,12 @@ class SpeciesForm(forms.ModelForm):
 
     def clean_special_features(self):
         return ",".join(self.cleaned_data["special_features"])
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image and image.size > PlantForm.MAX_IMAGE_SIZE:
+            raise ValidationError("Image must be 5 MB or smaller.")
+        return image
 
 
 class LoginForm(forms.Form):
@@ -473,3 +479,21 @@ class DeleteAccountForm(forms.Form):
         if not self.user.check_password(password):
             raise ValidationError("Incorrect password.")
         return password
+
+
+class ContactForm(forms.ModelForm):
+    # Hidden from people; bots that fill every field are ignored.
+    website = forms.CharField(required=False)
+
+    class Meta:
+        model = ContactMessage
+        fields = ["name", "email", "subject", "message"]
+
+    def clean_name(self):
+        return " ".join(self.cleaned_data["name"].split())
+
+    def clean_message(self):
+        message = self.cleaned_data["message"].strip()
+        if len(message) < 10:
+            raise ValidationError("Please write a little more (at least 10 characters).")
+        return message
