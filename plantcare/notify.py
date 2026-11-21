@@ -96,6 +96,15 @@ def _health_notification(case):
     )
 
 
+def _wants_task(user, kind):
+    """Whether the user's notification settings ask for reminders about this task kind."""
+    if kind == CareTask.Kind.WATER:
+        return user.notify_watering
+    if kind == CareTask.Kind.HEALTH:
+        return user.notify_health
+    return user.notify_care_tasks
+
+
 def sync(user):
     """Create any notifications the user's schedules call for. Returns how many were added."""
     today = timezone.localdate()
@@ -108,25 +117,28 @@ def sync(user):
     )
     watered_by_task = set()
     for task in tasks:
-        candidates.append(_task_notification(task, today))
+        if _wants_task(user, task.kind):
+            candidates.append(_task_notification(task, today))
         if task.kind == CareTask.Kind.WATER:
             watered_by_task.add(task.plant_id)
 
-    reminders = (
-        WaterReminder.objects.filter(plant__created_user=user, is_active=True, next_due_date__lte=soon)
-        .select_related("plant")
-    )
-    for reminder in reminders:
-        # A watering task on the care schedule already covers this plant.
-        if reminder.plant_id not in watered_by_task:
-            candidates.append(_water_notification(reminder, today))
+    if user.notify_watering:
+        reminders = (
+            WaterReminder.objects.filter(plant__created_user=user, is_active=True, next_due_date__lte=soon)
+            .select_related("plant")
+        )
+        for reminder in reminders:
+            # A watering task on the care schedule already covers this plant.
+            if reminder.plant_id not in watered_by_task:
+                candidates.append(_water_notification(reminder, today))
 
-    recent_cases = (
-        HealthCase.objects.filter(plant__created_user=user, started_at__gte=timezone.now() - timedelta(days=HEALTH_ALERT_DAYS))
-        .exclude(status=HealthCase.Status.RESOLVED)
-        .select_related("plant")
-    )
-    candidates.extend(_health_notification(case) for case in recent_cases)
+    if user.notify_health:
+        recent_cases = (
+            HealthCase.objects.filter(plant__created_user=user, started_at__gte=timezone.now() - timedelta(days=HEALTH_ALERT_DAYS))
+            .exclude(status=HealthCase.Status.RESOLVED)
+            .select_related("plant")
+        )
+        candidates.extend(_health_notification(case) for case in recent_cases)
 
     if not candidates:
         return 0

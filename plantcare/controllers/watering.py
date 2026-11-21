@@ -106,7 +106,12 @@ def _form_page(request, form, reminder=None):
 
 
 def add(request):
-    initial = {"next_due_date": timezone.localdate().isoformat(), "reminder_time": "09:00"}
+    # New reminders start from the user's care preferences (Settings page).
+    initial = {
+        "next_due_date": timezone.localdate().isoformat(),
+        "reminder_time": request.user.default_reminder_time.strftime("%H:%M"),
+        "method": request.user.default_watering_method,
+    }
     plant_id = request.GET.get("plant", "")
     if plant_id.isdigit():
         plant = Plant.objects.filter(pk=plant_id, created_user=request.user).first()
@@ -192,7 +197,11 @@ def auto_create(request):
     today = timezone.localdate()
     plants = list(_plants_without_reminder(request.user).select_related("plant_species"))
     WaterReminder.objects.bulk_create([
-        WaterReminder(plant=plant, frequency_days=_suggested_days(plant), next_due_date=today)
+        WaterReminder(
+            plant=plant, frequency_days=_suggested_days(plant), next_due_date=today,
+            reminder_time=request.user.default_reminder_time,
+            method=request.user.default_watering_method,
+        )
         for plant in plants
     ])
     if plants:

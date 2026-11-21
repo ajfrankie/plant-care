@@ -14,379 +14,237 @@
 
     <div style="padding:28px 32px;">
 
+      {% for message in messages %}
+      <div role="status" class="settings-alert {% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</div>
+      {% endfor %}
+
       <!-- Settings Tabs -->
       <div style="border-bottom:2px solid var(--border); margin-bottom:28px;">
-        <div style="display:flex; gap:4px; overflow-x:auto;">
-          <button class="settings-tab active" data-tab="account">
+        <div role="tablist" style="display:flex; gap:4px; overflow-x:auto;">
+          <button type="button" role="tab" class="settings-tab{% if tab == 'account' %} active{% endif %}" data-tab="account">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.6"/></svg>
             Account
           </button>
-          <button class="settings-tab" data-tab="notifications">
+          <button type="button" role="tab" class="settings-tab{% if tab == 'notifications' %} active{% endif %}" data-tab="notifications">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="currentColor" stroke-width="1.6"/></svg>
             Notifications
           </button>
-          <button class="settings-tab" data-tab="care">
+          <button type="button" role="tab" class="settings-tab{% if tab == 'care' %} active{% endif %}" data-tab="care">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2.5c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10Z" stroke="currentColor" stroke-width="1.6"/></svg>
             Care Preferences
           </button>
-          <button class="settings-tab" data-tab="security">
+          <button type="button" role="tab" class="settings-tab{% if tab == 'security' %} active{% endif %}" data-tab="security">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4Z" stroke="currentColor" stroke-width="1.6"/></svg>
             Security
           </button>
-          <button class="settings-tab" data-tab="privacy">
+          <button type="button" role="tab" class="settings-tab{% if tab == 'privacy' %} active{% endif %}" data-tab="privacy">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.6"/></svg>
-            Privacy
+            Privacy &amp; Data
           </button>
-          <button class="settings-tab" data-tab="integrations">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            Integrations
-          </button>
-          <button class="settings-tab" data-tab="appearance">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            Appearance
-          </button>
-          <button class="settings-tab" data-tab="about">
+          <button type="button" role="tab" class="settings-tab{% if tab == 'about' %} active{% endif %}" data-tab="about">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             About
           </button>
         </div>
       </div>
 
-      <!-- Tab Content Wrapper -->
-      <div>
-
       <!-- Account Settings Tab -->
-      <section class="tab-content active" data-content="account" style="margin-bottom:40px;">
+      <section class="tab-content{% if tab == 'account' %} active{% endif %}" data-content="account" style="margin-bottom:40px;">
         <h2 class="t-h3" style="margin-bottom:16px;">Account Settings</h2>
 
-        <div class="card">
-          <div style="display:flex; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border);">
-            <div class="avatar" style="width:72px; height:72px; font-size:24px;">{{ user.initials }}</div>
-            <div style="flex:1;">
+        {% with form=profile_form %}
+        <form method="post" enctype="multipart/form-data" class="card settings-card" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="tab" value="account">
+          {% for error in form.non_field_errors %}<div class="settings-alert error">{{ error }}</div>{% endfor %}
+
+          <div style="display:flex; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border); flex-wrap:wrap;">
+            {% include "partials/avatar.html" with style="width:72px; height:72px; font-size:24px;" %}
+            <div style="flex:1; min-width:200px;">
               <div class="t-h4">{{ user.full_name }}</div>
               <div class="t-body text-secondary">{{ user.email }}</div>
-              <div style="display:flex; gap:10px; margin-top:12px;">
-                <button class="btn btn-secondary btn-sm">Change Photo</button>
-                <button class="btn btn-secondary btn-sm">Remove Photo</button>
+              <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;">
+                <label for="id_avatar" class="btn btn-secondary btn-sm" style="cursor:pointer;">{% if user.avatar %}Change Photo{% else %}Upload Photo{% endif %}</label>
+                <input type="file" id="id_avatar" name="avatar" accept="image/*" style="position:absolute; width:1px; height:1px; opacity:0;">
+                {% if user.avatar %}
+                <label class="checkbox-row"><input type="checkbox" name="remove_avatar"{% if form.remove_avatar.value %} checked{% endif %}> Remove photo</label>
+                {% endif %}
               </div>
+              <div class="hint" id="avatar-name">JPG or PNG, up to 2 MB. Saved when you click Save Changes.</div>
+              {% for error in form.avatar.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
             </div>
           </div>
 
           <div style="padding-top:20px;">
             <div class="field" style="margin-bottom:16px;">
               <label for="full-name">Full Name</label>
-              <input type="text" id="full-name" class="input" value="{{ user.full_name }}">
+              <input type="text" id="full-name" name="full_name" class="input{% if form.full_name.errors %} error{% endif %}" value="{{ form.full_name.value|default_if_none:'' }}" maxlength="150" required>
+              {% for error in form.full_name.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
             </div>
 
             <div class="field" style="margin-bottom:16px;">
               <label for="email">Email Address</label>
-              <input type="email" id="email" class="input" value="{{ user.email }}">
-              <div class="hint">We'll send watering reminders and updates to this email.</div>
+              <input type="email" id="email" name="email" class="input{% if form.email.errors %} error{% endif %}" value="{{ form.email.value|default_if_none:'' }}" maxlength="254" required>
+              {% for error in form.email.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+              <div class="hint">You sign in with this email address.</div>
             </div>
 
             <div class="field" style="margin-bottom:16px;">
               <label for="timezone">Timezone</label>
-              <select id="timezone" class="select">
-                <option>UTC -08:00 Pacific Time (US & Canada)</option>
-                <option>UTC -07:00 Mountain Time (US & Canada)</option>
-                <option>UTC -06:00 Central Time (US & Canada)</option>
-                <option>UTC -05:00 Eastern Time (US & Canada)</option>
+              <select id="timezone" name="timezone" class="select{% if form.timezone.errors %} error{% endif %}">
+                {% for value, label in form.fields.timezone.widget.choices %}
+                <option value="{{ value }}"{% if value == form.timezone.value %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
               </select>
-              <div class="hint">Used for scheduling reminders at the right time.</div>
+              {% for error in form.timezone.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+              <div class="hint">Decides what "today" means for your reminders and how dates are shown.</div>
             </div>
 
             <div style="display:flex; gap:10px; margin-top:20px;">
-              <button class="btn btn-primary">Save Changes</button>
-              <button class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+              <a href="?tab=account" class="btn btn-secondary">Cancel</a>
             </div>
           </div>
-        </div>
+        </form>
+        {% endwith %}
       </section>
 
       <!-- Notification Settings Tab -->
-      <section class="tab-content" data-content="notifications" style="margin-bottom:40px; display:none;">
+      <section class="tab-content{% if tab == 'notifications' %} active{% endif %}" data-content="notifications" style="margin-bottom:40px;">
         <h2 class="t-h3" style="margin-bottom:16px;">Notification Preferences</h2>
 
-        <div class="card">
+        {% with form=notification_form %}
+        <form method="post" class="card settings-card">
+          {% csrf_token %}
+          <input type="hidden" name="tab" value="notifications">
           <div style="padding-bottom:16px; border-bottom:1px solid var(--border); margin-bottom:16px;">
-            <div class="t-h4" style="margin-bottom:8px;">Email Notifications</div>
-            <div class="t-body text-secondary">Receive reminders and updates via email</div>
+            <div class="t-h4" style="margin-bottom:8px;">In-app Notifications</div>
+            <div class="t-body text-secondary">Choose which reminders appear in your notification bell and on the Notifications page.</div>
           </div>
 
           <div style="display:flex; flex-direction:column; gap:14px;">
             <div class="checkbox-row">
-              <input type="checkbox" id="email-watering" checked>
-              <label for="email-watering">Watering reminders</label>
+              <input type="checkbox" id="notify-watering" name="notify_watering"{% if form.notify_watering.value %} checked{% endif %}>
+              <label for="notify-watering">Watering reminders</label>
             </div>
             <div class="checkbox-row">
-              <input type="checkbox" id="email-fertilizing" checked>
-              <label for="email-fertilizing">Fertilizing reminders</label>
+              <input type="checkbox" id="notify-care" name="notify_care_tasks"{% if form.notify_care_tasks.value %} checked{% endif %}>
+              <label for="notify-care">Fertilizing and pruning reminders</label>
             </div>
             <div class="checkbox-row">
-              <input type="checkbox" id="email-health">
-              <label for="email-health">Plant health alerts</label>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="email-weekly">
-              <label for="email-weekly">Weekly care summary</label>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="email-tips" checked>
-              <label for="email-tips">Plant care tips and guides</label>
+              <input type="checkbox" id="notify-health" name="notify_health"{% if form.notify_health.value %} checked{% endif %}>
+              <label for="notify-health">Plant health alerts and photo updates</label>
             </div>
           </div>
-
-          <div style="padding-top:16px; border-top:1px solid var(--border); margin-top:16px;">
-            <div class="t-h4" style="margin-bottom:8px;">Push Notifications</div>
-            <div class="t-body text-secondary">Receive notifications in your browser</div>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:14px; margin-top:14px;">
-            <div class="checkbox-row">
-              <input type="checkbox" id="push-watering" checked>
-              <label for="push-watering">Watering reminders</label>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="push-critical" checked>
-              <label for="push-critical">Critical care alerts</label>
-            </div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="push-achievements">
-              <label for="push-achievements">Care milestones and achievements</label>
-            </div>
-          </div>
+          <div class="hint" style="margin-top:12px;">Turning a reminder off stops new notifications; your schedules keep running.</div>
 
           <div style="margin-top:20px;">
-            <button class="btn btn-primary">Save Preferences</button>
+            <button type="submit" class="btn btn-primary">Save Preferences</button>
           </div>
-        </div>
+        </form>
+        {% endwith %}
       </section>
 
       <!-- Care Preferences Tab -->
-      <section class="tab-content" data-content="care" style="margin-bottom:40px; display:none;">
+      <section class="tab-content{% if tab == 'care' %} active{% endif %}" data-content="care" style="margin-bottom:40px;">
         <h2 class="t-h3" style="margin-bottom:16px;">Care Preferences</h2>
 
-        <div class="card">
+        {% with form=care_form %}
+        <form method="post" class="card settings-card" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="tab" value="care">
           <div class="field" style="margin-bottom:16px;">
             <label for="reminder-time">Default Reminder Time</label>
-            <select id="reminder-time" class="select">
-              <option>6:00 AM</option>
-              <option>7:00 AM</option>
-              <option selected>8:00 AM</option>
-              <option>9:00 AM</option>
-              <option>10:00 AM</option>
-              <option>5:00 PM</option>
-              <option>6:00 PM</option>
-            </select>
-            <div class="hint">Time when you'll receive daily watering reminders.</div>
+            <input type="time" id="reminder-time" name="default_reminder_time" class="input{% if form.default_reminder_time.errors %} error{% endif %}" value="{{ form.default_reminder_time.value|time:'H:i'|default:form.default_reminder_time.value|default_if_none:'' }}" required>
+            {% for error in form.default_reminder_time.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            <div class="hint">Used for new watering reminders.</div>
           </div>
 
-          <div class="field" style="margin-bottom:16px;">
-            <label for="measurement-system">Measurement System</label>
-            <select id="measurement-system" class="select">
-              <option selected>Imperial (inches, °F)</option>
-              <option>Metric (cm, °C)</option>
-            </select>
-            <div class="hint">Units for displaying plant care information.</div>
-          </div>
-
-          <div class="field" style="margin-bottom:16px;">
+          <div class="field" style="margin-bottom:20px;">
             <label for="watering-method">Preferred Watering Method</label>
-            <select id="watering-method" class="select">
-              <option selected>Top Watering</option>
-              <option>Bottom Watering</option>
-              <option>Mixed Approach</option>
+            <select id="watering-method" name="default_watering_method" class="select{% if form.default_watering_method.errors %} error{% endif %}">
+              {% for value, label in form.fields.default_watering_method.choices %}
+              <option value="{{ value }}"{% if value == form.default_watering_method.value %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
             </select>
-            <div class="hint">Default method shown in watering instructions.</div>
+            {% for error in form.default_watering_method.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            <div class="hint">Default method for new watering reminders.</div>
           </div>
 
-          <div style="margin-bottom:20px;">
-            <div class="t-label" style="margin-bottom:10px;">Care Approach</div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div class="checkbox-row">
-                <input type="checkbox" id="organic-focus" checked>
-                <label for="organic-focus">Prioritize organic and natural care methods</label>
-              </div>
-              <div class="checkbox-row">
-                <input type="checkbox" id="seasonal-adjust" checked>
-                <label for="seasonal-adjust">Automatically adjust schedules for seasonal changes</label>
-              </div>
-              <div class="checkbox-row">
-                <input type="checkbox" id="beginner-mode">
-                <label for="beginner-mode">Show beginner-friendly tips and guidance</label>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-primary">Save Preferences</button>
-        </div>
-      </section>
-
-      <!-- Privacy & Data Tab -->
-      <section class="tab-content" data-content="privacy" style="margin-bottom:40px; display:none;">
-        <h2 class="t-h3" style="margin-bottom:16px;">Privacy & Data</h2>
-
-        <div class="card">
-          <div style="margin-bottom:20px;">
-            <div class="t-h4" style="margin-bottom:8px;">Data Collection</div>
-            <div class="t-body text-secondary" style="margin-bottom:14px;">Control how we use your data to improve Plant Care</div>
-
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div class="checkbox-row">
-                <input type="checkbox" id="usage-analytics" checked>
-                <label for="usage-analytics">Allow usage analytics to improve the app</label>
-              </div>
-              <div class="checkbox-row">
-                <input type="checkbox" id="plant-data">
-                <label for="plant-data">Share anonymized plant data for research</label>
-              </div>
-            </div>
-          </div>
-
-          <div style="padding-top:20px; border-top:1px solid var(--border);">
-            <div class="t-h4" style="margin-bottom:8px;">Data Export & Deletion</div>
-            <div class="t-body text-secondary" style="margin-bottom:14px;">Download or delete your Plant Care data</div>
-
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm">Download My Data</button>
-              <button class="btn btn-destructive btn-sm">Delete My Account</button>
-            </div>
-            <div class="hint" style="margin-top:10px;">Account deletion is permanent and cannot be undone.</div>
-          </div>
-        </div>
+          <button type="submit" class="btn btn-primary">Save Preferences</button>
+        </form>
+        {% endwith %}
       </section>
 
       <!-- Password & Security Tab -->
-      <section class="tab-content" data-content="security" style="margin-bottom:40px; display:none;">
-        <h2 class="t-h3" style="margin-bottom:16px;">Password & Security</h2>
+      <section class="tab-content{% if tab == 'security' %} active{% endif %}" data-content="security" style="margin-bottom:40px;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Password &amp; Security</h2>
 
-        <div class="card">
-          <div style="margin-bottom:20px;">
-            <div class="t-h4" style="margin-bottom:14px;">Change Password</div>
+        {% with form=password_form %}
+        <form method="post" class="card settings-card" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="tab" value="security">
+          <div class="t-h4" style="margin-bottom:14px;">Change Password</div>
 
-            <div class="field" style="margin-bottom:14px;">
-              <label for="current-password">Current Password</label>
-              <input type="password" id="current-password" class="input" placeholder="Enter current password">
-            </div>
-
-            <div class="field" style="margin-bottom:14px;">
-              <label for="new-password">New Password</label>
-              <input type="password" id="new-password" class="input" placeholder="Enter new password">
-            </div>
-
-            <div class="field" style="margin-bottom:14px;">
-              <label for="confirm-password">Confirm New Password</label>
-              <input type="password" id="confirm-password" class="input" placeholder="Confirm new password">
-            </div>
-
-            <button class="btn btn-primary">Update Password</button>
+          <div class="field" style="margin-bottom:14px;">
+            <label for="current-password">Current Password</label>
+            <input type="password" id="current-password" name="old_password" class="input{% if form.old_password.errors %} error{% endif %}" placeholder="Enter current password" autocomplete="current-password" required>
+            {% for error in form.old_password.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
           </div>
 
-          <div style="padding-top:20px; border-top:1px solid var(--border);">
-            <div class="t-h4" style="margin-bottom:8px;">Two-Factor Authentication</div>
-            <div class="t-body text-secondary" style="margin-bottom:14px;">Add an extra layer of security to your account</div>
-
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--pale-sage); border-radius:8px;">
-              <div>
-                <div class="t-label">Two-Factor Authentication</div>
-                <div class="t-small text-muted">Not enabled</div>
-              </div>
-              <button class="btn btn-secondary btn-sm">Enable 2FA</button>
-            </div>
+          <div class="field" style="margin-bottom:14px;">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" name="new_password1" class="input{% if form.new_password1.errors %} error{% endif %}" placeholder="At least 8 characters" autocomplete="new-password" required>
+            {% for error in form.new_password1.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
           </div>
-        </div>
+
+          <div class="field" style="margin-bottom:14px;">
+            <label for="confirm-password">Confirm New Password</label>
+            <input type="password" id="confirm-password" name="new_password2" class="input{% if form.new_password2.errors %} error{% endif %}" placeholder="Confirm new password" autocomplete="new-password" required>
+            {% for error in form.new_password2.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+          </div>
+
+          <button type="submit" class="btn btn-primary">Update Password</button>
+          <div class="hint" style="margin-top:10px;">You'll stay signed in on this device.</div>
+        </form>
+        {% endwith %}
       </section>
 
-      <!-- Connected Services Tab -->
-      <section class="tab-content" data-content="integrations" style="margin-bottom:40px; display:none;">
-        <h2 class="t-h3" style="margin-bottom:16px;">Connected Services</h2>
+      <!-- Privacy & Data Tab -->
+      <section class="tab-content{% if tab == 'privacy' %} active{% endif %}" data-content="privacy" style="margin-bottom:40px;">
+        <h2 class="t-h3" style="margin-bottom:16px;">Privacy &amp; Data</h2>
 
-        <div class="card">
-          <div class="t-body text-secondary" style="margin-bottom:16px;">Connect external services to enhance your plant care experience</div>
-
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--border); border-radius:8px;">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:40px; height:40px; background:var(--pale-sage); border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="var(--primary)" stroke-width="1.6"/><path d="M3 9h18" stroke="var(--primary)" stroke-width="1.6"/></svg>
-                </div>
-                <div>
-                  <div class="t-label">Google Calendar</div>
-                  <div class="t-small text-muted">Sync care tasks with your calendar</div>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-sm">Connect</button>
-            </div>
-
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--border); border-radius:8px;">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:40px; height:40px; background:var(--pale-sage); border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4v16m8-8H4" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </div>
-                <div>
-                  <div class="t-label">Weather Service</div>
-                  <div class="t-small text-muted">Get location-based care recommendations</div>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-sm">Connect</button>
-            </div>
-
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border:1px solid var(--success); background:var(--success-bg); border-radius:8px;">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:40px; height:40px; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z" stroke="var(--success)" stroke-width="1.6"/></svg>
-                </div>
-                <div>
-                  <div class="t-label">Smart Home (IoT)</div>
-                  <div class="t-small" style="color:var(--success);">Connected • 2 devices</div>
-                </div>
-              </div>
-              <button class="btn btn-secondary btn-sm">Manage</button>
-            </div>
+        <div class="card settings-card">
+          <div class="t-h4" style="margin-bottom:8px;">Your Data</div>
+          <div class="t-body text-secondary" style="margin-bottom:14px;">Everything you've added to Plant Care.</div>
+          <div class="settings-stats">
+            <div><div class="t-h4">{{ data_counts.plants }}</div><div class="t-small text-muted">Plants</div></div>
+            <div><div class="t-h4">{{ data_counts.tasks }}</div><div class="t-small text-muted">Care tasks</div></div>
+            <div><div class="t-h4">{{ data_counts.logs }}</div><div class="t-small text-muted">Care log entries</div></div>
+            <div><div class="t-h4">{{ data_counts.health_cases }}</div><div class="t-small text-muted">Health cases</div></div>
           </div>
-        </div>
-      </section>
+          <a href="{% url 'settings_export' %}" class="btn btn-secondary btn-sm">Download My Data (JSON)</a>
 
-      <!-- Appearance Tab -->
-      <section class="tab-content" data-content="appearance" style="margin-bottom:40px; display:none;">
-        <h2 class="t-h3" style="margin-bottom:16px;">Appearance</h2>
-
-        <div class="card">
-          <div class="field" style="margin-bottom:16px;">
-            <label>Theme</label>
-            <div style="display:flex; gap:12px; margin-top:10px;">
-              <button class="btn btn-secondary" style="flex:1; display:flex; flex-direction:column; gap:8px; height:auto; padding:14px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                <span class="t-small">Light</span>
-              </button>
-              <button class="btn btn-secondary" style="flex:1; display:flex; flex-direction:column; gap:8px; height:auto; padding:14px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg>
-                <span class="t-small">Dark</span>
-              </button>
-              <button class="btn btn-primary" style="flex:1; display:flex; flex-direction:column; gap:8px; height:auto; padding:14px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="7" height="7" rx="1" fill="currentColor"/><rect x="13" y="4" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" fill="currentColor"/></svg>
-                <span class="t-small">Auto</span>
-              </button>
-            </div>
-            <div class="hint" style="margin-top:10px;">Auto theme matches your system preferences</div>
-          </div>
-
-          <div class="field">
-            <label>Dashboard Layout</label>
-            <select class="select">
-              <option selected>Comfortable (default)</option>
-              <option>Compact</option>
-              <option>Spacious</option>
-            </select>
+          <div class="settings-section">
+            <div class="t-h4" style="margin-bottom:8px; color:var(--error);">Delete Account</div>
+            <div class="t-body text-secondary" style="margin-bottom:14px;">Permanently deletes your account, plants, schedules, history, health photos and notifications. This cannot be undone.</div>
+            <form method="post" action="{% url 'settings_delete_account' %}" id="delete-account-form" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+              {% csrf_token %}
+              <div class="field" style="flex:1; min-width:200px;">
+                <label for="delete-password">Confirm with your password</label>
+                <input type="password" id="delete-password" name="password" class="input" autocomplete="current-password" required>
+              </div>
+              <button type="submit" class="btn btn-destructive">Delete My Account</button>
+            </form>
           </div>
         </div>
       </section>
 
       <!-- About Tab -->
-      <section class="tab-content" data-content="about" style="margin-bottom:40px; display:none;">
+      <section class="tab-content{% if tab == 'about' %} active{% endif %}" data-content="about" style="margin-bottom:40px;">
         <h2 class="t-h3" style="margin-bottom:16px;">About</h2>
 
-        <div class="card">
+        <div class="card settings-card">
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 4C11 4 4 11 4 20c9 0 16-7 16-16Z" fill="#4F8A52"/><path d="M4 20c4-2 9-7 11-13" stroke="#EEF4EB" stroke-width="1.4" stroke-linecap="round"/></svg>
             <div>
@@ -400,19 +258,17 @@
           </div>
 
           <div style="display:flex; flex-wrap:wrap; gap:10px;">
-            <a href="#privacy" class="btn btn-secondary btn-sm">Privacy Policy</a>
-            <a href="#terms" class="btn btn-secondary btn-sm">Terms of Service</a>
-            <a href="#changelog" class="btn btn-secondary btn-sm">What's New</a>
-            <a href="#help" class="btn btn-secondary btn-sm">Help Center</a>
+            <a href="{% url 'about' %}" class="btn btn-secondary btn-sm">About Plant Care</a>
+            <a href="{% url 'care_guides' %}" class="btn btn-secondary btn-sm">Care Guides</a>
+            <a href="{% url 'notifications' %}" class="btn btn-secondary btn-sm">Notifications</a>
           </div>
 
-          <div style="padding-top:20px; border-top:1px solid var(--border); margin-top:20px;">
-            <div class="t-small text-muted">© 2026 Plant Care. All rights reserved.</div>
+          <div class="settings-section">
+            <div class="t-small text-muted">Member since {{ user.created_at|date:"F j, Y" }}</div>
+            <div class="t-small text-muted" style="margin-top:4px;">© {% now "Y" %} Plant Care. All rights reserved.</div>
           </div>
         </div>
       </section>
-
-      </div><!-- End tab content wrapper -->
 
     </div>
   </div>
@@ -421,27 +277,40 @@
 
 {% block scripts %}
 <script>
-  // Tab switching functionality (page-specific, left inline)
+  // Tab switching (the active tab is also set by the server via ?tab=).
   const tabs = document.querySelectorAll('.settings-tab');
   const contents = document.querySelectorAll('.tab-content');
 
   tabs.forEach(tab => {
+    tab.setAttribute('aria-selected', tab.classList.contains('active'));
     tab.addEventListener('click', () => {
-      const targetTab = tab.dataset.tab;
-
-      tabs.forEach(t => t.classList.remove('active'));
-      contents.forEach(c => {
-        c.classList.remove('active');
-        c.style.display = 'none';
+      const target = tab.dataset.tab;
+      tabs.forEach(t => {
+        t.classList.toggle('active', t === tab);
+        t.setAttribute('aria-selected', t === tab);
       });
-
-      tab.classList.add('active');
-      const targetContent = document.querySelector(`[data-content="${targetTab}"]`);
-      if (targetContent) {
-        targetContent.classList.add('active');
-        targetContent.style.display = 'block';
-      }
+      contents.forEach(c => c.classList.toggle('active', c.dataset.content === target));
+      const url = new URL(window.location);
+      url.searchParams.set('tab', target);
+      history.replaceState(null, '', url);
     });
   });
+
+  // Show the chosen photo's name before it is saved.
+  const avatarInput = document.getElementById('id_avatar');
+  if (avatarInput) {
+    avatarInput.addEventListener('change', () => {
+      const file = avatarInput.files[0];
+      if (file) document.getElementById('avatar-name').textContent = `${file.name} selected. Click Save Changes to upload.`;
+    });
+  }
+
+  // Ask once more before deleting the account.
+  const deleteForm = document.getElementById('delete-account-form');
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', (event) => {
+      if (!confirm('Delete your account and all of your plant data? This cannot be undone.')) event.preventDefault();
+    });
+  }
 </script>
 {% endblock %}

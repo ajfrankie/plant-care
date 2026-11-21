@@ -304,7 +304,7 @@ class PageRenderingTests(TestCase):
             "health_case_resolve", "health_case_frequency", "health_case_delete",
             "notifications_read_all", "notifications_clear", "notification_open",
             "notification_toggle_read", "notification_complete", "notification_dismiss",
-            "care_log_add", "care_log_delete",
+            "care_log_add", "care_log_delete", "settings_delete_account",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -2272,3 +2272,159 @@ class NotificationTests(TestCase):
                            ("notifications_clear", None)):
             with self.subTest(name=name):
                 self.assertEqual(self.client.get(reverse(name, args=args)).status_code, 405)
+
+
+class SettingsTests(TestCase):
+    password = "mossy-Fern-42!"
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            "settings@example.com", "Sam Settings", cls.password, is_active=True
+        )
+        cls.other = User.objects.create_user(
+            "taken@example.com", "Other", cls.password, is_active=True
+        )
+        cls.plant = Plant.objects.create(
+            created_user=cls.user, name="Monstera", planting_date=date(2026, 1, 1)
+        )
+        cls.url = reverse("settings")
+
+    def setUp(self):
+        import shutil, tempfile
+        from django.test import override_settings
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.client.force_login(self.user)
+
+    def post(self, tab, **data):
+        return self.client.post(self.url, {"tab": tab, **data})
+
+    def profile(self, **overrides):
+        return {"full_name": "Sam Settings", "email": "settings@example.com", "timezone": "UTC", **overrides}
+
+    def png(self, name="me.png"):
+        import io
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new("RGB", (4, 4), "green").save(buf, "PNG")
+        return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+
+    def test_page_shows_saved_values_and_opens_requested_tab(self):
+        response = self.client.get(self.url + "?tab=care")
+        html = response.content.decode()
+        self.assertEqual(response.context["tab"], "care")
+        self.assertIn('value="Sam Settings"', html)
+        self.assertIn('class="tab-content active" data-content="care"', html)
+        self.assertIn('value="09:00"', html)
+
+    def test_update_profile(self):
+        response = self.post(
+            "account", **self.profile(full_name="  Sam   New ", email="New@Example.com", timezone="Asia/Colombo")
+        )
+        self.assertRedirects(response, self.url + "?tab=account")
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.full_name, "Sam New")
+        self.assertEqual(self.user.email, "new@example.com")
+        self.assertEqual(self.user.timezone, "Asia/Colombo")
+
+    def test_profile_rejects_taken_email_and_unknown_timezone(self):
+        response = self.post("account", **self.profile(email="taken@example.com", timezone="Mars/Base"))
+        self.assertEqual(response.status_code, 200)
+        form = response.context["profile_form"]
+        self.assertIn("email", form.errors)
+        self.assertIn("timezone", form.errors)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "settings@example.com")
+
+    def test_upload_and_remove_photo(self):
+        import os
+        self.client.post(self.url, {"tab": "account", **self.profile(), "avatar": self.png()})
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.avatar)
+        path = self.user.avatar.path
+        self.assertIn(f'src="{self.user.avatar.url}"', self.client.get(self.url).content.decode())
+
+        self.post("account", **self.profile(), remove_avatar="on")
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.avatar)
+        self.assertFalse(os.path.exists(path))
+
+    def test_requests_use_the_users_timezone(self):
+        from django.test import RequestFactory
+        from django.utils import timezone as tz
+        from .middleware import UserTimezoneMiddleware
+        self.user.timezone = "Asia/Colombo"
+        request = RequestFactory().get("/")
+        request.user = self.user
+        seen = UserTimezoneMiddleware(lambda r: tz.get_current_timezone_name())(request)
+        self.assertEqual(seen, "Asia/Colombo")
+
+    def test_notification_preferences_stop_matching_notifications(self):
+        response = self.post("notifications", notify_care_tasks="on")
+        self.assertRedirects(response, self.url + "?tab=notifications")
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.notify_watering)
+        self.assertFalse(self.user.notify_health)
+        self.assertTrue(self.user.notify_care_tasks)
+
+        today = timezone.localdate()
+        CareTask.objects.create(plant=self.plant, kind="water", due_date=today)
+        CareTask.objects.create(plant=self.plant, kind="fertilize", due_date=today)
+        WaterReminder.objects.create(plant=self.plant, next_due_date=today)
+        notify.sync(self.user)
+        titles = list(Notification.objects.filter(recipient=self.user).values_list("title", flat=True))
+        self.assertEqual(titles, ["Monstera needs fertilizing"])
+
+    def test_care_preferences_prefill_new_water_reminders(self):
+        response = self.post("care", default_reminder_time="07:30", default_watering_method="bottom")
+        self.assertRedirects(response, self.url + "?tab=care")
+        form = self.client.get(reverse("water_reminder_add")).context["form"]
+        self.assertEqual(form.initial["reminder_time"], "07:30")
+        self.assertEqual(form.initial["method"], "bottom")
+
+        self.client.post(reverse("water_reminder_auto"))
+        reminder = WaterReminder.objects.get(plant=self.plant)
+        self.assertEqual(reminder.reminder_time.strftime("%H:%M"), "07:30")
+        self.assertEqual(reminder.method, "bottom")
+
+    def test_change_password_keeps_user_signed_in(self):
+        new = "Leafy-Green-77?"
+        response = self.post("security", old_password=self.password, new_password1=new, new_password2=new)
+        self.assertRedirects(response, self.url + "?tab=security")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(new))
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_change_password_rejects_wrong_current_password(self):
+        new = "Leafy-Green-77?"
+        response = self.post("security", old_password="wrong", new_password1=new, new_password2=new)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("old_password", response.context["password_form"].errors)
+        self.assertEqual(response.context["tab"], "security")
+
+    def test_export_contains_own_data_without_password(self):
+        import json
+        response = self.client.get(reverse("settings_export"))
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn("attachment;", response["Content-Disposition"])
+        data = json.loads(response.content)
+        self.assertEqual(data["account"]["email"], "settings@example.com")
+        self.assertNotIn("password", data["account"])
+        self.assertEqual([p["name"] for p in data["plants"]], ["Monstera"])
+
+    def test_delete_account_needs_password(self):
+        response = self.client.post(reverse("settings_delete_account"), {"password": "wrong"})
+        self.assertRedirects(response, self.url + "?tab=privacy")
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+
+    def test_delete_account_removes_user_and_data(self):
+        response = self.client.post(reverse("settings_delete_account"), {"password": self.password})
+        self.assertRedirects(response, reverse("login"))
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
+        self.assertFalse(Plant.objects.filter(pk=self.plant.pk).exists())
+        self.assertEqual(self.client.get(self.url).status_code, 302)  # signed out

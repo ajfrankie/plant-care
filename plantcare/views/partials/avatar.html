@@ -1,0 +1,1 @@
+<div class="avatar"{% if style %} style="{{ style }}"{% endif %} title="{{ user.full_name }}">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}{{ user.initials }}{% endif %}</div>
