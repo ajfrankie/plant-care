@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import date, timedelta
 
@@ -315,6 +316,7 @@ class PageRenderingTests(TestCase):
             "care_log_add", "care_log_delete", "settings_delete_account",
             # Admin only (AdminDashboardTests).
             "admin_dashboard", "admin_user_toggle", "inquiries", "inquiry_toggle", "inquiry_delete",
+            "admin_care_history", "species_add", "species_edit",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -616,9 +618,8 @@ class PlantEditTests(TestCase):
 class SpeciesTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create_user(
-            "species@example.com", "Species Keeper", "mossy-Fern-42!", is_active=True
-        )
+        # Only admins can add or edit species.
+        cls.user = User.objects.create_superuser("species@example.com", "Species Keeper", "mossy-Fern-42!")
 
     def setUp(self):
         self.client.force_login(self.user)
@@ -2684,10 +2685,10 @@ class InquiryTests(TestCase):
     def setUp(self):
         self.client.force_login(self.admin)
 
-    def test_admin_sidebar_shows_inquiries_with_open_count(self):
+    def test_admin_dashboard_links_to_inquiries_with_open_count(self):
         html = self.client.get(reverse("admin_dashboard")).content.decode()
-        self.assertIn('data-nav="inquiries"', html)
-        self.assertIn('<span class="side-badge" aria-label="1 open">1</span>', html)
+        self.assertIn(f'<a href="{self.url}" class="dash-row"', html)
+        self.assertIn("1 &rarr;", html)
 
     def test_members_cannot_see_inquiries(self):
         self.client.force_login(self.member)
@@ -2720,3 +2721,96 @@ class InquiryTests(TestCase):
         self.client.force_login(self.admin)
         response = self.client.get(self.url)
         self.assertIn("Kim", [m.name for m in response.context["page"].object_list])
+
+
+class AdminAreaTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_superuser("chief@example.com", "Cleo Chief", "mossy-Fern-42!")
+        cls.member = User.objects.create_user(
+            "grower@example.com", "Gus Grower", "mossy-Fern-42!", is_active=True
+        )
+        cls.fern = Plant.objects.create(created_user=cls.member, name="Fern", planting_date=date(2026, 1, 1))
+        CareLog.objects.create(plant=cls.fern, activity="watering", performed_at=timezone.now(), notes="Soaked")
+        CareLog.objects.create(
+            plant=cls.fern, activity="fertilizing", performed_at=timezone.now() - timedelta(days=60)
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_admin_sidebar_shows_only_admin_menu(self):
+        html = self.client.get(reverse("admin_dashboard")).content.decode()
+        navs = re.findall(r'data-nav="([a-z-]+)"', html.split('<aside class="sidebar">')[1].split("</aside>")[0])
+        self.assertEqual(navs, ["admin-dashboard", "species", "history", "settings", "help", "signout"])
+        self.assertIn(f'data-nav="history" href="{reverse("admin_care_history")}"', html)
+        self.assertIn(f'data-nav="help" href="{reverse("help")}"', html)
+
+    def test_member_sidebar_unchanged(self):
+        self.client.force_login(self.member)
+        html = self.client.get(reverse("dashboard")).content.decode()
+        sidebar = html.split('<aside class="sidebar">')[1].split("</aside>")[0]
+        navs = re.findall(r'data-nav="([a-z-]+)"', sidebar)
+        self.assertEqual(navs, ["dashboard", "my-plants", "species", "care-schedule", "watering", "health",
+                                "history", "notifications", "settings", "help", "signout"])
+        self.assertIn(f'data-nav="history" href="{reverse("care_history")}"', sidebar)
+
+    def test_care_history_is_admin_only(self):
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get(reverse("admin_care_history")).status_code, 403)
+
+    def test_care_history_shows_all_users_logs(self):
+        url = reverse("admin_care_history")
+        response = self.client.get(url)  # last 30 days by default
+        self.assertContains(response, 'class="side-link active" data-nav="history"')
+        self.assertEqual([log.notes for log in response.context["page"].object_list], ["Soaked"])
+        self.assertContains(response, "Gus Grower")
+        response = self.client.get(url, {"period": "all"})
+        self.assertEqual(response.context["summary"]["total"], 2)
+        response = self.client.get(url, {"period": "all", "activity": "fertilizing"})
+        self.assertEqual(len(response.context["page"].object_list), 1)
+        response = self.client.get(url, {"period": "all", "user": str(self.member.pk)})
+        self.assertEqual(response.context["summary"]["total"], 2)
+        self.assertEqual(self.client.get(url, {"user": "not-a-uuid"}).context["member_id"], "")
+
+    def test_help_page_for_members_sends_inquiry(self):
+        from .models import ContactMessage
+        self.client.force_login(self.member)
+        response = self.client.get(reverse("help"))
+        self.assertContains(response, "Frequently asked questions")
+        self.assertContains(response, 'class="side-link active" data-nav="help"')
+        response = self.client.post(reverse("help"), {"subject": "Help", "message": "My reminders stopped."})
+        self.assertRedirects(response, reverse("help"))
+        message = ContactMessage.objects.get()
+        self.assertEqual((message.name, message.email), ("Gus Grower", "grower@example.com"))
+
+    def test_help_page_for_admins(self):
+        response = self.client.get(reverse("help"))
+        self.assertContains(response, "Admin questions")
+        self.assertContains(response, "Open Inquiries")
+        self.assertNotContains(response, "Still need help?")
+
+    def test_members_can_only_view_species(self):
+        species = PlantSpecies.objects.create(
+            common_name="Fern", scientific_name="Nephrolepis exaltata",
+            category="indoor", difficulty="easy", light="medium", watering="weekly",
+        )
+        self.client.force_login(self.member)
+        response = self.client.get(reverse("species"))
+        self.assertContains(response, "Fern")
+        self.assertContains(response, f'href="{reverse("explore_species", args=[species.pk])}"')
+        self.assertNotContains(response, reverse("species_add"))
+        self.assertNotContains(response, reverse("species_edit", args=[species.pk]))
+        self.assertEqual(self.client.get(reverse("species_add")).status_code, 403)
+        self.assertEqual(self.client.post(reverse("species_add"), {"common_name": "X"}).status_code, 403)
+        self.assertEqual(self.client.get(reverse("species_edit", args=[species.pk])).status_code, 403)
+        self.assertEqual(
+            self.client.post(reverse("species_edit", args=[species.pk]), {"common_name": "X"}).status_code, 403
+        )
+        species.refresh_from_db()
+        self.assertEqual(species.common_name, "Fern")
+
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("species"))
+        self.assertContains(response, reverse("species_add"))
+        self.assertContains(response, reverse("species_edit", args=[species.pk]))

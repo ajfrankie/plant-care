@@ -1,0 +1,88 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Help &amp; Support{% endblock %}
+
+{% block head_extra %}
+<style>
+  .help-grid { display:grid; grid-template-columns:minmax(0, 3fr) minmax(0, 2fr); gap:24px; align-items:start; }
+  .help-faq details { border-bottom:1px solid var(--border); }
+  .help-faq details:last-child { border-bottom:none; }
+  .help-faq summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 0; font-weight:600; font-size:15px; }
+  .help-faq summary::-webkit-details-marker { display:none; }
+  .help-faq summary svg { flex:none; color:var(--text-muted); transition:transform .2s; }
+  .help-faq details[open] summary svg { transform:rotate(180deg); }
+  .help-faq p { padding:0 0 16px; margin:0; color:var(--text-secondary); line-height:1.65; font-size:14px; }
+  .help-links { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px; margin-bottom:24px; }
+  .help-link { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow-sm); color:inherit; transition:border-color .15s, transform .15s; }
+  .help-link:hover { border-color:var(--primary); transform:translateY(-2px); }
+  .help-link .ico { width:36px; height:36px; border-radius:10px; background:var(--pale-sage); color:var(--primary); display:flex; align-items:center; justify-content:center; flex:none; }
+  @media (max-width: 900px) { .help-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="help" %}
+
+  <div class="main-area">
+    {% include "partials/app_header.html" with title="Help & Support" subtitle="Answers to common questions, or send us a message" %}
+
+    <div style="padding:28px 32px;">
+
+      {% for message in messages %}
+      <div role="status" class="settings-alert {% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</div>
+      {% endfor %}
+
+      <div class="help-links">
+        <a class="help-link" href="{% url 'care_guides' %}"><span class="ico">{% include "partials/icon.html" with name="leaf" size=18 %}</span><div><div class="t-label">Care Guides</div><div class="t-small text-muted">Watering, light, soil</div></div></a>
+        <a class="help-link" href="{% url 'explore' %}"><span class="ico">{% include "partials/icon.html" with name="search" size=18 %}</span><div><div class="t-label">Plant Library</div><div class="t-small text-muted">Browse every species</div></div></a>
+        <a class="help-link" href="{% url 'settings' %}"><span class="ico">{% include "partials/icon.html" with name="tool" size=18 %}</span><div><div class="t-label">Settings</div><div class="t-small text-muted">Profile and preferences</div></div></a>
+      </div>
+
+      <div class="help-grid">
+        <div class="card help-faq">
+          <h3 class="t-h4" style="margin-bottom:4px;">{% if user.is_staff %}Admin questions{% else %}Frequently asked questions{% endif %}</h3>
+          {% for question, answer in faq %}
+          <details{% if forloop.first %} open{% endif %}>
+            <summary>{{ question }}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+            <p>{{ answer }}</p>
+          </details>
+          {% endfor %}
+        </div>
+
+        {% if user.is_staff %}
+        <div class="card">
+          <h3 class="t-h4">Support inbox</h3>
+          <p class="t-small text-secondary" style="margin-top:4px;">Messages users send from the Help page and the About page arrive in Inquiries.</p>
+          <div style="display:flex; align-items:baseline; gap:8px; margin:18px 0;">
+            <span style="font-size:32px; font-weight:700;">{{ open_inquiries|default:0 }}</span>
+            <span class="t-body text-secondary">open message{{ open_inquiries|default:0|pluralize }}</span>
+          </div>
+          <a href="{% url 'inquiries' %}" class="btn btn-primary" style="width:100%;">Open Inquiries</a>
+        </div>
+        {% else %}
+        <div class="card" id="contact">
+          <h3 class="t-h4">Still need help?</h3>
+          <p class="t-small text-secondary" style="margin-top:4px;">Send a message and we'll reply to <strong>{{ user.email }}</strong>.</p>
+          <form method="post" novalidate style="margin-top:16px;">
+            {% csrf_token %}
+            <div class="field">
+              <label for="h-subject">Subject <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+              <input type="text" id="h-subject" name="subject" class="input" value="{{ form.subject.value|default_if_none:'' }}" maxlength="160" placeholder="e.g., Reminders not arriving">
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label for="h-message">Message</label>
+              <textarea id="h-message" name="message" class="input{% if form.message.errors %} error{% endif %}" rows="6" maxlength="3000" required style="height:auto; padding-top:10px; resize:vertical;">{{ form.message.value|default_if_none:'' }}</textarea>
+              {% for error in form.message.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:18px; width:100%;">Send Message</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

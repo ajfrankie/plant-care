@@ -1,0 +1,107 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Care History (All Users){% endblock %}
+
+{% block head_extra %}
+<style>
+  .ah-stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:20px; }
+  .ah-stat { display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--border); border-radius:var(--radius-card); padding:14px 16px; box-shadow:var(--shadow-sm); color:inherit; transition:border-color .15s; }
+  .ah-stat:hover, .ah-stat.active { border-color:var(--primary); }
+  .ah-stat .dot { width:10px; height:10px; border-radius:50%; flex:none; }
+  .ah-stat .num { font-size:20px; font-weight:700; line-height:1.1; }
+  .ah-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:20px; }
+  .ah-filters .select { height:38px; width:auto; }
+  .ah-icon { width:34px; height:34px; border-radius:10px; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; flex:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="history" %}
+
+  <div class="main-area">
+    {% include "partials/app_header.html" with title="Care History" subtitle="Care activity logged by every user" %}
+
+    <div style="padding:28px 32px;">
+
+      <p class="t-body text-secondary" style="margin-bottom:16px;">
+        <strong style="color:var(--text);">{{ summary.total }}</strong> activit{{ summary.total|pluralize:"y,ies" }}
+        on <strong style="color:var(--text);">{{ summary.plants }}</strong> plant{{ summary.plants|pluralize }}
+        by <strong style="color:var(--text);">{{ summary.people }}</strong> user{{ summary.people|pluralize }}.
+      </p>
+
+      <div class="ah-stats">
+        {% for key, label, count, color in stats %}
+        <a href="?{% if key != activity %}activity={{ key }}&amp;{% endif %}period={{ period }}{% if member_id %}&amp;user={{ member_id }}{% endif %}{% if q %}&amp;q={{ q|urlencode }}{% endif %}" class="ah-stat{% if key == activity %} active{% endif %}">
+          <span class="dot" style="background:{{ color }};"></span>
+          <div><div class="num">{{ count }}</div><div class="t-small text-muted">{{ label }}</div></div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <form method="get" class="ah-filters" role="search">
+        {% if activity %}<input type="hidden" name="activity" value="{{ activity }}">{% endif %}
+        <div class="search-box" style="width:240px; height:38px;">
+          {% include "partials/icon.html" with name="search" size=14 %}
+          <input type="search" name="q" value="{{ q }}" placeholder="Search plant or notes..." aria-label="Search care history">
+        </div>
+        <select name="user" class="select" aria-label="User" onchange="this.form.submit()">
+          <option value="">All users</option>
+          {% for owner in owners %}<option value="{{ owner.pk }}"{% if owner.pk|stringformat:"s" == member_id %} selected{% endif %}>{{ owner.full_name|default:owner.email }}</option>{% endfor %}
+        </select>
+        <select name="period" class="select" aria-label="Period" onchange="this.form.submit()">
+          {% for key, label in periods %}<option value="{{ key }}"{% if key == period %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        {% if is_filtered %}<a href="{% url 'admin_care_history' %}" class="btn btn-secondary btn-sm">Clear filters</a>{% endif %}
+      </form>
+
+      {% if page.object_list %}
+      <div class="card" style="padding:8px 12px;">
+        <div style="overflow-x:auto;">
+          <table class="dash-table">
+            <thead>
+              <tr><th>Activity</th><th>Plant</th><th>User</th><th>Notes</th><th>When</th></tr>
+            </thead>
+            <tbody>
+              {% for log in page.object_list %}
+              <tr>
+                <td>
+                  <div style="display:flex; align-items:center; gap:10px; white-space:nowrap;">
+                    <span class="ah-icon" style="color:{{ log.color }};">{% include "care/_log_icon.html" with activity=log.activity size=16 color=log.color %}</span>
+                    <span class="t-label">{{ log.get_activity_display }}</span>
+                  </div>
+                </td>
+                <td class="t-label">{{ log.plant.name }}</td>
+                <td>
+                  <div>{{ log.plant.created_user.full_name|default:"—" }}</div>
+                  <div class="t-small text-muted">{{ log.plant.created_user.email }}</div>
+                </td>
+                <td class="text-secondary" style="max-width:320px;">{{ log.notes|default:"—"|truncatechars:90 }}</td>
+                <td class="text-muted" style="white-space:nowrap;" title="{{ log.performed_at|date:'M j, Y g:i A' }}">{{ log.performed_at|date:"M j, Y" }}<div class="t-small">{{ log.performed_at|date:"g:i A" }}</div></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {% if page.has_other_pages %}
+      <nav class="pager" aria-label="Pages">
+        {% if page.has_previous %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page.previous_page_number }}" class="btn btn-secondary btn-sm">&larr; Newer</a>{% endif %}
+        <span class="t-small text-muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page.next_page_number }}" class="btn btn-secondary btn-sm">Older &rarr;</a>{% endif %}
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <div class="t-h4">No care activity found</div>
+        <p class="t-body text-secondary" style="margin-top:6px;">{% if is_filtered %}Try a longer period or clear the filters.{% else %}Activity appears here when users log watering, fertilizing and other care.{% endif %}</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
