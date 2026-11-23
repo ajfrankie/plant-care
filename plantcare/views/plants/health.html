@@ -124,6 +124,7 @@
                 {% endfor %}
               </select>
               {% for error in form.issue_key.errors %}<span class="hint error">{{ error }}</span>{% endfor %}
+              <span class="hint">Not sure of the name? <a href="{% url 'diseases' %}" style="color:var(--primary); font-weight:600;">Browse Diseases &amp; Pests</a></span>
             </div>
             <div>
               <label class="t-label" for="id_other_issue" style="display:block; margin-bottom:6px;">Or type another issue</label>

@@ -316,7 +316,7 @@ class PageRenderingTests(TestCase):
             "care_log_add", "care_log_delete", "settings_delete_account",
             # Admin only (AdminDashboardTests).
             "admin_dashboard", "admin_user_toggle", "inquiries", "inquiry_toggle", "inquiry_delete",
-            "admin_care_history", "species_add", "species_edit",
+            "admin_care_history", "species_add", "species_edit", "disease_add", "disease_edit", "disease_delete",
         )
         pages = [pattern for pattern in urlpatterns if pattern.name not in post_only]
         for pattern in pages:
@@ -1830,8 +1830,8 @@ class HealthAITests(TestCase):
         self.assertEqual(kwargs["model"], health_ai.GEMINI_MODEL)
         config = kwargs["config"]
         self.assertEqual(config.response_mime_type, "application/json")
-        self.assertEqual(config.response_json_schema, health_ai.SCHEMA)
-        self.assertEqual(config.system_instruction, health_ai.SYSTEM)
+        self.assertEqual(config.response_json_schema, health_ai.schema())
+        self.assertEqual(config.system_instruction, health_ai.system_prompt())
         contents = kwargs["contents"]
         images = [c for c in contents if not isinstance(c, str)]
         self.assertEqual(len(images), 2)  # earlier + latest photo
@@ -2742,7 +2742,7 @@ class AdminAreaTests(TestCase):
     def test_admin_sidebar_shows_only_admin_menu(self):
         html = self.client.get(reverse("admin_dashboard")).content.decode()
         navs = re.findall(r'data-nav="([a-z-]+)"', html.split('<aside class="sidebar">')[1].split("</aside>")[0])
-        self.assertEqual(navs, ["admin-dashboard", "species", "history", "settings", "help", "signout"])
+        self.assertEqual(navs, ["admin-dashboard", "species", "diseases", "history", "settings", "help", "signout"])
         self.assertIn(f'data-nav="history" href="{reverse("admin_care_history")}"', html)
         self.assertIn(f'data-nav="help" href="{reverse("help")}"', html)
 
@@ -2751,7 +2751,7 @@ class AdminAreaTests(TestCase):
         html = self.client.get(reverse("dashboard")).content.decode()
         sidebar = html.split('<aside class="sidebar">')[1].split("</aside>")[0]
         navs = re.findall(r'data-nav="([a-z-]+)"', sidebar)
-        self.assertEqual(navs, ["dashboard", "my-plants", "species", "care-schedule", "watering", "health",
+        self.assertEqual(navs, ["dashboard", "my-plants", "species", "care-schedule", "watering", "health", "diseases",
                                 "history", "notifications", "settings", "help", "signout"])
         self.assertIn(f'data-nav="history" href="{reverse("care_history")}"', sidebar)
 
@@ -2814,3 +2814,140 @@ class AdminAreaTests(TestCase):
         response = self.client.get(reverse("species"))
         self.assertContains(response, reverse("species_add"))
         self.assertContains(response, reverse("species_edit", args=[species.pk]))
+
+
+class DiseasesTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user("sick@example.com", "Sam Grower", "mossy-Fern-42!", is_active=True)
+        cls.rose = Plant.objects.create(created_user=cls.user, name="Rose", planting_date=date(2026, 1, 1))
+        HealthCase.objects.create(plant=cls.rose, title="Aphids", issue_key="aphids", next_check_date=date(2026, 1, 1))
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_sidebar_has_diseases_tab(self):
+        html = self.client.get(reverse("diseases")).content.decode()
+        self.assertIn('class="side-link active" data-nav="diseases"', html)
+        admin = User.objects.create_superuser("doc@example.com", "Doc Admin", "mossy-Fern-42!")
+        self.client.force_login(admin)
+        self.assertIn('data-nav="diseases"', self.client.get(reverse("admin_dashboard")).content.decode())
+
+    def test_lists_every_issue_with_organic_steps(self):
+        from . import health_library
+        response = self.client.get(reverse("diseases"))
+        self.assertEqual(len(response.context["issues"]), len(health_library.ISSUES))
+        first = response.context["issues"][0]
+        self.assertEqual(first["key"], "aphids")  # problems on the user's own plants come first
+        self.assertEqual(first["affected"], 1)
+        self.assertContains(response, "Affecting 1 of your plant")
+        self.assertTrue(all(health_library.is_organic(t) for i in response.context["issues"] for t in i["treatments"]))
+
+    def test_search_and_type_filter(self):
+        response = self.client.get(reverse("diseases"), {"type": "Pest"})
+        self.assertTrue(response.context["issues"])
+        self.assertTrue(all(i["type"] == "Pest" for i in response.context["issues"]))
+        response = self.client.get(reverse("diseases"), {"q": "webbing"})
+        self.assertEqual([i["key"] for i in response.context["issues"]], ["spider_mites"])
+        response = self.client.get(reverse("diseases"), {"q": "zzzz"})
+        self.assertContains(response, "Nothing matches")
+
+    def test_treat_button_prefills_health_check(self):
+        response = self.client.get(reverse("diseases"), {"q": "webbing"})
+        link = f'{reverse("plant_health")}?new=1&amp;issue=spider_mites#check-form'
+        self.assertContains(response, link)
+        html = self.client.get(reverse("plant_health"), {"new": "1", "issue": "spider_mites"}).content.decode()
+        self.assertIn('value="known" checked', html)
+        self.assertIn('value="spider_mites" selected', html)
+        html = self.client.get(reverse("plant_health"), {"new": "1", "issue": "bogus"}).content.decode()
+        self.assertNotIn('value="known" checked', html)
+
+
+class DiseaseAdminTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_superuser("vet@example.com", "Vera Vet", "mossy-Fern-42!")
+        cls.member = User.objects.create_user("pat@example.com", "Pat Plant", "mossy-Fern-42!", is_active=True)
+        cls.data = {
+            "name": "Leaf  Miner", "type": "Pest",
+            "symptoms": "Winding pale trails inside the leaves.",
+            "prevention": "Check new leaves weekly.",
+            "step": ["Pick off mined leaves", "Spray with neem oil", ""],
+            "when": ["Today", "Every 7 days", ""],
+            "how": ["Bin them, don't compost.", "1 tbsp neem per litre of water.", ""],
+        }
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_library_is_seeded_from_built_in_problems(self):
+        from . import health_library
+        from .models import PlantIssue
+        self.assertEqual(PlantIssue.objects.count(), len(health_library.DEFAULT_ISSUES))
+        self.assertEqual(health_library.get("aphids")["name"], "Aphids")
+
+    def test_admin_adds_disease_and_users_can_use_it(self):
+        from . import health_ai, health_library
+        from .models import PlantIssue
+        response = self.client.post(reverse("disease_add"), self.data)
+        issue = PlantIssue.objects.get(name="Leaf Miner")
+        self.assertRedirects(response, f'{reverse("diseases")}?open=leaf_miner#issue-leaf_miner')
+        self.assertEqual(issue.key, "leaf_miner")
+        self.assertEqual([t["step"] for t in issue.treatments], ["Pick off mined leaves", "Spray with neem oil"])
+        # It shows up everywhere the library is used.
+        self.assertIn(("leaf_miner", "Leaf Miner"), health_library.choices())
+        self.assertIn("leaf_miner", health_ai.issue_keys())
+        self.assertIn("leaf_miner (Leaf Miner)", health_ai.system_prompt())
+        self.client.force_login(self.member)
+        self.assertContains(self.client.get(reverse("diseases")), "Winding pale trails")
+        self.assertContains(self.client.get(reverse("care_guides"), {"topic": "problems"}), "Leaf Miner")
+
+    def test_edit_keeps_key_and_delete_removes(self):
+        from .models import PlantIssue
+        issue = PlantIssue.objects.get(key="aphids")
+        url = reverse("disease_edit", args=[issue.pk])
+        html = self.client.get(url).content.decode()
+        self.assertIn('value="Spray with soapy water"', html)
+        self.client.post(url, {**self.data, "name": "Aphids (Greenfly)"})
+        issue.refresh_from_db()
+        self.assertEqual((issue.key, issue.name), ("aphids", "Aphids (Greenfly)"))
+        self.client.post(reverse("disease_delete", args=[issue.pk]))
+        self.assertFalse(PlantIssue.objects.filter(pk=issue.pk).exists())
+
+    def test_validation(self):
+        from .models import PlantIssue
+        cases = {
+            "no steps": {**self.data, "step": [""], "when": [""], "how": [""]},
+            "long title": {**self.data, "step": ["Spray it all over every single leaf"], "when": ["x"], "how": ["y"]},
+            "not organic": {**self.data, "step": ["Spray copper fungicide"], "when": ["x"], "how": ["Use copper."]},
+            "missing how": {**self.data, "step": ["Spray"], "when": ["x"], "how": [""]},
+            "duplicate name": {**self.data, "name": "aphids"},
+        }
+        for label, data in cases.items():
+            with self.subTest(label):
+                response = self.client.post(reverse("disease_add"), data)
+                self.assertEqual(response.status_code, 200)
+        self.assertFalse(PlantIssue.objects.filter(name="Leaf Miner").exists())
+
+    def test_list_shows_admin_tools_only_to_admins(self):
+        from .models import PlantIssue
+        aphids = PlantIssue.objects.get(key="aphids")
+        html = self.client.get(reverse("diseases")).content.decode()
+        self.assertIn(reverse("disease_add"), html)
+        self.assertIn(reverse("disease_edit", args=[aphids.pk]), html)
+        self.assertNotIn("Treat My Plant", html)
+        self.client.force_login(self.member)
+        html = self.client.get(reverse("diseases")).content.decode()
+        self.assertNotIn(reverse("disease_add"), html)
+        self.assertNotIn(reverse("disease_edit", args=[aphids.pk]), html)
+        self.assertIn("Treat My Plant", html)
+
+    def test_members_cannot_change_library(self):
+        from .models import PlantIssue
+        aphids = PlantIssue.objects.get(key="aphids")
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get(reverse("disease_add")).status_code, 403)
+        self.assertEqual(self.client.post(reverse("disease_add"), self.data).status_code, 403)
+        self.assertEqual(self.client.post(reverse("disease_edit", args=[aphids.pk]), self.data).status_code, 403)
+        self.assertEqual(self.client.post(reverse("disease_delete", args=[aphids.pk])).status_code, 403)
+        self.assertTrue(PlantIssue.objects.filter(pk=aphids.pk).exists())
