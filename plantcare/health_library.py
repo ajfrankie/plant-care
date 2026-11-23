@@ -8,6 +8,7 @@ Each treatment is one step of the treatment roadmap: ``step`` is its short
 title (five words at most), ``when`` says when or how often, and ``how`` gives
 the detail. Organic remedies only — see ``is_organic``.
 """
+from collections.abc import Mapping
 
 # Reusable treatments ---------------------------------------------------------
 
@@ -76,7 +77,9 @@ def is_organic(treatment):
     return not any(word in text for word in NOT_ORGANIC)
 
 
-ISSUES = {
+# The starting library, copied into the database by migration 0015.
+# Admins manage the live list on the Diseases & Pests page.
+DEFAULT_ISSUES = {
     # Pests ---------------------------------------------------------------
     "aphids": {
         "name": "Aphids", "type": "Pest",
@@ -262,8 +265,46 @@ ISSUES = {
     },
 }
 
-CHOICES = [(key, issue["name"]) for key, issue in ISSUES.items()]
+class _Library(Mapping):
+    """key -> issue dict, read from the PlantIssue table on each use (always current)."""
+
+    def _load(self):
+        from .models import PlantIssue
+        return {issue.key: issue.as_dict() for issue in PlantIssue.objects.all()}
+
+    def __getitem__(self, key):
+        from .models import PlantIssue
+        issue = PlantIssue.objects.filter(key=key).first()
+        if issue is None:
+            raise KeyError(key)
+        return issue.as_dict()
+
+    def __contains__(self, key):
+        from .models import PlantIssue
+        return isinstance(key, str) and bool(key) and PlantIssue.objects.filter(key=key).exists()
+
+    def __iter__(self):
+        return iter(self._load())
+
+    def __len__(self):
+        from .models import PlantIssue
+        return PlantIssue.objects.count()
+
+    def items(self):
+        return self._load().items()
+
+    def values(self):
+        return self._load().values()
+
+
+ISSUES = _Library()
+
+
+def choices():
+    """(key, name) pairs for the issue drop-downs, A-Z."""
+    from .models import PlantIssue
+    return list(PlantIssue.objects.values_list("key", "name"))
 
 
 def get(key):
-    return ISSUES.get(key)
+    return ISSUES.get(key) if key else None

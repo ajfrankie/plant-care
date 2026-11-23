@@ -26,66 +26,72 @@ GEMINI_TIMEOUT_MS = 90_000
 PROVIDERS = ("gemini", "anthropic")
 MAX_SIDE = 1568  # larger images are downscaled by the API anyway
 
-ISSUE_KEYS = list(health_library.ISSUES) + ["other"]
 
-SCHEMA = {
-    "type": "object",
-    "properties": {
-        "is_plant": {"type": "boolean"},
-        "overall": {"type": "string", "enum": ["healthy", "mild", "moderate", "severe"]},
-        "progress": {"type": "string", "enum": ["first", "better", "same", "worse"]},
-        "summary": {"type": "string"},
-        "issues": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "key": {"type": "string", "enum": ISSUE_KEYS},
-                    "name": {"type": "string"},
-                    "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
-                    "evidence": {"type": "string"},
-                    "organic_treatments": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {"type": "string"},
-                                "step": {"type": "string"},
-                                "when": {"type": "string"},
-                                "how": {"type": "string"},
+def issue_keys():
+    return list(health_library.ISSUES) + ["other"]
+
+
+def schema():
+    """JSON schema for the analysis, listing the library's current issue keys."""
+    return {
+        "type": "object",
+        "properties": {
+            "is_plant": {"type": "boolean"},
+            "overall": {"type": "string", "enum": ["healthy", "mild", "moderate", "severe"]},
+            "progress": {"type": "string", "enum": ["first", "better", "same", "worse"]},
+            "summary": {"type": "string"},
+            "issues": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "key": {"type": "string", "enum": issue_keys()},
+                        "name": {"type": "string"},
+                        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+                        "evidence": {"type": "string"},
+                        "organic_treatments": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "step": {"type": "string"},
+                                    "when": {"type": "string"},
+                                    "how": {"type": "string"},
+                                },
+                                "required": ["name", "step", "when", "how"],
+                                "additionalProperties": False,
                             },
-                            "required": ["name", "step", "when", "how"],
-                            "additionalProperties": False,
+                        },
+                        "prevention": {"type": "string"},
+                        "areas": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "label": {"type": "string"},
+                                    "ymin": {"type": "integer"},
+                                    "xmin": {"type": "integer"},
+                                    "ymax": {"type": "integer"},
+                                    "xmax": {"type": "integer"},
+                                },
+                                "required": ["label", "ymin", "xmin", "ymax", "xmax"],
+                                "additionalProperties": False,
+                            },
                         },
                     },
-                    "prevention": {"type": "string"},
-                    "areas": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "label": {"type": "string"},
-                                "ymin": {"type": "integer"},
-                                "xmin": {"type": "integer"},
-                                "ymax": {"type": "integer"},
-                                "xmax": {"type": "integer"},
-                            },
-                            "required": ["label", "ymin", "xmin", "ymax", "xmax"],
-                            "additionalProperties": False,
-                        },
-                    },
+                    "required": ["key", "name", "confidence", "evidence", "organic_treatments",
+                                 "prevention", "areas"],
+                    "additionalProperties": False,
                 },
-                "required": ["key", "name", "confidence", "evidence", "organic_treatments",
-                             "prevention", "areas"],
-                "additionalProperties": False,
             },
         },
-    },
-    "required": ["is_plant", "overall", "progress", "summary", "issues"],
-    "additionalProperties": False,
-}
+        "required": ["is_plant", "overall", "progress", "summary", "issues"],
+        "additionalProperties": False,
+    }
 
-SYSTEM = (
+
+SYSTEM_RULES = (
     "You are a careful plant doctor for home gardeners. You look at a photo of a whole "
     "plant or a single leaf and identify visible pests, diseases and care problems.\n"
     "- Only report problems you can actually see evidence of; say what you see in "
@@ -106,8 +112,11 @@ SYSTEM = (
     "- When an earlier photo is given, compare the two and set 'progress' to better, "
     "same or worse; otherwise set it to 'first'.\n"
     "Known issue keys: "
-    + ", ".join(f"{key} ({issue['name']})" for key, issue in health_library.ISSUES.items())
 )
+
+
+def system_prompt():
+    return SYSTEM_RULES + ", ".join(f"{key} ({issue['name']})" for key, issue in health_library.ISSUES.items())
 
 
 NO_CREDENTIALS = (
@@ -238,10 +247,10 @@ def _analyse_gemini(image_file, *, plant, notes, previous_image, previous_title)
             model=GEMINI_MODEL,
             contents=contents,
             config=types.GenerateContentConfig(
-                system_instruction=SYSTEM,
+                system_instruction=system_prompt(),
                 max_output_tokens=8000,
                 response_mime_type="application/json",
-                response_json_schema=SCHEMA,
+                response_json_schema=schema(),
                 # Low reasoning keeps the upload page quick; the photo does most of the work.
                 thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW),
             ),
@@ -293,11 +302,11 @@ def _analyse_anthropic(image_file, *, plant, notes, previous_image, previous_tit
         response = client.beta.messages.create(
             model=MODEL,
             max_tokens=16000,
-            system=SYSTEM,
+            system=system_prompt(),
             messages=[{"role": "user", "content": content}],
             output_config={
                 "effort": "medium",
-                "format": {"type": "json_schema", "schema": SCHEMA},
+                "format": {"type": "json_schema", "schema": schema()},
             },
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",

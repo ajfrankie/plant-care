@@ -1,0 +1,134 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — {% if issue %}Edit {{ issue.name }}{% else %}Add Disease or Pest{% endif %}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .df-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .df-step { display:grid; grid-template-columns:28px minmax(0, 2fr) minmax(0, 1.2fr) 36px; gap:10px; align-items:start; padding:14px; border:1px solid var(--border); border-radius:10px; background:var(--bg-secondary); }
+  .df-step .num { width:26px; height:26px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:6px; }
+  .df-step .how { grid-column:2 / 4; }
+  .df-step textarea { resize:vertical; height:auto; padding-top:10px; }
+  .df-steps { display:flex; flex-direction:column; gap:10px; counter-reset:step; }
+  @media (max-width: 680px) {
+    .df-pair { grid-template-columns:1fr; }
+    .df-step { grid-template-columns:28px minmax(0, 1fr) 36px; }
+    .df-step .when, .df-step .how { grid-column:2 / 3; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="diseases" %}
+
+  <div class="main-area">
+    {% if issue %}
+    {% include "partials/app_header.html" with title="Edit Disease or Pest" subtitle=issue.name %}
+    {% else %}
+    {% include "partials/app_header.html" with title="Add Disease or Pest" subtitle="Add a problem and its organic cure to the library" %}
+    {% endif %}
+
+    <div style="padding:28px 32px;">
+      <div style="margin-bottom:20px;">
+        <a href="{% url 'diseases' %}" class="nav-link" style="font-size:14px;">&larr; Back to Diseases &amp; Pests</a>
+      </div>
+
+      {% if in_use %}
+      <div role="note" class="settings-alert" style="background:var(--info-bg); border-color:var(--info); color:var(--info);">{{ in_use }} health case{{ in_use|pluralize }} use{{ in_use|pluralize:"s," }} this entry. Your changes will show on {{ in_use|pluralize:"it,them" }} too.</div>
+      {% endif %}
+
+      <div class="card" style="padding:32px;">
+        <form method="post" novalidate id="diseaseForm">
+          {% csrf_token %}
+
+          <h3 class="t-h3" style="margin-bottom:20px;">About the problem</h3>
+          <div style="display:grid; gap:20px; margin-bottom:32px;">
+            <div class="df-pair">
+              {% include "species/_field.html" with field=form.name placeholder="e.g., Leaf Miner" %}
+              {% include "species/_field.html" with field=form.type empty="Select a type..." %}
+            </div>
+            {% include "species/_field.html" with field=form.symptoms placeholder="What it looks like: e.g., Winding pale trails inside the leaves..." %}
+          </div>
+
+          <h3 class="t-h3" style="margin-bottom:6px;">Organic cure</h3>
+          <p class="t-small text-muted" style="margin-bottom:16px;">The steps to follow, in order. Keep each step title short (5 words at most). Organic remedies only.</p>
+          {% if form.step_errors %}
+          <div role="alert" class="settings-alert error">
+            {% for error in form.step_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="df-steps" id="steps">
+            {% for row in form.steps %}
+            <div class="df-step" data-step>
+              <span class="num" data-num>{{ forloop.counter }}</span>
+              <input type="text" name="step" class="input" value="{{ row.step }}" placeholder="Step, e.g., Spray with neem oil" maxlength="60" aria-label="Step title">
+              <input type="text" name="when" class="input when" value="{{ row.when }}" placeholder="When, e.g., Every 7 days" maxlength="60" aria-label="When">
+              <button type="button" class="icon-btn" data-remove title="Remove step" aria-label="Remove step"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+              <textarea name="how" class="input how" rows="2" maxlength="600" placeholder="How to do it, with amounts" aria-label="How to do it">{{ row.how }}</textarea>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="addStep" style="margin-top:12px;">+ Add Step</button>
+
+          <h3 class="t-h3" style="margin:32px 0 20px;">Prevention</h3>
+          {% include "species/_field.html" with field=form.prevention placeholder="How to stop it coming back..." %}
+
+          <div style="display:flex; gap:12px; justify-content:flex-end; padding-top:20px; margin-top:32px; border-top:1px solid var(--border);">
+            <a href="{% url 'diseases' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{% if issue %}Save Changes{% else %}Add to Library{% endif %}</button>
+          </div>
+        </form>
+      </div>
+
+      <template id="stepTemplate">
+        <div class="df-step" data-step>
+          <span class="num" data-num></span>
+          <input type="text" name="step" class="input" placeholder="Step, e.g., Spray with neem oil" maxlength="60" aria-label="Step title">
+          <input type="text" name="when" class="input when" placeholder="When, e.g., Every 7 days" maxlength="60" aria-label="When">
+          <button type="button" class="icon-btn" data-remove title="Remove step" aria-label="Remove step"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+          <textarea name="how" class="input how" rows="2" maxlength="600" placeholder="How to do it, with amounts" aria-label="How to do it"></textarea>
+        </div>
+      </template>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var list = document.getElementById('steps');
+  var template = document.getElementById('stepTemplate');
+  var MAX = 10;
+
+  function renumber() {
+    var rows = list.querySelectorAll('[data-step]');
+    rows.forEach(function (row, i) { row.querySelector('[data-num]').textContent = i + 1; });
+    document.getElementById('addStep').disabled = rows.length >= MAX;
+  }
+
+  function add(focus) {
+    var row = template.content.firstElementChild.cloneNode(true);
+    list.appendChild(row);
+    renumber();
+    if (focus) row.querySelector('input').focus();
+  }
+
+  document.getElementById('addStep').addEventListener('click', function () { add(true); });
+  list.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-remove]');
+    if (!btn) return;
+    btn.closest('[data-step]').remove();
+    if (!list.querySelector('[data-step]')) add(false);
+    renumber();
+  });
+
+  if (!list.querySelector('[data-step]')) add(false);
+  renumber();
+})();
+</script>
+{% endblock %}

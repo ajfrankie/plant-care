@@ -70,7 +70,7 @@
             </select>
             <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
             {% if is_filtered %}<a href="{% url 'species' %}" class="btn btn-secondary btn-sm">Clear</a>{% endif %}
-            <a href="{% url 'species_add' %}" class="btn btn-primary btn-sm">+ Add Species</a>
+            {% if user.is_staff %}<a href="{% url 'species_add' %}" class="btn btn-primary btn-sm">+ Add Species</a>{% endif %}
           </form>
         </div>
       </div>
@@ -98,7 +98,11 @@
             </div>
             <div class="t-small text-muted">Used by {{ item.plant_count }} plant{{ item.plant_count|pluralize }}</div>
             <div style="display:flex; gap:10px; margin-top:6px;">
+              {% if user.is_staff %}
               <a href="{% url 'species_edit' item.pk %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+              {% else %}
+              <a href="{% url 'explore_species' item.pk %}" class="btn btn-secondary btn-sm" style="flex:1;">View</a>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -135,8 +139,12 @@
         <a href="{% url 'species' %}" class="btn btn-secondary btn-sm" style="margin-top:16px;">Clear filters</a>
         {% else %}
         <div class="t-h3">No species added yet</div>
+        {% if user.is_staff %}
         <p class="t-body text-secondary" style="margin-top:8px;">Add a species so plants can be linked to it.</p>
         <a href="{% url 'species_add' %}" class="btn btn-primary btn-sm" style="margin-top:16px;">+ Add Species</a>
+        {% else %}
+        <p class="t-body text-secondary" style="margin-top:8px;">Species added by the Plant Care team will appear here.</p>
+        {% endif %}
         {% endif %}
       </div>
       {% endif %}

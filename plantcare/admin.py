@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import CareLog, CareTask, ContactMessage, HealthCase, HealthCheck, Notification, Plant, PlantSpecies, User, WaterReminder
+from .models import CareLog, CareTask, ContactMessage, HealthCase, HealthCheck, Notification, Plant, PlantIssue, PlantSpecies, User, WaterReminder
 
 
 @admin.register(User)
@@ -94,3 +94,10 @@ class ContactMessageAdmin(admin.ModelAdmin):
     list_editable = ("is_handled",)
     search_fields = ("name", "email", "subject", "message")
     readonly_fields = ("name", "email", "subject", "message", "created_at")
+
+
+@admin.register(PlantIssue)
+class PlantIssueAdmin(admin.ModelAdmin):
+    list_display = ["name", "type", "key", "updated_at"]
+    list_filter = ["type"]
+    search_fields = ["name", "key", "symptoms"]

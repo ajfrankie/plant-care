@@ -66,6 +66,9 @@ def index(request, form=None):
         initial = {}
         if request.GET.get("plant", "").isdigit():
             initial["plant"] = request.GET["plant"]
+        # Coming from Diseases & Pests: the issue is already known.
+        if request.GET.get("issue") in health_library.ISSUES:
+            initial.update(action=HealthCheckForm.KNOWN, issue_key=request.GET["issue"])
         form = HealthCheckForm(user=request.user, initial=initial)
 
     return render(request, "plants/health.html", {
@@ -218,7 +221,7 @@ def case_detail(request, pk, form=None):
         "prevention": entry["prevention"] if entry else next(
             (i["prevention"] for i in analysis.get("issues", []) if i["name"] == case.title), ""),
         "form": form or HealthUpdateForm(),
-        "issue_choices": health_library.CHOICES,
+        "issue_choices": health_library.choices(),
         "severity_choices": HealthCase.Severity.choices,
         "today": timezone.localdate(),
     })

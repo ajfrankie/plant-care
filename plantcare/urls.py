@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .controllers import accounts, care, dashboard, health, history, inquiries, library, notifications, plants, public, species, watering
+from .controllers import accounts, admin_area, care, dashboard, diseases, health, help, history, inquiries, library, notifications, plants, public, species, watering
 
 urlpatterns = [
     # Public site
@@ -18,6 +18,7 @@ urlpatterns = [
     path("settings/", accounts.settings, name="settings"),
     path("settings/export/", accounts.export_data, name="settings_export"),
     path("settings/delete-account/", accounts.delete_account, name="settings_delete_account"),
+    path("help/", help.index, name="help"),
     path("notifications/", notifications.index, name="notifications"),
     path("notifications/read-all/", notifications.read_all, name="notifications_read_all"),
     path("notifications/clear/", notifications.clear_all, name="notifications_clear"),
@@ -29,6 +30,7 @@ urlpatterns = [
     # App
     path("dashboard/", dashboard.index, name="dashboard"),
     path("admin-dashboard/", dashboard.admin_index, name="admin_dashboard"),
+    path("admin-dashboard/care-history/", admin_area.care_history, name="admin_care_history"),
     path("admin-dashboard/users/<uuid:pk>/toggle/", dashboard.admin_toggle_user, name="admin_user_toggle"),
     path("inquiries/", inquiries.index, name="inquiries"),
     path("inquiries/<int:pk>/toggle/", inquiries.toggle, name="inquiry_toggle"),
@@ -41,6 +43,10 @@ urlpatterns = [
     path("my-plants/<int:pk>/care-plan/", plants.replan, name="plant_replan"),
     path("my-plants/details/", plants.details, name="plant_details"),
     path("plant-health/", health.index, name="plant_health"),
+    path("diseases/", diseases.index, name="diseases"),
+    path("diseases/add/", diseases.add, name="disease_add"),
+    path("diseases/<int:pk>/edit/", diseases.edit, name="disease_edit"),
+    path("diseases/<int:pk>/delete/", diseases.delete, name="disease_delete"),
     path("plant-health/check/", health.new_check, name="health_check_new"),
     path("plant-health/<int:pk>/", health.case_detail, name="health_case"),
     path("plant-health/<int:pk>/update/", health.case_update, name="health_case_update"),

@@ -9,7 +9,7 @@ from django.core.validators import MaxLengthValidator
 from django.utils import timezone
 
 from . import health_library
-from .models import CareLog, CareTask, ContactMessage, HealthCase, HealthCheck, Plant, PlantSpecies, User, WaterReminder
+from .models import CareLog, CareTask, ContactMessage, HealthCase, HealthCheck, Plant, PlantIssue, PlantSpecies, User, WaterReminder
 from .models.choices import SpecialFeature
 
 
@@ -228,7 +228,7 @@ class HealthCheckForm(forms.Form):
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["plant"].queryset = Plant.objects.filter(created_user=user).order_by("name")
-        self.fields["issue_key"].choices = [("", "Select an issue...")] + health_library.CHOICES
+        self.fields["issue_key"].choices = [("", "Select an issue...")] + health_library.choices()
 
     def clean_image(self):
         return _check_photo(self.cleaned_data["image"])
@@ -497,3 +497,79 @@ class ContactForm(forms.ModelForm):
         if len(message) < 10:
             raise ValidationError("Please write a little more (at least 10 characters).")
         return message
+
+
+class PlantIssueForm(forms.ModelForm):
+    """Add or edit a disease/pest. The cure is a list of steps sent as step/when/how rows."""
+
+    MAX_STEPS = 10
+    MAX_STEP_WORDS = 5
+
+    class Meta:
+        model = PlantIssue
+        fields = ["name", "type", "symptoms", "prevention"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["type"].choices = [("", "Select a type...")] + list(PlantIssue.Type.choices)
+        self.step_errors = []
+        if self.is_bound:
+            rows = zip(self.data.getlist("step"), self.data.getlist("when"), self.data.getlist("how"))
+            self.steps = [
+                {"step": " ".join(step.split()), "when": when.strip(), "how": how.strip()}
+                for step, when, how in rows
+                if step.strip() or when.strip() or how.strip()
+            ]
+        else:
+            self.steps = [
+                {"step": t.get("step", ""), "when": t.get("when", ""), "how": t.get("how", "")}
+                for t in self.instance.treatments
+            ]
+
+    def clean_name(self):
+        name = " ".join(self.cleaned_data["name"].split())
+        taken = PlantIssue.objects.filter(name__iexact=name)
+        if self.instance.pk:
+            taken = taken.exclude(pk=self.instance.pk)
+        if taken.exists():
+            raise ValidationError("This disease or pest is already in the list.")
+        return name
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not self.steps:
+            self.step_errors.append("Add at least one treatment step.")
+        if len(self.steps) > self.MAX_STEPS:
+            self.step_errors.append(f"Use {self.MAX_STEPS} steps at most.")
+        for number, row in enumerate(self.steps, start=1):
+            if not row["step"] or not row["how"]:
+                self.step_errors.append(f"Step {number}: fill in both the step and how to do it.")
+            elif len(row["step"].split()) > self.MAX_STEP_WORDS:
+                self.step_errors.append(f"Step {number}: keep the step title to {self.MAX_STEP_WORDS} words.")
+            elif not health_library.is_organic({"step": row["step"], "how": row["how"]}):
+                self.step_errors.append(
+                    f"Step {number}: only organic treatments are allowed (no copper, sulfur or chemical sprays)."
+                )
+            if len(row["how"]) > 600 or len(row["when"]) > 60:
+                self.step_errors.append(f"Step {number} is too long.")
+        if self.step_errors:
+            raise ValidationError("Please fix the treatment steps.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        issue = super().save(commit=False)
+        issue.treatments = [{"name": row["step"], **row} for row in self.steps]
+        if not issue.key:
+            issue.key = self._unique_key(issue.name)
+        if commit:
+            issue.save()
+        return issue
+
+    @staticmethod
+    def _unique_key(name):
+        from django.utils.text import slugify
+        base = slugify(name).replace("-", "_")[:34] or "issue"
+        key, n = base, 2
+        while PlantIssue.objects.filter(key=key).exists():
+            key, n = f"{base}_{n}", n + 1
+        return key

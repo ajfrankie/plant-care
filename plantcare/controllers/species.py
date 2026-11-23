@@ -8,6 +8,7 @@ from django.utils import timezone
 from ..forms import SpeciesForm
 from ..models import PlantSpecies
 from ..models.choices import Light
+from .dashboard import _require_admin
 
 PER_PAGE = 8
 
@@ -76,6 +77,7 @@ def index(request):
 
 
 def add(request):
+    _require_admin(request)  # members can browse species but not change them
     form = SpeciesForm(request.POST or None, request.FILES or None)
 
     if request.method == "POST" and form.is_valid():
@@ -87,6 +89,7 @@ def add(request):
 
 
 def edit(request, pk):
+    _require_admin(request)
     species = get_object_or_404(PlantSpecies, pk=pk)
     # The form gets its own copy so the page header keeps showing saved data
     # when validation fails.

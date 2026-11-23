@@ -1,0 +1,135 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Plant Care — Diseases &amp; Pests{% endblock %}
+
+{% block head_extra %}
+<style>
+  .dz-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .dz-list { display:flex; flex-direction:column; gap:12px; }
+  .dz-card summary { gap:14px; }
+  .dz-card summary .dz-name { flex:1; min-width:0; }
+  .dz-card summary .dz-sym { font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+  .dz-card[open] summary .dz-sym { display:none; }
+  .dz-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex:none; background:var(--pale-sage); color:var(--primary); }
+  .dz-icon.pest { background:var(--warning-bg); color:var(--warning); }
+  .dz-icon.disease { background:var(--error-bg); color:var(--error); }
+  .dz-icon.care { background:var(--info-bg); color:var(--info); }
+  .dz-cols { display:grid; grid-template-columns:minmax(0, 3fr) minmax(0, 2fr); gap:24px; margin-top:16px; }
+  .dz-steps { list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:10px; counter-reset:step; }
+  .dz-steps li { display:flex; gap:12px; counter-increment:step; }
+  .dz-steps li::before { content:counter(step); width:24px; height:24px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none; margin-top:1px; }
+  .dz-affected { font-size:12px; font-weight:600; color:var(--error); background:var(--error-bg); border-radius:999px; padding:3px 10px; white-space:nowrap; }
+  @media (max-width: 760px) { .dz-cols { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+
+  {% include "partials/sidebar.html" with current="diseases" %}
+
+  <div class="main-area">
+    {% include "partials/app_header.html" with title="Diseases & Pests" subtitle="Know the problem? Find the organic cure and start treating it" %}
+
+    <div style="padding:28px 32px;">
+
+      {% for message in messages %}
+      <div role="status" class="settings-alert {% if message.tags == 'error' %}error{% else %}success{% endif %}">{{ message }}</div>
+      {% endfor %}
+
+      <div class="dz-toolbar">
+        <nav style="display:flex; gap:8px; flex-wrap:wrap;" aria-label="Filter by type">
+          <a href="?{% if q %}q={{ q|urlencode }}{% endif %}" class="chip{% if not type %} active{% endif %}">All <span class="count">{{ total }}</span></a>
+          {% for name, count in types %}
+          <a href="?type={{ name|urlencode }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}" class="chip{% if name == type %} active{% endif %}">{{ name }}s <span class="count">{{ count }}</span></a>
+          {% endfor %}
+        </nav>
+        <form method="get" class="search-box" style="width:280px; height:38px;" role="search">
+          {% if type %}<input type="hidden" name="type" value="{{ type }}">{% endif %}
+          {% include "partials/icon.html" with name="search" size=14 %}
+          <input type="search" name="q" value="{{ q }}" placeholder="Search a disease, pest or symptom..." aria-label="Search diseases and pests">
+        </form>
+        {% if user.is_staff %}<a href="{% url 'disease_add' %}" class="btn btn-primary btn-sm">+ Add Disease or Pest</a>{% endif %}
+      </div>
+
+      {% if issues %}
+      <div class="dz-list">
+        {% for issue in issues %}
+        <details class="problem-card dz-card" id="issue-{{ issue.key }}"{% if issue.key == open_key or issues|length == 1 %} open{% endif %}>
+          <summary>
+            <span class="dz-icon {% if issue.type == 'Pest' %}pest{% elif 'disease' in issue.type|lower %}disease{% else %}care{% endif %}">
+              {% if issue.type == 'Pest' %}{% include "partials/icon.html" with name="bug" size=20 %}{% elif 'disease' in issue.type|lower %}{% include "partials/icon.html" with name="fungus" size=20 %}{% else %}{% include "partials/icon.html" with name="leaf" size=20 %}{% endif %}
+            </span>
+            <span class="dz-name">
+              <span style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span class="t-h4">{{ issue.name }}</span>
+                <span class="badge {{ issue.badge }}">{{ issue.type }}</span>
+                {% if issue.affected %}<span class="dz-affected">{% if user.is_staff %}Affecting {{ issue.affected }} plant{{ issue.affected|pluralize }}{% else %}Affecting {{ issue.affected }} of your plant{{ issue.affected|pluralize }}{% endif %}</span>{% endif %}
+              </span>
+              <span class="dz-sym" style="display:block;">{{ issue.symptoms }}</span>
+            </span>
+          </summary>
+          <div class="problem-body">
+            <div class="dz-cols">
+              <div>
+                <div class="t-label">How to recognise it</div>
+                <p class="t-body text-secondary" style="margin-top:4px;">{{ issue.symptoms }}</p>
+                {% if issue.treatments %}
+                <div class="t-label" style="margin-top:18px;">Organic cure, step by step</div>
+                <ol class="dz-steps">
+                  {% for step in issue.treatments %}
+                  <li><div class="t-body"><strong>{{ step.step }}</strong>{% if step.when %} <span class="text-muted">&middot; {{ step.when }}</span>{% endif %}<br><span class="text-secondary">{{ step.how }}</span></div></li>
+                  {% endfor %}
+                </ol>
+                {% endif %}
+              </div>
+              <div>
+                {% if issue.prevention %}
+                <div style="padding:14px 16px; background:var(--success-bg); border-radius:10px;">
+                  <div class="t-label" style="color:var(--success); display:flex; align-items:center; gap:6px;">{% include "partials/icon.html" with name="shield" size=14 %} Prevention</div>
+                  <p class="t-body" style="margin-top:6px;">{{ issue.prevention }}</p>
+                </div>
+                {% endif %}
+                {% if user.is_staff %}
+                <div style="padding:14px 16px; background:var(--bg-secondary); border-radius:10px; margin-top:12px;">
+                  <div class="t-label">Manage this entry</div>
+                  <p class="t-small text-secondary" style="margin-top:4px;">Changes show straight away for every user and in their health cases.</p>
+                  <div style="display:flex; gap:8px; margin-top:12px;">
+                    <a href="{% url 'disease_edit' issue.pk %}" class="btn btn-secondary btn-sm" style="flex:1;">Edit</a>
+                    <form method="post" action="{% url 'disease_delete' issue.pk %}" style="flex:1; margin:0;" onsubmit="return confirm('Delete {{ issue.name|escapejs }} from the library? Health cases keep their title.');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-destructive btn-sm" style="width:100%;">Delete</button>
+                    </form>
+                  </div>
+                </div>
+                {% else %}
+                <div style="padding:14px 16px; background:var(--bg-secondary); border-radius:10px; margin-top:12px;">
+                  <div class="t-label">Seeing this on your plant?</div>
+                  <p class="t-small text-secondary" style="margin-top:4px;">Start a health case with this issue already chosen. You'll get the treatment plan and reminders to check progress.</p>
+                  <a href="{% url 'plant_health' %}?new=1&amp;issue={{ issue.key }}#check-form" class="btn btn-primary btn-sm" style="margin-top:12px; width:100%;">{% include "partials/icon.html" with name="health" size=14 %} Treat My Plant</a>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+      {% elif not total %}
+      <div class="empty-state">
+        <div class="t-h4">The library is empty</div>
+        <p class="t-body text-secondary" style="margin-top:6px;">{% if user.is_staff %}Add the first disease or pest and its organic cure.{% else %}Diseases and pests added by the Plant Care team will appear here.{% endif %}</p>
+        {% if user.is_staff %}<a href="{% url 'disease_add' %}" class="btn btn-primary btn-sm" style="margin-top:14px;">+ Add Disease or Pest</a>{% endif %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="t-h4">Nothing matches &ldquo;{{ q }}&rdquo;</div>
+        <p class="t-body text-secondary" style="margin-top:6px;">Try a symptom such as &ldquo;yellow leaves&rdquo; or &ldquo;white spots&rdquo;, or <a href="{% url 'plant_health' %}?new=1#check-form" style="color:var(--primary); font-weight:600;">upload a photo</a> and we'll look for the problem.</p>
+        <a href="{% url 'diseases' %}" class="btn btn-secondary btn-sm" style="margin-top:14px;">Show all</a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
